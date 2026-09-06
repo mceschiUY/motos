@@ -1,0 +1,110 @@
+<div class="mutation-window">
+  <!-- Header -->
+  <header class="window-header">
+    <div class="header-left">
+      <mat-icon class="zas-icon">auto_fix_high</mat-icon>
+      <span class="title">ZAS Mutation Engine</span>
+      @if (solicitud()) {
+        <span class="solicitud-badge" [matTooltip]="solicitud()">
+          {{ solicitud() | slice:0:50 }}{{ solicitud().length > 50 ? '...' : '' }}
+        </span>
+      }
+    </div>
+    <div class="header-right">
+      @if (isStreaming() || step() === 'executing') {
+        <div class="status-indicator streaming">
+          <mat-icon>sensors</mat-icon>
+          <span>En vivo</span>
+        </div>
+      }
+      <button mat-icon-button (click)="closeWindow()" matTooltip="Cerrar ventana">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  @if (isStreaming() || step() === 'executing') {
+    <div class="progress-section">
+      <div class="phase-info">
+        <mat-icon>{{ getPhaseIcon(streamingPhase()) }}</mat-icon>
+        <span class="phase-label">{{ getPhaseLabel(streamingPhase()) }}</span>
+        <span class="progress-text">{{ streamingProgress() }}%</span>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="streamingProgress()"></mat-progress-bar>
+      <span class="status-message">{{ streamingMessage() }}</span>
+    </div>
+  }
+
+  <!-- Main Content -->
+  <main class="window-content">
+    @if (step() === 'input') {
+      <div class="waiting-state">
+        <mat-icon class="waiting-icon">hourglass_empty</mat-icon>
+        <h2>Esperando...</h2>
+        <p>Inicia un cambio desde la aplicacion principal para ver el progreso aqui.</p>
+      </div>
+    }
+
+    @if (step() === 'executing') {
+      <div class="executing-state">
+        <mat-spinner diameter="80"></mat-spinner>
+        <h2>{{ streamingMessage() || 'Procesando...' }}</h2>
+
+        <div class="execution-steps">
+          <div class="step-item" [class.active]="streamingPhase() === 'interpreting'" [class.done]="streamingProgress() > 20">
+            <mat-icon>{{ streamingProgress() > 20 ? 'check_circle' : 'psychology' }}</mat-icon>
+            <span>Interpretando</span>
+          </div>
+          <div class="step-item" [class.active]="streamingPhase() === 'analyzing'" [class.done]="streamingProgress() > 40">
+            <mat-icon>{{ streamingProgress() > 40 ? 'check_circle' : 'analytics' }}</mat-icon>
+            <span>Analizando</span>
+          </div>
+          <div class="step-item" [class.active]="streamingPhase() === 'generating'" [class.done]="streamingProgress() > 70">
+            <mat-icon>{{ streamingProgress() > 70 ? 'check_circle' : 'code' }}</mat-icon>
+            <span>Generando</span>
+          </div>
+          <div class="step-item" [class.active]="streamingPhase() === 'applying'" [class.done]="streamingProgress() >= 100">
+            <mat-icon>{{ streamingProgress() >= 100 ? 'check_circle' : 'save' }}</mat-icon>
+            <span>Aplicando</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (step() === 'done') {
+      <div class="complete-state">
+        <mat-icon class="complete-icon">check_circle</mat-icon>
+        <h2>Cambios Aplicados</h2>
+        <p>{{ streamingMessage() }}</p>
+        <button mat-button (click)="closeWindow()">
+          <mat-icon>close</mat-icon>
+          Cerrar
+        </button>
+      </div>
+    }
+
+    @if (step() === 'error') {
+      <div class="error-state">
+        <mat-icon class="error-icon">error</mat-icon>
+        <h2>Error</h2>
+        <p class="error-message">{{ error() }}</p>
+        <button mat-button (click)="closeWindow()">
+          <mat-icon>close</mat-icon>
+          Cerrar
+        </button>
+      </div>
+    }
+  </main>
+
+  <!-- Footer -->
+  <footer class="window-footer">
+    <span class="footer-text">ZAS Mutation Engine</span>
+    @if (step() === 'done') {
+      <span class="complete-badge">
+        <mat-icon>check</mat-icon>
+        Completado
+      </span>
+    }
+  </footer>
+</div>

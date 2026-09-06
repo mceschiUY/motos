@@ -1,0 +1,125 @@
+<div class="dialog-container">
+  <!-- Progress Bar -->
+  <div class="form-progress">
+    <div class="progress-bar" [style.width.%]="formProgress"></div>
+  </div>
+
+  <!-- Header -->
+  <div class="dialog-header">
+    <div class="header-icon">
+      <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+    </div>
+    <h2 mat-dialog-title>{{ isEdit ? 'Editar Usuario' : 'Nuevo Usuario' }}</h2>
+    <div class="progress-indicator">
+      <span class="progress-text">{{ validFieldsCount }}/{{ totalFields }} campos</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+
+      <!-- Nombre Completo + Username Row -->
+      <div class="form-row">
+        <div class="form-field-wrapper half">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Nombre Completo</mat-label>
+            <input matInput type="text" formControlName="nombreCompleto">
+            <mat-icon matPrefix>person</mat-icon>
+            @if (form.get('nombreCompleto')?.touched && form.get('nombreCompleto')?.invalid) {
+              <mat-error>{{ getErrorMessage('nombreCompleto') }}</mat-error>
+            }
+          </mat-form-field>
+          @if (isFieldValid('nombreCompleto')) {
+            <div class="field-check"><mat-icon>check</mat-icon></div>
+          }
+        </div>
+        <div class="form-field-wrapper half">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Username</mat-label>
+            <input matInput type="text" formControlName="userName">
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            @if (form.get('userName')?.touched && form.get('userName')?.invalid) {
+              <mat-error>{{ getErrorMessage('userName') }}</mat-error>
+            }
+          </mat-form-field>
+          @if (isFieldValid('userName')) {
+            <div class="field-check"><mat-icon>check</mat-icon></div>
+          }
+        </div>
+      </div>
+
+      <!-- Email + Perfil Row -->
+      <div class="form-row">
+        <div class="form-field-wrapper half">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email">
+            <mat-icon matPrefix>email</mat-icon>
+            @if (form.get('email')?.touched && form.get('email')?.invalid) {
+              <mat-error>{{ getErrorMessage('email') }}</mat-error>
+            }
+          </mat-form-field>
+          @if (isFieldValid('email')) {
+            <div class="field-check"><mat-icon>check</mat-icon></div>
+          }
+        </div>
+        <div class="form-field-wrapper half">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Perfil</mat-label>
+            <mat-select formControlName="perfilId">
+              @if (isLoadingPerfiles()) {
+                <mat-option disabled>Cargando perfiles...</mat-option>
+              } @else {
+                @for (perfil of perfiles(); track perfil.id) {
+                  <mat-option [value]="perfil.id">{{ perfil.nombre }}</mat-option>
+                }
+              }
+            </mat-select>
+            <mat-icon matPrefix>folder_shared</mat-icon>
+            @if (form.get('perfilId')?.touched && form.get('perfilId')?.invalid) {
+              <mat-error>{{ getErrorMessage('perfilId') }}</mat-error>
+            }
+          </mat-form-field>
+          @if (isFieldValid('perfilId')) {
+            <div class="field-check"><mat-icon>check</mat-icon></div>
+          }
+        </div>
+      </div>
+
+      <!-- Contrasena Field (solo alta) -->
+      @if (!isEdit) {
+        <div class="form-field-wrapper">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Contrasena</mat-label>
+            <input matInput type="password" formControlName="password">
+            <mat-icon matPrefix>lock</mat-icon>
+            @if (form.get('password')?.touched && form.get('password')?.invalid) {
+              <mat-error>{{ getErrorMessage('password') }}</mat-error>
+            }
+          </mat-form-field>
+          @if (isFieldValid('password')) {
+            <div class="field-check"><mat-icon>check</mat-icon></div>
+          }
+        </div>
+      }
+
+    </form>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isLoading()">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSubmit()" [disabled]="isLoading() || form.invalid">
+      @if (isLoading()) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEdit ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

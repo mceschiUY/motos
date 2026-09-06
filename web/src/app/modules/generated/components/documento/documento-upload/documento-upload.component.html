@@ -1,0 +1,90 @@
+<div class="upload-container">
+  <!-- Header -->
+  <div class="upload-header">
+    <mat-icon class="header-icon">upload_file</mat-icon>
+    <div class="header-text">
+      <h2>Subir Documento</h2>
+      <p>{{ data.relacionNombre }} #{{ data.relacionId }}</p>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="upload-content">
+    <!-- Drop Zone -->
+    @if (!selectedFile() && !isUploading()) {
+      <div
+        class="drop-zone"
+        [class.drag-over]="isDragOver()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()">
+
+        <input
+          #fileInput
+          type="file"
+          hidden
+          (change)="onFileSelected($event)">
+
+        <mat-icon class="drop-icon">cloud_upload</mat-icon>
+        <h3>Arrastra tu archivo aqui</h3>
+        <p>o haz clic para seleccionar</p>
+        <span class="drop-hint">Maximo 50MB por archivo</span>
+      </div>
+    }
+
+    <!-- Selected File -->
+    @if (selectedFile() && !isUploading()) {
+      <div class="file-preview">
+        <div class="file-info">
+          <mat-icon class="file-icon">{{ getFileIcon() }}</mat-icon>
+          <div class="file-details">
+            <span class="file-name">{{ selectedFile()!.name }}</span>
+            <span class="file-size">{{ formatFileSize(selectedFile()!.size) }}</span>
+          </div>
+          <button mat-icon-button class="remove-btn" (click)="removeFile()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Uploading State -->
+    @if (isUploading()) {
+      <div class="uploading-state">
+        <mat-icon class="uploading-icon">cloud_upload</mat-icon>
+        <h3>Subiendo archivo...</h3>
+        <mat-progress-bar mode="determinate" [value]="uploadProgress()"></mat-progress-bar>
+        <span class="progress-text">{{ uploadProgress() }}%</span>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Actions -->
+  @if (!isUploading()) {
+    <div class="upload-actions">
+      <button mat-stroked-button class="btn-cancel" (click)="cancel()">
+        Cancelar
+      </button>
+      <button
+        mat-flat-button
+        class="btn-upload"
+        [disabled]="!selectedFile()"
+        (click)="upload()">
+        <mat-icon>upload</mat-icon>
+        Subir archivo
+      </button>
+    </div>
+  }
+</div>

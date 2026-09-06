@@ -1,0 +1,998 @@
+// ╔═══════════════════════════════════════════════════════════════════════════════╗
+// ║                    CESKIA DESIGN SYSTEM - MAIN STYLESHEET                      ║
+// ║                              "Estándar Oro" v1.0                               ║
+// ╚═══════════════════════════════════════════════════════════════════════════════╝
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 1. ANGULAR MATERIAL CORE
+// ═══════════════════════════════════════════════════════════════════════════════
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. CESKIA DESIGN SYSTEM IMPORTS
+// ═══════════════════════════════════════════════════════════════════════════════
+@import 'styles/ceskia-tokens';
+@import 'styles/ceskia-components';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. ANGULAR MATERIAL THEME CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Dark theme (Obsidian Night)
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    // CESKIA 2.0: azure (el violet reforzaba el look "generado por IA")
+    primary: mat.$azure-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Light theme (Gallery White)
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Default: Dark theme (Ratio Navy)
+:root,
+[data-theme='dark'],
+.dark-theme {
+  @include mat.all-component-themes($dark-theme);
+}
+
+// Light theme (Ratio White)
+[data-theme='light'],
+.light-theme {
+  @include mat.all-component-colors($light-theme);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ÍCONOS FINOS (piel Salud 2026-08-29): Material Symbols Outlined con trazo 300
+// reemplaza a Material Icons en TODO el sitio. Mismos nombres de ícono (ligaduras),
+// solo cambia la fuente — revertible quitando este bloque + el link de index.html.
+// ═══════════════════════════════════════════════════════════════════════════════
+mat-icon.mat-icon,
+.material-icons {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4. BACKWARD COMPATIBILITY - Variable Aliases
+// Mapeo de variables antiguas a tokens CESKIA para componentes existentes
+// ═══════════════════════════════════════════════════════════════════════════════
+
+:root,
+[data-theme='dark'],
+.dark-theme {
+  // Background aliases
+  --bg-primary: var(--ceskia-base);
+  --bg-secondary: var(--ceskia-surface);
+  --bg-tertiary: var(--ceskia-elevated);
+  --surface-card: var(--ceskia-surface);
+  --surface-overlay: rgba(0, 0, 0, 0.5);
+
+  // Text aliases
+  --text-primary: var(--ceskia-text-primary);
+  --text-secondary: var(--ceskia-text-secondary);
+  --text-muted: var(--ceskia-text-tertiary);
+
+  // Accent aliases
+  --accent-primary: var(--ceskia-accent-primary);
+  --accent-success: var(--ceskia-accent-success);
+  --accent-warning: var(--ceskia-accent-warning);
+  --accent-error: var(--ceskia-accent-danger);
+  --accent-info: var(--ceskia-accent-info);
+
+  // Border aliases
+  --border-color: var(--ceskia-border-default);
+  --border-muted: var(--ceskia-border-subtle);
+
+  // Shadow aliases
+  --shadow-sm: var(--ceskia-shadow-sm);
+  --shadow-md: var(--ceskia-shadow-md);
+  --shadow-lg: var(--ceskia-shadow-lg);
+}
+
+[data-theme='light'],
+.light-theme {
+  // Background aliases
+  --bg-primary: var(--ceskia-base);
+  --bg-secondary: var(--ceskia-surface);
+  --bg-tertiary: var(--ceskia-hover);
+  --surface-card: var(--ceskia-surface);
+  --surface-overlay: rgba(0, 0, 0, 0.3);
+
+  // Text aliases
+  --text-primary: var(--ceskia-text-primary);
+  --text-secondary: var(--ceskia-text-secondary);
+  --text-muted: var(--ceskia-text-tertiary);
+
+  // Accent aliases
+  --accent-primary: var(--ceskia-accent-primary);
+  --accent-success: var(--ceskia-accent-success);
+  --accent-warning: var(--ceskia-accent-warning);
+  --accent-error: var(--ceskia-accent-danger);
+  --accent-info: var(--ceskia-accent-info);
+
+  // Border aliases
+  --border-color: var(--ceskia-border-default);
+  --border-muted: var(--ceskia-border-subtle);
+
+  // Shadow aliases
+  --shadow-sm: var(--ceskia-shadow-sm);
+  --shadow-md: var(--ceskia-shadow-md);
+  --shadow-lg: var(--ceskia-shadow-lg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 5. GLOBAL BASE STYLES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--ceskia-font-sans);
+  font-size: var(--ceskia-text-base);
+  line-height: var(--ceskia-leading-normal);
+  // Inter a 14px respira mejor con tracking apenas negativo (CESKIA 2.0)
+  letter-spacing: -0.006em;
+  background: var(--ceskia-base);
+  color: var(--ceskia-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// Títulos con la fuente display (Inter Tight): la firma tipográfica del sistema
+h1, h2, h3 {
+  font-family: var(--ceskia-font-display);
+  letter-spacing: var(--ceskia-tracking-tight);
+}
+
+// Selección de texto con el acento del producto (detalle premium barato)
+::selection {
+  background: var(--ceskia-accent-primary-glow);
+}
+
+// Foco visible sobrio y consistente (accesibilidad sin glow)
+:focus-visible {
+  outline: 2px solid var(--ceskia-accent-primary);
+  outline-offset: 2px;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. SCROLLBAR STYLING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ceskia-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ceskia-scrollbar-thumb);
+  border-radius: var(--ceskia-radius-full);
+
+  &:hover {
+    background: var(--ceskia-scrollbar-thumb-hover);
+  }
+}
+
+// Firefox scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ceskia-scrollbar-thumb) var(--ceskia-scrollbar-track);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. MATERIAL COMPONENT OVERRIDES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--ceskia-surface);
+}
+
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--ceskia-elevated);
+  --mdc-snackbar-supporting-text-color: var(--ceskia-text-primary);
+}
+
+// Superficies Material con la superficie de la PIEL en ambos temas. Sin esto,
+// en dark mat-card/mat-table/paneles quedan con el negro neutro del theme M3
+// (visto 2026-08-29 en /reportes: cards y tabla negras sobre fondo #0B1120).
+// Los tokens son theme-scoped, así que esto resuelve bien también en light.
+.mat-mdc-card {
+  --mdc-elevated-card-container-color: var(--ceskia-surface);
+  --mdc-outlined-card-container-color: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  box-shadow: var(--ceskia-shadow-sm);
+  color: var(--ceskia-text-primary);
+}
+
+.mat-mdc-table {
+  background: var(--ceskia-surface);
+
+  .mat-mdc-header-cell {
+    background: var(--ceskia-surface);
+    color: var(--ceskia-text-secondary);
+    border-bottom-color: var(--ceskia-border-default);
+  }
+
+  .mat-mdc-cell {
+    color: var(--ceskia-text-primary);
+    border-bottom-color: var(--ceskia-border-subtle);
+  }
+
+  .mat-mdc-row:hover {
+    background: var(--ceskia-hover);
+  }
+}
+
+.mat-mdc-paginator {
+  background: transparent;
+  color: var(--ceskia-text-secondary);
+}
+
+.mat-mdc-select-panel,
+.mat-mdc-menu-panel,
+.mat-mdc-autocomplete-panel {
+  background: var(--ceskia-elevated);
+}
+
+.mat-mdc-chip {
+  --mdc-chip-elevated-container-color: var(--ceskia-hover);
+  --mdc-chip-label-text-color: var(--ceskia-text-primary);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. NOTIFICATION STYLES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.notification-success {
+  --mdc-snackbar-container-color: var(--ceskia-accent-success) !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+}
+
+.notification-error {
+  --mdc-snackbar-container-color: var(--ceskia-accent-danger) !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+}
+
+.notification-warning {
+  --mdc-snackbar-container-color: var(--ceskia-accent-warning) !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+}
+
+.notification-info {
+  --mdc-snackbar-container-color: var(--ceskia-accent-info) !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. LIGHT THEME SPECIFIC OVERRIDES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+[data-theme='light'],
+.light-theme {
+  // Aplicar estilos base
+  background: var(--ceskia-base) !important;
+  color: var(--ceskia-text-primary) !important;
+
+  // Cuando la clase está en html, estilizar body descendiente
+  body {
+    background: var(--ceskia-base) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Container overrides
+  // ─────────────────────────────────────────────────────────────────────────────
+  .list-container,
+  .form-container,
+  .detail-container,
+  .page-container,
+  .content-container,
+  .card-container,
+  .dialog-content,
+  .panel-content,
+  .kosmos-page {
+    background: var(--ceskia-base) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Cards and surfaces
+  // ─────────────────────────────────────────────────────────────────────────────
+  .card,
+  .mat-mdc-card,
+  .surface,
+  .panel,
+  .content-card,
+  .data-card,
+  .info-card,
+  .detail-card,
+  .form-card {
+    background: var(--ceskia-surface) !important;
+    color: var(--ceskia-text-primary) !important;
+    border-color: var(--ceskia-border-default) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Headers
+  // ─────────────────────────────────────────────────────────────────────────────
+  .card-header,
+  .panel-header,
+  .section-header,
+  .content-header,
+  .page-header,
+  .list-header,
+  .form-header,
+  .toolbar,
+  .header-row,
+  .dialog-header {
+    background: var(--ceskia-void) !important;
+    color: var(--ceskia-text-primary) !important;
+    border-color: var(--ceskia-border-default) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Typography
+  // ─────────────────────────────────────────────────────────────────────────────
+  h1, h2, h3, h4, h5, h6,
+  .title,
+  .card-title,
+  .section-title,
+  .page-title,
+  .header-title,
+  .dialog-title,
+  .mat-mdc-card-title {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .subtitle,
+  .description,
+  .hint,
+  .helper-text,
+  .mat-mdc-card-subtitle,
+  .text-secondary,
+  .page-subtitle,
+  .dialog-subtitle {
+    color: var(--ceskia-text-secondary) !important;
+  }
+
+  .text-muted {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Tables
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-table {
+    background: var(--ceskia-surface) !important;
+
+    .mat-mdc-header-row {
+      background: var(--ceskia-void) !important;
+    }
+
+    .mat-mdc-header-cell {
+      color: var(--ceskia-text-secondary) !important;
+      background: var(--ceskia-void) !important;
+      border-bottom-color: var(--ceskia-border-default) !important;
+    }
+
+    .mat-mdc-row {
+      background: var(--ceskia-surface) !important;
+
+      &:hover {
+        background: var(--ceskia-hover) !important;
+      }
+    }
+
+    .mat-mdc-cell {
+      color: var(--ceskia-text-primary) !important;
+      border-bottom-color: var(--ceskia-border-subtle) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Paginator
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-paginator {
+    background: var(--ceskia-void) !important;
+    color: var(--ceskia-text-primary) !important;
+    border-top: 1px solid var(--ceskia-border-default) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Form Fields
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background: var(--ceskia-surface) !important;
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+      background-color: var(--ceskia-surface) !important;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: var(--ceskia-hover) !important;
+    }
+
+    .mdc-floating-label,
+    .mat-mdc-form-field-hint {
+      color: var(--ceskia-text-secondary) !important;
+    }
+
+    input, textarea, .mat-mdc-select-value {
+      color: var(--ceskia-text-primary) !important;
+    }
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--ceskia-border-default) !important;
+    }
+
+    &.mat-focused {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--ceskia-accent-primary) !important;
+      }
+
+      .mdc-floating-label {
+        color: var(--ceskia-accent-primary) !important;
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Select & Dropdowns
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-select {
+    .mat-mdc-select-trigger {
+      background: transparent !important;
+    }
+    .mat-mdc-select-value-text {
+      color: var(--ceskia-text-primary) !important;
+    }
+    .mat-mdc-select-arrow {
+      color: var(--ceskia-text-tertiary) !important;
+    }
+  }
+
+  .mat-mdc-select-panel {
+    background: var(--ceskia-surface) !important;
+    border: 1px solid var(--ceskia-border-default) !important;
+    box-shadow: var(--ceskia-shadow-lg) !important;
+  }
+
+  .mat-mdc-option {
+    color: var(--ceskia-text-primary) !important;
+    background: var(--ceskia-surface) !important;
+
+    &:hover:not(.mat-mdc-option-disabled) {
+      background: var(--ceskia-hover) !important;
+    }
+
+    &.mat-mdc-option-active,
+    &.mdc-list-item--selected {
+      background: var(--ceskia-active) !important;
+    }
+
+    .mdc-list-item__primary-text {
+      color: var(--ceskia-text-primary) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Dialogs
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-dialog-container {
+    --mdc-dialog-container-color: var(--ceskia-surface) !important;
+
+    .mat-mdc-dialog-surface {
+      background: var(--ceskia-surface) !important;
+      color: var(--ceskia-text-primary) !important;
+    }
+  }
+
+  .mat-mdc-dialog-title {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .mat-mdc-dialog-content {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .dialog-actions {
+    background: var(--ceskia-void) !important;
+    border-top-color: var(--ceskia-border-default) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Buttons
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-button,
+  .mat-mdc-outlined-button {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .mat-mdc-icon-button {
+    color: var(--ceskia-text-secondary) !important;
+
+    &:hover {
+      color: var(--ceskia-text-primary) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Chips
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-chip {
+    background: var(--ceskia-hover) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Checkboxes, Radio buttons, Slide toggles
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-checkbox .mdc-form-field label,
+  .mat-mdc-radio-button .mdc-form-field label,
+  .mat-mdc-slide-toggle .mdc-form-field label {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lists
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-list-item {
+    color: var(--ceskia-text-primary) !important;
+
+    &:hover {
+      background: var(--ceskia-hover) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Tabs
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      background: var(--ceskia-void) !important;
+      border-bottom: 1px solid var(--ceskia-border-default) !important;
+    }
+
+    .mat-mdc-tab:not(.mat-mdc-tab-disabled) .mdc-tab__text-label {
+      color: var(--ceskia-text-secondary) !important;
+    }
+
+    .mat-mdc-tab:not(.mat-mdc-tab-disabled).mdc-tab--active .mdc-tab__text-label {
+      color: var(--ceskia-accent-primary) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Expansion panels
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-expansion-panel {
+    background: var(--ceskia-surface) !important;
+    color: var(--ceskia-text-primary) !important;
+
+    .mat-expansion-panel-header {
+      background: var(--ceskia-void) !important;
+
+      .mat-expansion-panel-header-title {
+        color: var(--ceskia-text-primary) !important;
+      }
+
+      .mat-expansion-panel-header-description {
+        color: var(--ceskia-text-secondary) !important;
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Menu
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-menu-panel {
+    background: var(--ceskia-surface) !important;
+    border: 1px solid var(--ceskia-border-default) !important;
+    box-shadow: var(--ceskia-shadow-lg) !important;
+  }
+
+  .mat-mdc-menu-item {
+    color: var(--ceskia-text-primary) !important;
+
+    &:hover:not([disabled]) {
+      background: var(--ceskia-hover) !important;
+    }
+
+    .mat-icon {
+      color: var(--ceskia-text-secondary) !important;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Tooltips
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-tooltip {
+    --mdc-plain-tooltip-container-color: var(--ceskia-elevated);
+    --mdc-plain-tooltip-supporting-text-color: var(--ceskia-text-primary);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Snackbar
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: var(--ceskia-elevated);
+    --mdc-snackbar-supporting-text-color: var(--ceskia-text-primary);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Dividers
+  // ─────────────────────────────────────────────────────────────────────────────
+  .mat-divider {
+    border-top-color: var(--ceskia-border-default) !important;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Icons
+  // ─────────────────────────────────────────────────────────────────────────────
+  mat-icon:not([color]) {
+    color: var(--ceskia-text-secondary);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // KOSMOS Generated Component Overrides
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Smart toolbar
+  .smart-toolbar {
+    background: var(--ceskia-void) !important;
+    border-bottom-color: var(--ceskia-border-default) !important;
+  }
+
+  // Search
+  .search-input {
+    background: var(--ceskia-surface) !important;
+    border-color: var(--ceskia-border-default) !important;
+    color: var(--ceskia-text-primary) !important;
+
+    &::placeholder {
+      color: var(--ceskia-text-tertiary) !important;
+    }
+  }
+
+  .search-icon,
+  .search-clear {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  // Stats
+  .stat-item {
+    background: var(--ceskia-surface) !important;
+    border-color: var(--ceskia-border-default) !important;
+  }
+
+  .stat-value {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .stat-label {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  // User info
+  .user-name {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .user-username,
+  .user-role {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  .email-text {
+    color: var(--ceskia-text-secondary) !important;
+  }
+
+  // Results count
+  .results-count {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  // Filter select
+  .filter-select,
+  .mat-mdc-form-field:has(mat-select) {
+    .mat-mdc-text-field-wrapper {
+      background: var(--ceskia-surface) !important;
+    }
+  }
+
+  // Clear filters
+  .clear-filters-btn {
+    border-color: var(--ceskia-border-default) !important;
+    color: var(--ceskia-text-secondary) !important;
+  }
+
+  // Empty state
+  .empty-state {
+    background: transparent !important;
+  }
+
+  .empty-title {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .empty-description {
+    color: var(--ceskia-text-secondary) !important;
+  }
+
+  // Skeleton — pulso sólido y quieto (piel Salud: sin barrido de gradiente)
+  .skeleton {
+    background: var(--ceskia-hover) !important;
+    animation: skeleton-pulse 1.4s ease-in-out infinite !important;
+  }
+
+  // FAB buttons
+  .fab-btn.fab-secondary {
+    background: var(--ceskia-surface) !important;
+    border-color: var(--ceskia-border-default) !important;
+    color: var(--ceskia-text-secondary) !important;
+
+    &:hover {
+      color: var(--ceskia-text-primary) !important;
+    }
+  }
+
+  // Action buttons
+  .action-btn.more {
+    color: var(--ceskia-text-tertiary) !important;
+  }
+
+  // Form wrappers
+  .form-wrapper,
+  .form-content,
+  .form-section {
+    background: var(--ceskia-surface) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  // Selection lists
+  .selection-list,
+  .assignment-list {
+    background: var(--ceskia-surface) !important;
+  }
+
+  .list-item {
+    color: var(--ceskia-text-primary) !important;
+    border-bottom-color: var(--ceskia-border-subtle) !important;
+
+    &:hover {
+      background: var(--ceskia-hover) !important;
+    }
+  }
+
+  // Info panels
+  .info-panel,
+  .detail-panel {
+    background: var(--ceskia-void) !important;
+    border-color: var(--ceskia-border-default) !important;
+  }
+
+  .info-label {
+    color: var(--ceskia-text-secondary) !important;
+  }
+
+  .info-value {
+    color: var(--ceskia-text-primary) !important;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. UTILITY CLASSES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Compact mode
+.compact-mode {
+  .mat-mdc-table .mat-mdc-row {
+    height: 40px;
+  }
+
+  .mat-mdc-form-field {
+    margin-bottom: var(--ceskia-space-2);
+  }
+}
+
+// No animations mode
+.no-animations {
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 11. TYPOGRAPHY UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.text-xs { font-size: var(--ceskia-text-xs); }
+.text-sm { font-size: var(--ceskia-text-sm); }
+.text-base { font-size: var(--ceskia-text-base); }
+.text-md { font-size: var(--ceskia-text-md); }
+.text-lg { font-size: var(--ceskia-text-lg); }
+.text-xl { font-size: var(--ceskia-text-xl); }
+.text-2xl { font-size: var(--ceskia-text-2xl); }
+.text-3xl { font-size: var(--ceskia-text-3xl); }
+.text-4xl { font-size: var(--ceskia-text-4xl); }
+
+.font-normal { font-weight: var(--ceskia-font-normal); }
+.font-medium { font-weight: var(--ceskia-font-medium); }
+.font-semibold { font-weight: var(--ceskia-font-semibold); }
+.font-bold { font-weight: var(--ceskia-font-bold); }
+
+.tracking-tighter { letter-spacing: var(--ceskia-tracking-tighter); }
+.tracking-tight { letter-spacing: var(--ceskia-tracking-tight); }
+.tracking-normal { letter-spacing: var(--ceskia-tracking-normal); }
+.tracking-wide { letter-spacing: var(--ceskia-tracking-wide); }
+
+// CESKIA 2.0: tipografía funcional
+.font-display { font-family: var(--ceskia-font-display); }
+.font-mono { font-family: var(--ceskia-font-mono); font-size: 0.9em; }
+// Números tabulares: montos y cantidades alineados que no bailan entre filas
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: var(--ceskia-font-numeric); }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 12. SPACING UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.gap-1 { gap: var(--ceskia-space-1); }
+.gap-2 { gap: var(--ceskia-space-2); }
+.gap-3 { gap: var(--ceskia-space-3); }
+.gap-4 { gap: var(--ceskia-space-4); }
+.gap-5 { gap: var(--ceskia-space-5); }
+.gap-6 { gap: var(--ceskia-space-6); }
+.gap-8 { gap: var(--ceskia-space-8); }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 13. BORDER RADIUS UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.rounded-none { border-radius: var(--ceskia-radius-none); }
+.rounded-sm { border-radius: var(--ceskia-radius-sm); }
+.rounded-md { border-radius: var(--ceskia-radius-md); }
+.rounded-lg { border-radius: var(--ceskia-radius-lg); }
+.rounded-xl { border-radius: var(--ceskia-radius-xl); }
+.rounded-2xl { border-radius: var(--ceskia-radius-2xl); }
+.rounded-full { border-radius: var(--ceskia-radius-full); }
+
+// Skeleton: pulso de opacidad (reemplaza el barrido de gradiente)
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+// ═══ Asistente de voz: destello del campo que se está llenando por conversación ═══
+// Piel Salud: fade tonal simple — sin onda de box-shadow de 12px.
+@keyframes av-destello-anim {
+  0% { background: var(--ceskia-accent-primary-glow); }
+  100% { background: transparent; }
+}
+.av-destello {
+  animation: av-destello-anim 1.3s ease-out;
+  border-radius: var(--ceskia-radius-md);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 14. IMPRESIÓN — "PDF con marca": la Ficha 360 se imprime limpia con membrete.
+// El tema oscuro imprimiría texto claro sobre blanco → en papel se fuerzan
+// tokens legibles. El chrome del sitio (nav, topbar, FABs, overlays) no viaja.
+// ═══════════════════════════════════════════════════════════════════════════════
+@media print {
+  :root, [data-theme='dark'], [data-theme='light'], .dark-theme {
+    --ceskia-void: #ffffff;
+    --ceskia-surface: #ffffff;
+    --ceskia-elevated: #ffffff;
+    --ceskia-hover: #ffffff;
+    --ceskia-text-primary: #111111;
+    --ceskia-text-secondary: #333333;
+    --ceskia-text-tertiary: #555555;
+    --ceskia-text-muted: #777777;
+    --ceskia-border-subtle: #dddddd;
+    --ceskia-border-default: #cccccc;
+    --ceskia-border-strong: #999999;
+  }
+
+  html, body { background: #fff !important; }
+
+  // chrome del sitio: nada de esto va al papel
+  .sidebar,
+  .top-header,
+  app-site-footer,
+  app-mutation-sidebar,
+  app-alchemy-lens,
+  app-evolution-hub,
+  app-global-search,
+  app-asistente-voz,
+  .cdk-overlay-container {
+    display: none !important;
+  }
+
+  .site-container { display: block !important; }
+  .main-wrapper { margin: 0 !important; width: 100% !important; }
+  .main-content { padding: 0 !important; overflow: visible !important; height: auto !important; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 15. CABEZAL DE PÁGINA EN UNA LÍNEA (decisión Pablo 2026-08-23)
+// El rastro (casita) vive en el top-header del layout; el page-header de cada
+// vista se compacta: ícono chico + título + conteo en UNA sola fila finita.
+// Global a propósito: pisa el SCSS emitido por el generador en TODAS las vistas.
+// ═══════════════════════════════════════════════════════════════════════════════
+.kosmos-page .page-header,
+.page-container .page-header {
+  margin-top: var(--ceskia-space-2);
+  margin-bottom: var(--ceskia-space-3);
+
+  .header-content {
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .header-left { gap: var(--ceskia-space-3); }
+
+  .header-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--ceskia-radius-md);
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  }
+
+  .header-text {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ceskia-space-3);
+    min-width: 0;
+
+    .page-title { font-size: var(--ceskia-text-xl); white-space: nowrap; }
+    .page-subtitle { margin: 0; font-size: var(--ceskia-text-sm); white-space: nowrap; }
+  }
+
+  .header-stats .stat-item { padding: var(--ceskia-space-1) var(--ceskia-space-3); }
+}

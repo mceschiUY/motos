@@ -1,0 +1,50 @@
+﻿{
+  "version": 1,
+  "universo": "motos",
+  "entidades": [
+    {
+      "entidad": "Envio",
+      "campo": "Estado",
+      "transiciones": [
+        {
+          "accion": "PasarAFacturado",
+          "ruta": "pasar-a-facturado",
+          "campo": "Estado",
+          "hacia": "facturado",
+          "desde": [
+            "recibido"
+          ]
+        },
+        {
+          "accion": "PasarADespachado",
+          "ruta": "pasar-a-despachado",
+          "campo": "Estado",
+          "hacia": "despachado",
+          "desde": [
+            "facturado"
+          ]
+        },
+        {
+          "accion": "PasarAEntregado",
+          "ruta": "pasar-a-entregado",
+          "campo": "Estado",
+          "hacia": "entregado",
+          "desde": [
+            "despachado"
+          ]
+        },
+        {
+          "accion": "PasarAAnulado",
+          "ruta": "pasar-a-anulado",
+          "campo": "Estado",
+          "hacia": "anulado",
+          "desde": [
+            "recibido",
+            "facturado",
+            "despachado"
+          ]
+        }
+      ]
+    }
+  ]
+}

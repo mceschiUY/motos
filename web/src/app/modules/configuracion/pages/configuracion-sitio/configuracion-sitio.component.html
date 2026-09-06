@@ -1,0 +1,82 @@
+<div class="config-container">
+  <!-- Header -->
+  <header class="config-header">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon>settings</mat-icon>
+        <h1>Configuracion del Sitio</h1>
+      </div>
+      <p class="header-subtitle">Administra la informacion general, contacto y redes sociales del sitio</p>
+    </div>
+    <div class="header-actions">
+      @if (hasChanges()) {
+        <button mat-stroked-button (click)="reset()" [disabled]="isSaving()">
+          <mat-icon>undo</mat-icon>
+          Descartar
+        </button>
+      }
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="save()"
+        [disabled]="!hasChanges() || isSaving()">
+        @if (isSaving()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <mat-icon>save</mat-icon>
+        }
+        Guardar Cambios
+      </button>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <!-- Loading State -->
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando configuracion...</p>
+    </div>
+  } @else {
+    <!-- Config Groups -->
+    <div class="config-groups">
+      @for (group of groups(); track group.key) {
+        @if (group.items.length > 0) {
+          <mat-card class="config-group">
+            <mat-card-header>
+              <div class="group-icon">
+                <mat-icon>{{ group.icon }}</mat-icon>
+              </div>
+              <mat-card-title>{{ group.label }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="config-fields">
+                @for (item of group.items; track item.id) {
+                  <mat-form-field appearance="outline" class="config-field">
+                    <mat-label>{{ getLabel(item.clave) }}</mat-label>
+                    <input
+                      matInput
+                      [type]="getInputType(item.tipo)"
+                      [(ngModel)]="item.valor"
+                      (ngModelChange)="onValueChange(item)"
+                      [placeholder]="item.descripcion || ''"
+                    />
+                    @if (item.tipo === 'url') {
+                      <mat-icon matSuffix>link</mat-icon>
+                    }
+                    @if (item.tipo === 'email') {
+                      <mat-icon matSuffix>email</mat-icon>
+                    }
+                    @if (item.tipo === 'image') {
+                      <mat-icon matSuffix>image</mat-icon>
+                    }
+                    <mat-hint>{{ item.descripcion }}</mat-hint>
+                  </mat-form-field>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,85 @@
+// Compartido del core (A1.1): antes se estampaba por entidad. Es la UNION de
+// las variantes por vista: los selectores de vistas ausentes no matchean DOM.
+// Ficha 360 — el expediente del registro (generado por Forja)
+.ficha-view { padding: var(--ceskia-space-6) var(--ceskia-space-8); max-width: 1100px; margin: 0 auto; }
+.ficha-cargando { padding: var(--ceskia-space-10); text-align: center; color: var(--ceskia-text-tertiary); }
+.ficha-header { display: flex; align-items: center; gap: var(--ceskia-space-3); margin-bottom: var(--ceskia-space-5); }
+.ficha-titulo { display: flex; align-items: center; gap: var(--ceskia-space-3); min-width: 0; }
+.ficha-titulo h1 { margin: 0; font-size: var(--ceskia-text-2xl); font-weight: var(--ceskia-font-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ficha-estado { font-size: var(--ceskia-text-xs); text-transform: capitalize; padding: 3px 10px; border-radius: var(--ceskia-radius-full); background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-default); }
+.ficha-acciones { margin-left: auto; display: flex; gap: var(--ceskia-space-1); }
+.ficha-acciones .peligro { color: var(--ceskia-accent-danger); }
+
+// chips/dots de estado (mismos colores que el kanban)
+.estado-0 { background: var(--ceskia-accent-info); }
+.estado-1 { background: var(--ceskia-accent-primary); }
+.estado-2 { background: var(--ceskia-accent-warning); }
+.estado-3 { background: var(--ceskia-accent-success); }
+.estado-4 { background: var(--ceskia-accent-danger); }
+.estado-5 { background: var(--ceskia-text-tertiary); }
+.estado-off { background: var(--ceskia-border-strong); }
+// CESKIA 2.0: chips de estado TONALES (fondo al 15-25% del color, sin borde duro)
+.ficha-estado.estado-0 { background: var(--ceskia-accent-info-glow); border-color: transparent; color: var(--ceskia-accent-info); font-weight: 500; }
+.ficha-estado.estado-1 { background: var(--ceskia-accent-primary-glow); border-color: transparent; color: var(--ceskia-accent-primary); font-weight: 500; }
+.ficha-estado.estado-2 { background: var(--ceskia-accent-warning-glow); border-color: transparent; color: var(--ceskia-accent-warning); font-weight: 500; }
+.ficha-estado.estado-3 { background: var(--ceskia-accent-success-glow); border-color: transparent; color: var(--ceskia-accent-success); font-weight: 500; }
+.ficha-estado.estado-4 { background: var(--ceskia-accent-danger-glow); border-color: transparent; color: var(--ceskia-accent-danger); font-weight: 500; }
+.ficha-estado.estado-5 { background: var(--ceskia-hover); border-color: transparent; color: var(--ceskia-text-tertiary); font-weight: 500; }
+
+section { background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-lg); padding: var(--ceskia-space-5) var(--ceskia-space-6); margin-bottom: var(--ceskia-space-5); }
+section h2 { margin: 0 0 var(--ceskia-space-4) 0; font-size: var(--ceskia-text-sm); text-transform: uppercase; letter-spacing: .08em; color: var(--ceskia-text-tertiary); }
+
+// Proceso guiado
+.proceso-camino { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ceskia-space-1); margin-bottom: var(--ceskia-space-4); }
+.proceso-paso { display: flex; align-items: center; gap: var(--ceskia-space-2); opacity: .45; }
+.proceso-paso.recorrido { opacity: .8; }
+.proceso-paso.actual { opacity: 1; .paso-label { font-weight: var(--ceskia-font-semibold); } }
+.paso-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.proceso-paso.actual .paso-dot { box-shadow: 0 0 0 4px var(--ceskia-accent-primary-glow); }
+.paso-label { font-size: var(--ceskia-text-sm); text-transform: capitalize; white-space: nowrap; }
+.paso-linea { width: 34px; height: 2px; background: var(--ceskia-border-default); margin: 0 var(--ceskia-space-1); }
+.paso-linea.recorrida { background: var(--ceskia-accent-primary); }
+.proceso-siguientes { display: flex; flex-direction: column; gap: var(--ceskia-space-2); }
+.siguiente { display: flex; align-items: center; gap: var(--ceskia-space-3); flex-wrap: wrap; }
+.siguiente-guia { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.proceso-cerrado { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-muted); }
+
+// Datos
+.datos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--ceskia-space-4) var(--ceskia-space-6); }
+.dato { display: flex; flex-direction: column; gap: 2px; }
+.dato-label { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+.dato-valor { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-primary); font-variant-numeric: tabular-nums; }
+
+// Relacionados
+.rel-tabs { display: flex; gap: var(--ceskia-space-2); margin-bottom: var(--ceskia-space-4); flex-wrap: wrap; }
+.rel-tab { display: flex; align-items: center; gap: var(--ceskia-space-2); background: transparent; border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-full); padding: 6px 14px; color: var(--ceskia-text-secondary); cursor: pointer; font-size: var(--ceskia-text-sm); }
+.rel-tab mat-icon { font-size: 16px; width: 16px; height: 16px; }
+.rel-tab { transition: var(--ceskia-transition-fast); }
+.rel-tab:hover { border-color: var(--ceskia-border-strong); color: var(--ceskia-text-primary); }
+.rel-tab.activa { background: var(--ceskia-accent-primary-glow); border-color: transparent; color: var(--ceskia-accent-primary); font-weight: 500; }
+.rel-count { font-size: var(--ceskia-text-xs); font-variant-numeric: tabular-nums; background: var(--ceskia-surface); border-radius: var(--ceskia-radius-full); padding: 1px 7px; }
+.rel-vacio { color: var(--ceskia-text-muted); font-size: var(--ceskia-text-sm); padding: var(--ceskia-space-4) 0; }
+.rel-tabla { width: 100%; border-collapse: collapse; font-size: var(--ceskia-text-sm); }
+.rel-tabla th { text-align: left; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); padding: var(--ceskia-space-2); border-bottom: 1px solid var(--ceskia-border-subtle); }
+.rel-tabla td { padding: var(--ceskia-space-2); border-bottom: 1px solid var(--ceskia-border-subtle); }
+.rel-tabla tbody tr { cursor: pointer; }
+.rel-tabla tbody tr:hover { background: var(--ceskia-hover); }
+.rel-ir { font-size: 16px; color: var(--ceskia-text-muted); }
+
+// Historia
+.historia-linea { display: flex; flex-direction: column; gap: var(--ceskia-space-3); }
+.evento { display: flex; align-items: baseline; gap: var(--ceskia-space-3); }
+.evento-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ceskia-accent-primary); flex-shrink: 0; align-self: center; }
+.evento.fallo .evento-dot { background: var(--ceskia-accent-danger); }
+.evento-que { font-size: var(--ceskia-text-sm); }
+.evento-quien { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.evento-fecha { margin-left: auto; font-family: var(--ceskia-font-mono); font-size: 0.6875rem; color: var(--ceskia-text-muted); white-space: nowrap; }
+
+// PDF con marca: en papel solo viajan los datos (los botones y tabs son de pantalla)
+@media print {
+  .ficha-view { padding: 0; max-width: none; }
+  .ficha-header button, .ficha-acciones { display: none !important; }
+  .proceso-siguientes, .proceso-cerrado { display: none !important; }
+  .rel-tabs, .rel-ir { display: none !important; }
+  section { break-inside: avoid; }
+}

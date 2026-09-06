@@ -1,0 +1,147 @@
+<!-- Overlay -->
+<div
+  class="lens-overlay"
+  [class.open]="isOpen()"
+  (click)="close()">
+</div>
+
+<!-- Lens Panel -->
+<div class="lens-panel" [class.open]="isOpen()">
+
+  <!-- Header -->
+  <div class="lens-header">
+    <div class="header-left">
+      <mat-icon class="lens-icon">difference</mat-icon>
+      <h3>Alchemy Lens</h3>
+      @if (branchName()) {
+        <span class="git-branch-info">
+          <mat-icon class="branch-icon">fork_right</mat-icon>
+          {{ branchName() }}
+        </span>
+      }
+    </div>
+
+    <div class="header-center">
+      @if (diffResult()) {
+        <div class="diff-stats">
+          <span class="additions">+{{ totalAdditions() }}</span>
+          <span class="deletions">-{{ totalDeletions() }}</span>
+          <span class="file-count">{{ files().length }} archivo(s)</span>
+        </div>
+      }
+    </div>
+
+    <div class="header-right">
+      <button
+        type="button"
+        class="action-btn"
+        (click)="refreshDiff()"
+        matTooltip="Refrescar diff">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="close()"
+        matTooltip="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="lens-content">
+
+    <!-- File List Sidebar -->
+    <div class="file-list">
+      <div class="file-list-header">
+        <span>Archivos modificados</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <mat-icon class="spin">autorenew</mat-icon>
+          <span>Cargando diff...</span>
+        </div>
+      }
+
+      @if (errorMsg()) {
+        <div class="error-state">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMsg() }}</span>
+        </div>
+      }
+
+      @for (file of files(); track file.path; let i = $index) {
+        <button
+          type="button"
+          class="file-item"
+          [class.selected]="selectedFileIndex() === i"
+          [class]="getStatusClass(file.status)"
+          (click)="selectFile(i)">
+          <mat-icon class="file-status-icon">{{ getStatusIcon(file.status) }}</mat-icon>
+          <div class="file-info">
+            <span class="file-name">{{ getFileName(file.path) }}</span>
+            <span class="file-path">{{ file.path }}</span>
+          </div>
+          <div class="file-stats">
+            @if (file.additions > 0) {
+              <span class="additions">+{{ file.additions }}</span>
+            }
+            @if (file.deletions > 0) {
+              <span class="deletions">-{{ file.deletions }}</span>
+            }
+          </div>
+        </button>
+      }
+    </div>
+
+    <!-- Monaco Diff Editor Container -->
+    <div class="editor-container">
+      @if (!diffResult() && !loading() && !errorMsg()) {
+        <div class="empty-state">
+          <mat-icon>compare</mat-icon>
+          <p>Sin cambios para mostrar</p>
+        </div>
+      }
+      <div #monacoContainer class="monaco-diff-container"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="lens-footer">
+    <div class="logs-container">
+      @for (log of state.logs().slice(-5); track log.message) {
+        <div class="log-item" [class]="'log-' + log.level">
+          <mat-icon>{{ log.level === 'error' ? 'error' : log.level === 'success' ? 'check_circle' : 'info' }}</mat-icon>
+          <span>{{ log.message }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="footer-actions">
+      @if (state.step() === 'done') {
+        <button type="button" class="btn-revert" (click)="state.revertChanges()">
+          <mat-icon>undo</mat-icon>
+          Revertir
+        </button>
+        <button type="button" class="btn-commit" (click)="state.commitChanges()">
+          <mat-icon>check</mat-icon>
+          Solidificar
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- FAB para abrir el lens (solo cuando hay cambios) -->
+@if (shouldShow() && !isOpen()) {
+  <button
+    type="button"
+    class="lens-fab"
+    (click)="open()"
+    matTooltip="Ver diff"
+    matTooltipPosition="left">
+    <mat-icon>difference</mat-icon>
+  </button>
+}

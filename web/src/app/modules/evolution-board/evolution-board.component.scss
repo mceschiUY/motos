@@ -1,0 +1,271 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVOLUTION BOARD — Kanban con design tokens CESKIA (migrado de la paleta neón 2026-08-29)
+// Mapeo: neón cyan → accent-primary, violeta → accent-info, naranja → accent-warning,
+// obsidian → surface/elevated, silver → text-*.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.board-container {
+  padding: 24px;
+  min-height: calc(100vh - 120px);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.board-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--ceskia-accent-info);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ceskia-text-primary);
+  }
+
+  .board-count {
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: var(--ceskia-accent-info-glow);
+    color: var(--ceskia-accent-info);
+  }
+}
+
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .import-btn {
+    background: var(--ceskia-accent-primary-glow);
+    color: var(--ceskia-accent-primary);
+    border: 1px solid var(--ceskia-border-strong);
+    font-size: 13px;
+
+    mat-icon {
+      font-size: 18px;
+      margin-right: 4px;
+    }
+
+    &:hover {
+      background: rgba(0, 159, 227, 0.2);
+    }
+  }
+
+  button {
+    color: var(--ceskia-text-secondary);
+    &:hover { color: var(--ceskia-text-primary); }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOADING & ERROR
+// ─────────────────────────────────────────────────────────────────────────────
+
+.board-loading, .board-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px;
+  gap: 16px;
+  color: var(--ceskia-text-secondary);
+}
+
+.board-error {
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--ceskia-accent-warning);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KANBAN LAYOUT
+// ─────────────────────────────────────────────────────────────────────────────
+
+.kanban {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--ceskia-scrollbar-thumb);
+    border-radius: 3px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLUMN
+// ─────────────────────────────────────────────────────────────────────────────
+
+.kanban-column {
+  flex: 0 0 260px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  background: var(--ceskia-surface);
+  border-radius: 10px;
+  border: 1px solid var(--ceskia-border-default);
+  overflow: hidden;
+}
+
+.column-header {
+  padding: 14px 16px;
+  border-top: 3px solid transparent;
+  background: var(--ceskia-elevated);
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  span:first-of-type {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ceskia-text-primary);
+  }
+
+  .column-count {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+}
+
+.column-body {
+  flex: 1;
+  min-height: 200px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--ceskia-scrollbar-thumb);
+    border-radius: 2px;
+  }
+}
+
+.column-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--ceskia-text-muted);
+  gap: 6px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  span {
+    font-size: 12px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAG & DROP
+// ─────────────────────────────────────────────────────────────────────────────
+
+.drag-placeholder {
+  height: 60px;
+  border: 2px dashed var(--ceskia-border-strong);
+  border-radius: 8px;
+  background: var(--ceskia-accent-primary-glow);
+  transition: all 0.2s ease;
+}
+
+.cdk-drag-preview {
+  box-shadow: var(--ceskia-shadow-xl);
+  border-radius: 8px;
+  opacity: 0.9;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECONDARY SECTION (Failed & Rejected)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.secondary-section {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ceskia-border-default);
+}
+
+.secondary-column {
+  flex: 1;
+  max-width: 400px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ceskia-text-secondary);
+    margin: 0 0 12px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &.failed h3 mat-icon { color: var(--ceskia-accent-danger); }
+  &.rejected h3 mat-icon { color: var(--ceskia-accent-warning); }
+}
+
+.secondary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

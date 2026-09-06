@@ -1,0 +1,231 @@
+<!-- Header -->
+<div class="page-header">
+  <div class="header-content">
+    <div class="header-icon">
+      <mat-icon>history</mat-icon>
+    </div>
+    <div class="header-text">
+      <h1 class="page-title">Auditoría del sistema</h1>
+      <p class="page-subtitle">Registro de todas las acciones realizadas</p>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-item">
+      <span class="stat-value">{{ totalCount() | number }}</span>
+      <span class="stat-label">Registros</span>
+    </div>
+  </div>
+</div>
+
+<!-- Breadcrumb -->
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+
+<!-- Content Card -->
+<div class="content-card">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <!-- Busqueda -->
+    <div class="search-container">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar por usuario, entidad..."
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+      >
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Desde</mat-label>
+        <input matInput [matDatepicker]="pickerDesde" [value]="filtroDesde()" (dateChange)="filtroDesde.set($event.value); onFiltroChange()">
+        <mat-datepicker-toggle matIconSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+        <mat-datepicker #pickerDesde></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Hasta</mat-label>
+        <input matInput [matDatepicker]="pickerHasta" [value]="filtroHasta()" (dateChange)="filtroHasta.set($event.value); onFiltroChange()">
+        <mat-datepicker-toggle matIconSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+        <mat-datepicker #pickerHasta></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Accion</mat-label>
+        <mat-select [value]="filtroAccion()" (selectionChange)="filtroAccion.set($event.value); onFiltroChange()">
+          <mat-option value="">Todas</mat-option>
+          @for (accion of acciones; track accion.value) {
+            <mat-option [value]="accion.value">{{ accion.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Resultado</mat-label>
+        <mat-select [value]="filtroExito()" (selectionChange)="filtroExito.set($event.value); onFiltroChange()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="true">Exitoso</mat-option>
+          <mat-option value="false">Fallido</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Acciones -->
+    <div class="toolbar-actions">
+      @if (hasFilters()) {
+        <button mat-stroked-button color="warn" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar
+        </button>
+      }
+      <button mat-icon-button matTooltip="Actualizar" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-container">
+    <!-- Skeleton SOLO en la carga inicial: al refinar la búsqueda la tabla
+         se queda quieta (antes cada tecla la reemplazaba por el esqueleto) -->
+    @if (isLoading() && items().length === 0) {
+      <!-- Skeleton Loading -->
+      <table class="skeleton-table">
+        <thead>
+          <tr>
+            <th>Fecha/Hora</th>
+            <th>Usuario</th>
+            <th>Accion</th>
+            <th>Entidad</th>
+            <th>ID</th>
+            <th>Resultado</th>
+            <th>Duracion</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of skeletonRows; track $index) {
+            <tr class="skeleton-row">
+              <td><div class="skeleton-cell"></div></td>
+              <td><div class="skeleton-cell"></div></td>
+              <td><div class="skeleton-cell short"></div></td>
+              <td><div class="skeleton-cell"></div></td>
+              <td><div class="skeleton-cell short"></div></td>
+              <td><div class="skeleton-cell short"></div></td>
+              <td><div class="skeleton-cell short"></div></td>
+              <td><div class="skeleton-cell action"></div></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (items().length === 0) {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <mat-icon class="empty-icon">history</mat-icon>
+        <h3>No hay registros de auditoría</h3>
+        <p>No se encontraron registros con los filtros aplicados</p>
+      </div>
+    } @else {
+      <!-- Data Table -->
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange($event)" class="audit-table">
+
+        <!-- Timestamp Column -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="Timestamp">Fecha/Hora</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="timestamp">{{ formatDate(row.timestamp) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Usuario Column -->
+        <ng-container matColumnDef="usuario">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="UserName">Usuario</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="user-cell">
+              <mat-icon class="user-icon">person</mat-icon>
+              <span>{{ row.userName || 'Anonimo' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Action Column -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="Action">Accion</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="action-chip" [class]="getActionColor(row.action)">
+              <mat-icon>{{ getActionIcon(row.action) }}</mat-icon>
+              {{ getActionLabel(row.action) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- EntityType Column -->
+        <ng-container matColumnDef="entityType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="EntityType">Entidad</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="entity-type">{{ row.entityType }}</span>
+          </td>
+        </ng-container>
+
+        <!-- EntityId Column -->
+        <ng-container matColumnDef="entityId">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="entity-id">{{ row.entityId || '-' }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Success Column -->
+        <ng-container matColumnDef="success">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="Success">Resultado</th>
+          <td mat-cell *matCellDef="let row">
+            @if (row.success) {
+              <span class="status-chip success">
+                <mat-icon>check_circle</mat-icon>
+                OK
+              </span>
+            } @else {
+              <span class="status-chip error" [matTooltip]="row.errorMessage || 'Error'">
+                <mat-icon>error</mat-icon>
+                Error
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Duration Column -->
+        <ng-container matColumnDef="duration">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="DurationMs">Duracion</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="duration">{{ formatDuration(row.durationMs) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button matTooltip="Ver detalle" (click)="openDetail(row)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
+      </table>
+    }
+  </div>
+
+  <!-- Paginator -->
+  <mat-paginator
+    [length]="totalCount()"
+    [pageSize]="pageSize()"
+    [pageIndex]="page() - 1"
+    [pageSizeOptions]="[10, 25, 50, 100]"
+    (page)="onPageChange($event)"
+    showFirstLastButtons>
+  </mat-paginator>
+</div>

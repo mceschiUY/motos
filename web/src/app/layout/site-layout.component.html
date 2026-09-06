@@ -1,0 +1,370 @@
+<div class="site-container" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
+    <!-- Logo -->
+    <div class="sidebar-logo" (click)="navigateTo('')" (keydown.enter)="navigateTo('')" role="button" tabindex="0" aria-label="Ir al inicio" style="cursor: pointer;">
+      <div class="logo-container">
+        <!-- Logo del cliente si está configurado; si no, marca por defecto -->
+        @if (siteConfig.sitioLogoUrl()) {
+          <img class="logo-img" [src]="siteConfig.sitioLogoUrl()" [alt]="siteConfig.sitioNombre()" />
+        } @else {
+          <div class="logo-icon">
+            <mat-icon>hub</mat-icon>
+          </div>
+        }
+        <div class="logo-text" *ngIf="!sidebarCollapsed()">
+          <span class="logo-title">{{ siteConfig.sitioNombre() }}</span>
+          <span class="logo-subtitle">{{ siteConfig.sitioSubtitulo() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button
+      class="toggle-btn"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'"
+      [matTooltip]="sidebarCollapsed() ? 'Expandir menu' : 'Colapsar menu'"
+      matTooltipPosition="right">
+      <mat-icon>{{ sidebarCollapsed() ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left' }}</mat-icon>
+    </button>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <!-- Búsqueda global (Ctrl+K) -->
+      <div class="nav-section">
+        <a
+          class="nav-item"
+          role="button"
+          tabindex="0"
+          aria-label="Buscar"
+          (click)="buscador.abrir()"
+          (keydown.enter)="buscador.abrir()"
+          [matTooltip]="sidebarCollapsed() ? 'Buscar (Ctrl+K)' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>search</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Buscar&nbsp;&nbsp;<span class="nav-kbd">Ctrl K</span></span>
+        </a>
+      </div>
+
+      <!-- Inicio -->
+      <div class="nav-section">
+        <a
+          class="nav-item"
+          role="button"
+          tabindex="0"
+          aria-label="Inicio"
+          [class.active]="isActiveRoute('')"
+          (click)="navigateTo('')"
+          (keydown.enter)="navigateTo('')"
+          [matTooltip]="sidebarCollapsed() ? 'Inicio' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>home</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Inicio</span>
+        </a>
+      </div>
+
+      <!-- Grupos por constelacion -->
+      @if (hasGroups) {
+        @for (group of menuGroups; track group.label) {
+          <div class="nav-section">
+            <a
+              class="nav-item has-children"
+              [class.active]="isInGroup(group)"
+              [class.expanded]="isGroupExpanded(group.label)"
+              (click)="sidebarCollapsed() ? navigateTo(group.items[0]?.path || '') : toggleGroup(group.label)"
+              [matTooltip]="sidebarCollapsed() ? group.label : ''"
+              matTooltipPosition="right"
+              matRipple
+              [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+            >
+              <div class="nav-item-icon">
+                <mat-icon>{{ group.icon }}</mat-icon>
+              </div>
+              <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ group.label }}</span>
+              <mat-icon class="expand-arrow" *ngIf="!sidebarCollapsed()">
+                {{ isGroupExpanded(group.label) ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </a>
+
+            @if (isGroupExpanded(group.label) && !sidebarCollapsed()) {
+              <div class="nav-children">
+                @for (item of group.items; track item.path) {
+                  <a
+                    class="nav-item child"
+                    [class.active]="isActiveRoute(item.path)"
+                    (click)="navigateTo(item.path)"
+                    matRipple
+                    [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+                  >
+                    <div class="nav-item-icon">
+                      <mat-icon>{{ item.icon }}</mat-icon>
+                    </div>
+                    <span class="nav-item-label">{{ item.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      } @else if (hasComponents) {
+        <!-- Fallback: lista plana si no hay grupos -->
+        <div class="nav-section">
+          <span class="nav-section-title" *ngIf="!sidebarCollapsed()">Componentes</span>
+          <div class="nav-section-divider" *ngIf="sidebarCollapsed()"></div>
+          @for (item of menuItems; track item.path) {
+            <a
+              class="nav-item"
+              [class.active]="isActiveRoute(item.path)"
+              (click)="navigateTo(item.path)"
+              [matTooltip]="sidebarCollapsed() ? item.label : ''"
+              matTooltipPosition="right"
+              matRipple
+              [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+            >
+              <div class="nav-item-icon">
+                <mat-icon>{{ item.icon }}</mat-icon>
+              </div>
+              <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ item.label }}</span>
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="empty-nav">
+          <mat-icon>widgets</mat-icon>
+          <p *ngIf="!sidebarCollapsed()">Sin componentes</p>
+        </div>
+      }
+
+      <!-- Seccion Seguridad -->
+      <div class="nav-section seguridad-section">
+        <span class="nav-section-title" *ngIf="!sidebarCollapsed()">Sistema</span>
+        <div class="nav-section-divider" *ngIf="sidebarCollapsed()"></div>
+
+        <!-- Seguridad Parent -->
+        <a
+          class="nav-item has-children"
+          [class.active]="isInSeguridad()"
+          [class.expanded]="seguridadExpanded()"
+          (click)="sidebarCollapsed() ? navigateToSeguridad('seguridad/usuarios') : toggleSeguridad()"
+          [matTooltip]="sidebarCollapsed() ? 'Seguridad' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>{{ seguridadMenu.icon }}</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ seguridadMenu.label }}</span>
+          <mat-icon class="expand-arrow" *ngIf="!sidebarCollapsed()">
+            {{ seguridadExpanded() ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </a>
+
+        <!-- Seguridad Children -->
+        @if (seguridadExpanded() && !sidebarCollapsed()) {
+          <div class="nav-children">
+            @for (child of seguridadMenu.children; track child.path) {
+              <a
+                class="nav-item child"
+                [class.active]="currentRoute() === child.path"
+                (click)="navigateToSeguridad(child.path)"
+                matRipple
+                [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+              >
+                <div class="nav-item-icon">
+                  <mat-icon>{{ child.icon }}</mat-icon>
+                </div>
+                <span class="nav-item-label">{{ child.label }}</span>
+              </a>
+            }
+          </div>
+        }
+
+        <!-- Evolution Board (herramienta del motor: solo fuera de producción) -->
+        @if (herramientasZas) {
+          <a
+            class="nav-item"
+            [class.active]="currentRoute() === 'evolution'"
+            (click)="navigateTo('evolution')"
+            [matTooltip]="sidebarCollapsed() ? 'Evolution Board' : ''"
+            matTooltipPosition="right"
+            matRipple
+            [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+          >
+            <div class="nav-item-icon">
+              <mat-icon>dashboard_customize</mat-icon>
+            </div>
+            <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Evolution Board</span>
+          </a>
+        }
+
+        <!-- Configuracion -->
+        <a
+          class="nav-item"
+          [class.active]="currentRoute() === 'configuracion'"
+          (click)="navigateTo('configuracion')"
+          [matTooltip]="sidebarCollapsed() ? 'Configuracion' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>{{ configuracionMenuItem.icon }}</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ configuracionMenuItem.label }}</span>
+        </a>
+
+        <!-- Auditoria -->
+        <a
+          class="nav-item"
+          [class.active]="currentRoute() === 'auditoria'"
+          (click)="navigateTo('auditoria')"
+          [matTooltip]="sidebarCollapsed() ? 'Auditoria' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>{{ auditoriaMenuItem.icon }}</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ auditoriaMenuItem.label }}</span>
+        </a>
+
+        <!-- Reportes -->
+        <a
+          class="nav-item"
+          [class.active]="currentRoute() === 'reportes'"
+          (click)="navigateTo('reportes')"
+          [matTooltip]="sidebarCollapsed() ? 'Reportes' : ''"
+          matTooltipPosition="right"
+          matRipple
+          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
+        >
+          <div class="nav-item-icon">
+            <mat-icon>{{ reportesMenuItem.icon }}</mat-icon>
+          </div>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ reportesMenuItem.label }}</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-card" [matMenuTriggerFor]="userMenu" [matTooltip]="sidebarCollapsed() ? 'Mi cuenta' : ''" matTooltipPosition="right">
+        <div class="user-avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+        <div class="user-info" *ngIf="!sidebarCollapsed()">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role">{{ userProfile }}</span>
+        </div>
+        <mat-icon class="user-menu-icon" *ngIf="!sidebarCollapsed()">expand_more</mat-icon>
+      </div>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item disabled>
+          <mat-icon>person</mat-icon>
+          <span>Mi Perfil</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Cerrar Sesion</span>
+        </button>
+      </mat-menu>
+    </div>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" (click)="toggleSidebar()" aria-label="Abrir menú lateral">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <!-- Rastro de navegación (pedido Pablo 2026-08-23): la casita vive acá, en el
+             cabezal principal — las vistas ya no gastan una fila en su breadcrumb. -->
+        <nav class="header-breadcrumb" aria-label="Ruta de navegación">
+          <a class="hb-home" role="button" tabindex="0" aria-label="Ir al inicio"
+             (click)="navigateTo('')" (keydown.enter)="navigateTo('')" matTooltip="Inicio">
+            <mat-icon>home</mat-icon>
+          </a>
+          @for (p of rastro(); track p.label; let last = $last) {
+            <mat-icon class="hb-sep">chevron_right</mat-icon>
+            <span class="hb-item" [class.actual]="last">{{ p.label }}</span>
+          }
+        </nav>
+      </div>
+
+      <div class="header-right">
+        <!-- La búsqueda vive en el sidebar (Ctrl+K) y el usuario en el footer del
+             sidebar: el header no los duplica. Una sola campana, con datos reales. -->
+
+        <!-- Novedades (pulso del negocio) -->
+        <button mat-icon-button [matTooltip]="actividad.hayNovedades() ? 'Hay novedades' : 'Actividad del negocio'" class="tool-btn campanita" (click)="navigateTo('')">
+          <mat-icon>notifications</mat-icon>
+          @if (actividad.hayNovedades()) {
+            <span class="campanita-dot"></span>
+          }
+        </button>
+
+        <!-- Modo pantalla (TV de la oficina) — herramienta del motor -->
+        @if (herramientasZas) {
+          <button mat-icon-button matTooltip="Modo pantalla" class="tool-btn" (click)="navigateTo('pantalla')">
+            <mat-icon>tv</mat-icon>
+          </button>
+        }
+
+        <!-- Theme Toggle -->
+        <button
+          mat-icon-button
+          (click)="cycleTheme()"
+          [matTooltip]="'Tema: ' + themeService.mode()"
+          class="tool-btn theme-toggle">
+          @switch (themeService.mode()) {
+            @case ('dark') {
+              <mat-icon>dark_mode</mat-icon>
+            }
+            @case ('light') {
+              <mat-icon>light_mode</mat-icon>
+            }
+            @case ('system') {
+              <mat-icon>contrast</mat-icon>
+            }
+          }
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Footer -->
+    <app-site-footer></app-site-footer>
+  </div>
+
+  <!-- Herramientas del motor ZAS: pedido Pablo 2026-08-29 — fuera los FABs de
+       mutación (varita) y Evolution Hub (cohete); queda solo el lens de diff,
+       que aparece únicamente cuando hay cambios pendientes. -->
+  @if (herramientasZas) {
+    <app-alchemy-lens></app-alchemy-lens>
+  }
+
+  <!-- Búsqueda global (overlay Ctrl+K) -->
+  <app-global-search #buscador></app-global-search>
+
+  <!-- Asistente de voz (capa opcional: aparece solo si el producto tiene key) -->
+  <app-asistente-voz></app-asistente-voz>
+</div>

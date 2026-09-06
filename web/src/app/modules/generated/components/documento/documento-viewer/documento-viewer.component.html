@@ -1,0 +1,79 @@
+<div class="viewer-container">
+  <!-- Header -->
+  <div class="viewer-header">
+    <div class="header-left">
+      <mat-icon class="file-icon">{{ getFileIcon() }}</mat-icon>
+      <div class="file-info">
+        <h2 class="file-name">{{ data.nombre }}</h2>
+        <span class="file-meta">{{ data.extension }} - {{ data.fechaCarga | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button class="action-btn download" (click)="download()" matTooltip="Descargar">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button class="action-btn close" (click)="close()" matTooltip="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="viewer-content">
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Cargando documento...</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (!isLoading() && errorMessage()) {
+      <div class="error-state">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ errorMessage() }}</p>
+        <button mat-stroked-button (click)="download()">
+          <mat-icon>download</mat-icon>
+          Descargar archivo
+        </button>
+      </div>
+    }
+
+    <!-- PDF Preview -->
+    @if (!isLoading() && previewType() === 'pdf' && pdfSrc()) {
+      <iframe
+        class="pdf-viewer"
+        [src]="pdfSrc()"
+        type="application/pdf">
+      </iframe>
+    }
+
+    <!-- Image Preview -->
+    @if (!isLoading() && previewType() === 'image' && imageSrc()) {
+      <div class="image-container">
+        <img [src]="imageSrc()" alt="{{ data.nombre }}" class="image-viewer">
+      </div>
+    }
+
+    <!-- Text Preview -->
+    @if (!isLoading() && previewType() === 'text') {
+      <div class="text-container">
+        <pre class="text-viewer">{{ textContent() }}</pre>
+      </div>
+    }
+
+    <!-- No Preview Available -->
+    @if (!isLoading() && previewType() === 'none' && !errorMessage()) {
+      <div class="no-preview-state">
+        <mat-icon>visibility_off</mat-icon>
+        <h3>Vista previa no disponible</h3>
+        <p>Este tipo de archivo no se puede previsualizar</p>
+        <button mat-flat-button color="primary" (click)="download()">
+          <mat-icon>download</mat-icon>
+          Descargar archivo
+        </button>
+      </div>
+    }
+  </div>
+</div>

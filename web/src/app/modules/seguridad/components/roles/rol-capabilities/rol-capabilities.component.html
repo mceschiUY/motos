@@ -1,0 +1,105 @@
+<div class="dialog-container">
+  <!-- Header -->
+  <div class="dialog-header">
+    <div class="header-icon">
+      <mat-icon>vpn_key</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2 class="dialog-title">Capabilities del Rol</h2>
+      <p class="dialog-subtitle">{{ data.rol.nombre }}</p>
+    </div>
+    <div class="header-badge">
+      <span class="count-badge">{{ selectedCount() }} seleccionadas</span>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="onCancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-container">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar capabilities..."
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)">
+      @if (searchTerm()) {
+        <button class="search-clear" (click)="searchTerm.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="dialog-content">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando capabilities...</p>
+      </div>
+    } @else {
+      @for (group of filteredGroups(); track group.modulo) {
+        <div class="modulo-group">
+          <div class="modulo-header" (click)="toggleExpand(group)">
+            <mat-checkbox
+              [checked]="group.allSelected"
+              [indeterminate]="group.someSelected"
+              (change)="toggleModulo(group)"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+            <mat-icon class="expand-icon" [class.expanded]="group.expanded">
+              expand_more
+            </mat-icon>
+            <span class="modulo-name">{{ group.modulo }}</span>
+            <span class="modulo-count">
+              {{ getSelectedCount(group) }}/{{ group.capabilities.length }}
+            </span>
+          </div>
+
+          @if (group.expanded) {
+            <div class="capabilities-list">
+              @for (cap of group.capabilities; track cap.id) {
+                <div class="capability-item" (click)="toggleCapability(group, cap)">
+                  <mat-checkbox
+                    [checked]="cap.selected"
+                    (click)="$event.stopPropagation()">
+                  </mat-checkbox>
+                  <div class="capability-info">
+                    <span class="capability-name">{{ cap.nombre }}</span>
+                    <span class="capability-desc">{{ cap.descripcion }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (filteredGroups().length === 0) {
+        <div class="empty-state">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron capabilities</p>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Actions -->
+  <div class="dialog-actions">
+    <button mat-stroked-button class="btn-cancel" (click)="onCancel()" [disabled]="isSaving()">
+      Cancelar
+    </button>
+    <button mat-flat-button class="btn-submit" (click)="onSave()" [disabled]="isSaving() || isLoading()">
+      @if (isSaving()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>save</mat-icon>
+        <span>Guardar</span>
+      }
+    </button>
+  </div>
+</div>

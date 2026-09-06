@@ -1,0 +1,40 @@
+﻿<div class="home-view">
+
+  <div class="home-grid">
+    @for (e of entidades; track e.api) {
+      <div class="home-card">
+        <div class="home-card-header" [routerLink]="e.ruta">
+          <div class="home-card-icon"><mat-icon>{{ e.icon }}</mat-icon></div>
+          <div class="home-card-info">
+            <span class="home-card-title">{{ e.label }}</span>
+            <span class="home-card-modulo">{{ e.modulo }}</span>
+          </div>
+          <span class="home-card-total">{{ resumenDe(e.api)?.total ?? '—' }}</span>
+        </div>
+        @if (resumenDe(e.api); as r) {
+          @if (e.conEstado && r.porEstado.length > 0) {
+            <div class="home-dist">
+              @for (g of r.porEstado; track g.clave) {
+                <div class="dist-row">
+                  <span class="dist-label">{{ g.clave || '—' }}</span>
+                  <div class="dist-bar"><div class="dist-fill" [style.width.%]="(g.cantidad / maxDe(r.porEstado)) * 100"></div></div>
+                  <span class="dist-num">{{ g.cantidad }}</span>
+                </div>
+              }
+            </div>
+          }
+          @if (e.conMes && r.porMes.length > 0) {
+            <div class="home-meses">
+              @for (g of r.porMes; track g.clave) {
+                <div class="mes-col" [matTooltip]="g.clave + ': ' + g.cantidad">
+                  <div class="mes-track"><div class="mes-bar" [style.height.%]="(g.cantidad / maxDe(r.porMes)) * 100"></div></div>
+                  <span class="mes-label">{{ etiquetaMes(g.clave) }}</span>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+</div>

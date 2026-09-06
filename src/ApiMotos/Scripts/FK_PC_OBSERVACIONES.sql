@@ -1,0 +1,12 @@
+﻿-- FOREIGN KEYs de PC_OBSERVACIONES — generado por Forja; idempotente;
+-- lo ejecuta DbBootstrap DESPUÉS de crear todas las tablas.
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_PC_OBSERVACIONES_EnvioId')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_OBSERVACIONES')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_ENVIOS')
+    ALTER TABLE [PC_OBSERVACIONES] ADD CONSTRAINT [FK_PC_OBSERVACIONES_EnvioId]
+        FOREIGN KEY ([EnvioId]) REFERENCES [PC_ENVIOS]([Id]);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_PC_OBSERVACIONES_EnvioId')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_OBSERVACIONES')
+    CREATE INDEX [IX_PC_OBSERVACIONES_EnvioId] ON [PC_OBSERVACIONES]([EnvioId]);
+GO

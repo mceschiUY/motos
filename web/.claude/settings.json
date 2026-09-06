@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./dist/**)",
+      "Read(./.angular/**)",
+      "Read(./coverage/**)",
+      "Read(./e2e/reports/**)",
+      "Read(./tmp/**)",
+      "Read(./.git/**)"
+    ],
+    "allow": [],
+    "ask": []
+  }
+}

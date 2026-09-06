@@ -1,0 +1,108 @@
+// Piel Ratio 2026-08-29: delega en el core generado (mismo patrón que las
+// vistas del generador). Acá quedan SOLO las reglas propias de esta vista.
+@use 'generated/entity-list' as *;
+
+// mat-table sobre el patrón del core: th/td ya los estila el core (son elementos
+// th/td); solo se neutraliza el fondo propio de Material y la fila clickeable.
+.smart-table {
+  background: transparent;
+
+  ::ng-deep .mat-mdc-header-row,
+  ::ng-deep .mat-mdc-row { background: transparent; }
+  ::ng-deep .mat-mdc-row { cursor: pointer; }
+  ::ng-deep .mat-mdc-cell { border-bottom-color: var(--ceskia-border-subtle); }
+  ::ng-deep .mat-mdc-header-cell { border-bottom-color: var(--ceskia-border-default); }
+}
+
+// KPIs del header: el ícono viene envuelto en .stat-icon (el core estila el
+// mat-icon directo del stat-item) — mismo tratamiento tonal
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ceskia-radius-md);
+  background: var(--ceskia-accent-primary-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--ceskia-accent-primary); }
+}
+.stat-item.active .stat-icon {
+  background: var(--ceskia-accent-success-glow);
+  mat-icon { color: var(--ceskia-accent-success); }
+}
+.stat-content { display: flex; flex-direction: column; }
+
+// Identidad del usuario (primera columna)
+.user-info { display: flex; align-items: center; gap: var(--ceskia-space-3); }
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ceskia-radius-md);
+  background: var(--ceskia-accent-primary-glow);
+  color: var(--ceskia-accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--ceskia-font-semibold);
+  font-size: var(--ceskia-text-sm);
+  flex-shrink: 0;
+}
+.user-details { display: flex; flex-direction: column; gap: 2px; }
+.user-name { font-weight: var(--ceskia-font-semibold); color: var(--ceskia-text-primary); font-size: var(--ceskia-text-sm); }
+.user-username { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+
+.email-text { color: var(--ceskia-text-secondary); font-size: var(--ceskia-text-sm); }
+
+.perfil-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: 2px 9px;
+  background: var(--ceskia-accent-info-glow);
+  color: var(--ceskia-accent-info);
+  border-radius: var(--ceskia-radius-full);
+  font-size: var(--ceskia-text-xs);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--ceskia-radius-full);
+  font-size: 0.6875rem;
+  font-weight: var(--ceskia-font-medium);
+
+  &.active { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+  &.inactive { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+}
+
+.delete-option {
+  color: var(--ceskia-accent-danger) !important;
+  mat-icon { color: var(--ceskia-accent-danger); }
+}
+
+// Skeleton sobrio: pulso de opacidad sobre superficie elevada (sin shimmer)
+.skeleton-row { height: 52px; }
+.skeleton-cell { padding: 0.5625rem 1rem; border-bottom: 1px solid var(--ceskia-border-subtle); }
+.skeleton {
+  background: var(--ceskia-elevated);
+  border-radius: var(--ceskia-radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.skeleton-text { height: 14px; width: 100%; max-width: 150px; &.long { max-width: 200px; } }
+.skeleton-user { height: 36px; width: 36px; border-radius: var(--ceskia-radius-md); }
+.skeleton-chip { height: 22px; width: 100px; border-radius: var(--ceskia-radius-full); }
+.skeleton-badge { height: 22px; width: 60px; border-radius: var(--ceskia-radius-full); }
+.skeleton-actions { height: 30px; width: 110px; border-radius: var(--ceskia-radius-md); }
+
+// Empty state: el core ya estila mat-icon (círculo tonal), h3 y .empty-btn.primary
+.empty-state-cell { padding: 0 !important; border: none !important; }
+.empty-actions { display: flex; gap: var(--ceskia-space-3); flex-wrap: wrap; justify-content: center; }
+.empty-btn.secondary {
+  color: var(--ceskia-text-secondary);
+  border-color: var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-lg);
+}

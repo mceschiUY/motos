@@ -1,0 +1,39 @@
+﻿-- Script generado automáticamente para PC_OBSERVACIONES
+-- Crea la tabla si falta; si existe, agrega columnas faltantes (sin DROP).
+
+IF OBJECT_ID('PC_OBSERVACIONES', 'U') IS NULL
+BEGIN
+    PRINT 'Tabla PC_OBSERVACIONES no existe. Creando...';
+    CREATE TABLE [PC_OBSERVACIONES] (
+        [Id] INT IDENTITY(1,1) PRIMARY KEY,
+        [Texto] NVARCHAR(255) NOT NULL,
+        [FechaHora] DATETIME2 NOT NULL,
+        [Usuario] NVARCHAR(255) NOT NULL,
+        [EnvioId] INT NOT NULL
+    );
+    PRINT 'Tabla PC_OBSERVACIONES creada exitosamente';
+END
+ELSE
+BEGIN
+    PRINT 'Tabla PC_OBSERVACIONES ya existe. Verificando columnas...';
+    IF COL_LENGTH('PC_OBSERVACIONES', 'Texto') IS NULL
+    BEGIN
+        ALTER TABLE [PC_OBSERVACIONES] ADD [Texto] NVARCHAR(255) NOT NULL CONSTRAINT [DF_PC_OBSERVACIONES_Texto] DEFAULT N'';
+        PRINT 'Columna PC_OBSERVACIONES.Texto agregada';
+    END
+    IF COL_LENGTH('PC_OBSERVACIONES', 'FechaHora') IS NULL
+    BEGIN
+        ALTER TABLE [PC_OBSERVACIONES] ADD [FechaHora] DATETIME2 NOT NULL CONSTRAINT [DF_PC_OBSERVACIONES_FechaHora] DEFAULT GETUTCDATE();
+        PRINT 'Columna PC_OBSERVACIONES.FechaHora agregada';
+    END
+    IF COL_LENGTH('PC_OBSERVACIONES', 'Usuario') IS NULL
+    BEGIN
+        ALTER TABLE [PC_OBSERVACIONES] ADD [Usuario] NVARCHAR(255) NOT NULL CONSTRAINT [DF_PC_OBSERVACIONES_Usuario] DEFAULT N'';
+        PRINT 'Columna PC_OBSERVACIONES.Usuario agregada';
+    END
+    IF COL_LENGTH('PC_OBSERVACIONES', 'EnvioId') IS NULL
+    BEGIN
+        ALTER TABLE [PC_OBSERVACIONES] ADD [EnvioId] INT NOT NULL CONSTRAINT [DF_PC_OBSERVACIONES_EnvioId] DEFAULT 0;
+        PRINT 'Columna PC_OBSERVACIONES.EnvioId agregada';
+    END
+END

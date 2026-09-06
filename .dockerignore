@@ -1,0 +1,9 @@
+# Evita mandar al daemon de Docker cosas pesadas o innecesarias para el build.
+**/bin
+**/obj
+**/node_modules
+web/dist
+.angular
+.vs
+.git
+.github

@@ -1,0 +1,114 @@
+// CESKIA 2.0: barra utilitaria slim — texto xs, iconos chicos con el color de
+// cada red en reposo (tenue) y pleno al hover. Nada de bloques ni gradientes.
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ceskia-space-4);
+  min-height: 40px;
+  padding: var(--ceskia-space-1) var(--ceskia-space-6);
+  background: var(--ceskia-surface);
+  border-top: 1px solid var(--ceskia-border-subtle);
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  min-width: 0;
+}
+
+.footer-empresa {
+  font-size: var(--ceskia-text-xs);
+  font-weight: 600;
+  color: var(--ceskia-text-secondary);
+  white-space: nowrap;
+}
+
+.footer-sep {
+  color: var(--ceskia-text-muted);
+}
+
+.footer-copy {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-4);
+}
+
+.footer-dato {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-tertiary);
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--ceskia-accent-primary);
+  }
+
+  &.clickable {
+    cursor: pointer;
+    transition: color var(--ceskia-transition-fast);
+    &:hover { color: var(--ceskia-accent-primary); }
+  }
+}
+
+.footer-redes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.red-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--ceskia-radius-md);
+  cursor: pointer;
+  transition: var(--ceskia-transition-fast);
+  opacity: 0.75;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  // color de marca tenue en reposo, pleno + fondo tonal al hover
+  &.whatsapp  { color: #25d366; }
+  &.instagram { color: #dc2743; }
+  &.facebook  { color: #1877f2; }
+  &.linkedin  { color: #0a66c2; }
+  &.twitter   { color: #1da1f2; }
+  &.youtube   { color: #ff4444; }
+
+  &:hover {
+    opacity: 1;
+    background: var(--ceskia-hover);
+  }
+}
+
+@media (max-width: 767px) {
+  .site-footer {
+    padding: var(--ceskia-space-2) var(--ceskia-space-4);
+  }
+  .footer-dato { display: none; }  // en mobile solo empresa + redes
+}

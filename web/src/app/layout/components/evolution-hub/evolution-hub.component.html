@@ -1,0 +1,264 @@
+<!-- FAB Button -->
+@if (!hub.isOpen()) {
+  <button
+    class="evolution-fab"
+    (click)="hub.toggle()"
+    matTooltip="Evolution Hub"
+    matTooltipPosition="left"
+    [matBadge]="hub.summary()?.totalProposals || ''"
+    [matBadgeHidden]="!hub.hasProposals()"
+    matBadgeColor="accent"
+    matBadgeSize="small">
+    <mat-icon>rocket_launch</mat-icon>
+  </button>
+}
+
+<!-- Panel Overlay -->
+@if (hub.isOpen()) {
+  <div class="hub-overlay" (click)="hub.close()"></div>
+  <div class="hub-panel">
+    <!-- Header -->
+    <div class="hub-header">
+      <div class="hub-title">
+        <mat-icon class="title-icon">rocket_launch</mat-icon>
+        <div>
+          <h2>Evolution Hub</h2>
+          <span class="hub-subtitle">Propuestas inteligentes de evolución</span>
+        </div>
+      </div>
+      <div class="hub-actions">
+        <button mat-icon-button (click)="onRefresh()" matTooltip="Recargar propuestas" class="refresh-btn">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-icon-button (click)="hub.close()" matTooltip="Cerrar" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (hub.loadingState() === 'loading') {
+      <div class="hub-loading">
+        <mat-spinner diameter="40" color="accent"></mat-spinner>
+        <p>Analizando componentes generados...</p>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (hub.loadingState() === 'error') {
+      <div class="hub-error">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ hub.errorMessage() }}</p>
+        <button mat-flat-button color="accent" (click)="hub.loadProposals()">
+          <mat-icon>refresh</mat-icon>
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- Loaded Content -->
+    @if (hub.loadingState() === 'loaded' && hub.proposals()) {
+      <!-- Summary Bar -->
+      <div class="hub-summary">
+        <div class="summary-stat">
+          <span class="stat-value">{{ hub.summary()?.totalEntities }}</span>
+          <span class="stat-label">Entidades</span>
+        </div>
+        <div class="summary-stat">
+          <span class="stat-value">{{ hub.summary()?.totalProposals }}</span>
+          <span class="stat-label">Propuestas</span>
+        </div>
+        <div class="summary-stat highlight">
+          <span class="stat-value">{{ hub.summary()?.highPriority }}</span>
+          <span class="stat-label">Alta Prioridad</span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="hub-filters">
+        <div class="filter-group">
+          <span class="filter-label">Entidad:</span>
+          <button
+            class="filter-chip"
+            [class.active]="!hub.filterEntity()"
+            (click)="hub.setFilterEntity(null)">
+            Todas
+          </button>
+          @for (entity of hub.entityNames(); track entity) {
+            <button
+              class="filter-chip"
+              [class.active]="hub.filterEntity() === entity"
+              (click)="hub.setFilterEntity(entity)">
+              {{ entity }}
+            </button>
+          }
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Prioridad:</span>
+          <button class="filter-chip" [class.active]="!hub.filterPriority()" (click)="hub.setFilterPriority(null)">Todas</button>
+          <button class="filter-chip priority-high" [class.active]="hub.filterPriority() === 'high'" (click)="hub.setFilterPriority('high')">Alta</button>
+          <button class="filter-chip priority-medium" [class.active]="hub.filterPriority() === 'medium'" (click)="hub.setFilterPriority('medium')">Media</button>
+          <button class="filter-chip priority-low" [class.active]="hub.filterPriority() === 'low'" (click)="hub.setFilterPriority('low')">Baja</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="hub-tabs">
+        <button
+          class="tab-btn"
+          [class.active]="hub.activeTab() === 0"
+          (click)="hub.setActiveTab(0)">
+          <mat-icon>speed</mat-icon>
+          Optimización
+          <span class="tab-count">{{ hub.filteredOptimization().length }}</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="hub.activeTab() === 1"
+          (click)="hub.setActiveTab(1)">
+          <mat-icon>extension</mat-icon>
+          Expansión
+          <span class="tab-count">{{ hub.filteredExpansion().length }}</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="hub.activeTab() === 2"
+          (click)="hub.setActiveTab(2)">
+          <mat-icon>layers</mat-icon>
+          Transversal
+          <span class="tab-count">{{ hub.filteredCrossCutting().length }}</span>
+        </button>
+      </div>
+
+      <!-- Proposals Grid -->
+      <div class="hub-proposals">
+        @if (hub.activeTab() === 0) {
+          @if (hub.filteredOptimization().length === 0) {
+            <div class="no-proposals">
+              <mat-icon>check_circle</mat-icon>
+              <p>No hay propuestas de optimización pendientes</p>
+            </div>
+          }
+          @for (proposal of hub.filteredOptimization(); track proposal.id; let i = $index) {
+            <div class="proposal-card" [class]="getPriorityClass(proposal.priority)" [style.animation-delay]="(i * 50) + 'ms'">
+              <div class="card-priority-bar"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <mat-icon class="card-icon">{{ proposal.icon }}</mat-icon>
+                  <div class="card-titles">
+                    <h4>{{ proposal.featureName }}</h4>
+                    @if (proposal.entityName) {
+                      <span class="card-entity">{{ proposal.entityName }}</span>
+                    }
+                  </div>
+                  <span class="card-priority-badge">{{ proposal.priority }}</span>
+                </div>
+                <p class="card-description">{{ proposal.description }}</p>
+                <div class="card-meta">
+                  <span class="card-impact">
+                    <mat-icon>trending_up</mat-icon>
+                    {{ proposal.estimatedImpact }}
+                  </span>
+                </div>
+                <div class="card-actions">
+                  <button class="materialize-btn" (click)="onMaterialize(proposal)" matRipple>
+                    <mat-icon>auto_fix_high</mat-icon>
+                    Materializar
+                  </button>
+                  <button class="board-btn" (click)="onAddToBoard(proposal)" matRipple matTooltip="Agregar al Evolution Board">
+                    <mat-icon>dashboard_customize</mat-icon>
+                    Board
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        @if (hub.activeTab() === 1) {
+          @if (hub.filteredExpansion().length === 0) {
+            <div class="no-proposals">
+              <mat-icon>check_circle</mat-icon>
+              <p>No hay propuestas de expansión pendientes</p>
+            </div>
+          }
+          @for (proposal of hub.filteredExpansion(); track proposal.id; let i = $index) {
+            <div class="proposal-card" [class]="getPriorityClass(proposal.priority)" [style.animation-delay]="(i * 50) + 'ms'">
+              <div class="card-priority-bar"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <mat-icon class="card-icon">{{ proposal.icon }}</mat-icon>
+                  <div class="card-titles">
+                    <h4>{{ proposal.featureName }}</h4>
+                    @if (proposal.entityName) {
+                      <span class="card-entity">{{ proposal.entityName }}</span>
+                    }
+                  </div>
+                  <span class="card-priority-badge">{{ proposal.priority }}</span>
+                </div>
+                <p class="card-description">{{ proposal.description }}</p>
+                <div class="card-meta">
+                  <span class="card-impact">
+                    <mat-icon>trending_up</mat-icon>
+                    {{ proposal.estimatedImpact }}
+                  </span>
+                </div>
+                <div class="card-actions">
+                  <button class="materialize-btn" (click)="onMaterialize(proposal)" matRipple>
+                    <mat-icon>auto_fix_high</mat-icon>
+                    Materializar
+                  </button>
+                  <button class="board-btn" (click)="onAddToBoard(proposal)" matRipple matTooltip="Agregar al Evolution Board">
+                    <mat-icon>dashboard_customize</mat-icon>
+                    Board
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        @if (hub.activeTab() === 2) {
+          @if (hub.filteredCrossCutting().length === 0) {
+            <div class="no-proposals">
+              <mat-icon>check_circle</mat-icon>
+              <p>No hay propuestas transversales pendientes</p>
+            </div>
+          }
+          @for (proposal of hub.filteredCrossCutting(); track proposal.id; let i = $index) {
+            <div class="proposal-card cross-cutting" [class]="getPriorityClass(proposal.priority)" [style.animation-delay]="(i * 50) + 'ms'">
+              <div class="card-priority-bar"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <mat-icon class="card-icon">{{ proposal.icon }}</mat-icon>
+                  <div class="card-titles">
+                    <h4>{{ proposal.featureName }}</h4>
+                    <span class="card-entity">Toda la aplicación</span>
+                  </div>
+                  <span class="card-priority-badge">{{ proposal.priority }}</span>
+                </div>
+                <p class="card-description">{{ proposal.description }}</p>
+                <div class="card-meta">
+                  <span class="card-impact">
+                    <mat-icon>trending_up</mat-icon>
+                    {{ proposal.estimatedImpact }}
+                  </span>
+                </div>
+                <div class="card-actions">
+                  <button class="materialize-btn" (click)="onMaterialize(proposal)" matRipple>
+                    <mat-icon>auto_fix_high</mat-icon>
+                    Materializar
+                  </button>
+                  <button class="board-btn" (click)="onAddToBoard(proposal)" matRipple matTooltip="Agregar al Evolution Board">
+                    <mat-icon>dashboard_customize</mat-icon>
+                    Board
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,68 @@
+﻿<div class="ficha-view">
+  @if (cargando()) {
+    <div class="ficha-cargando">Cargando…</div>
+  } @else if (!item()) {
+    <div class="ficha-cargando">No se encontró el registro <button mat-button (click)="volver()">← Volver</button></div>
+  } @else {
+
+    <!-- Membrete: solo existe en papel (PDF con marca) -->
+    <app-membrete-impresion [titulo]="titulo()" tipo="Observación"></app-membrete-impresion>
+
+    <!-- ═══ Encabezado: título, estado, acciones ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo">
+        <h1>{{ titulo() }}</h1>
+      </div>
+      <div class="ficha-acciones">
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir / guardar PDF"><mat-icon>picture_as_pdf</mat-icon></button>
+        <button mat-icon-button (click)="documentos()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
+        <button mat-icon-button (click)="editar()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button class="peligro" (click)="eliminar()" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ Datos ═══ -->
+    <section class="ficha-datos">
+      <h2>Datos</h2>
+      <div class="datos-grid">
+        <div class="dato">
+          <span class="dato-label">Texto</span>
+          <span class="dato-valor">{{ $any(item()).texto }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Fecha Hora</span>
+          <span class="dato-valor">{{ $any(item()).fechaHora | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Usuario</span>
+          <span class="dato-valor">{{ $any(item()).usuario }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Envio</span>
+          <span class="dato-valor">{{ $any(item()).envioDisplay || $any(item()).envioId }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Fotos: los Documentos con imagen del registro; sin fotos, sin sección ═══ -->
+    <app-foto-galeria [relacionId]="id" relacionNombre="Observacion"></app-foto-galeria>
+
+    <!-- ═══ Historia (auditoría) ═══ -->
+    @if (historia().length > 0) {
+      <section class="ficha-historia">
+        <h2>Historia</h2>
+        <div class="historia-linea">
+          @for (e of historia(); track $index) {
+            <div class="evento" [class.fallo]="!e.ok">
+              <span class="evento-dot"></span>
+              <span class="evento-que">{{ e.que }}</span>
+              <span class="evento-quien">{{ e.quien }}</span>
+              <span class="evento-fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

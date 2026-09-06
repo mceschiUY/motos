@@ -1,0 +1,887 @@
+// Compartido del core (A1.1): antes se estampaba por entidad. Es la UNION de
+// las variantes por vista: los selectores de vistas ausentes no matchean DOM.
+// ═══════════════════════════════════════════════════════════════════════════
+// 2026 CESKIA - Generated Multi-View List Component Styles
+// ═══════════════════════════════════════════════════════════════════════════
+
+.kosmos-page {
+  padding: 1rem;
+  min-height: 100vh;
+  background: var(--ceskia-base);
+
+  // Density Compact Mode
+  &.density-compact {
+    .page-header {
+      margin-bottom: 0.75rem;
+      .header-icon { width: 36px; height: 36px; }
+      .page-title { font-size: 1.25rem; }
+      .page-subtitle { font-size: 0.75rem; }
+    }
+
+    .content-card { padding: 0.75rem; }
+
+    .smart-table {
+      td, th { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+    }
+
+    .item-card {
+      padding: 0.75rem;
+      .card-header h3 { font-size: 0.9rem; }
+      .card-details { font-size: 0.8rem; }
+    }
+
+    .master-detail-container {
+      .master-item { padding: 0.5rem 0.75rem; }
+      .detail-panel { padding: 1rem; }
+    }
+
+    .with-relations-container {
+      .wr-list-item { padding: 0.5rem 0.75rem; }
+      .wr-detail-panel { padding: 1rem; }
+    }
+
+    .timeline-item {
+      .timeline-card { padding: 0.75rem; }
+    }
+  }
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  // CESKIA 2.0: ícono tonal (acento al 12%) en vez del bloque sólido — más fino
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--ceskia-accent-primary-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ceskia-accent-primary);
+  }
+
+  .page-title {
+    margin: 0;
+    color: var(--ceskia-text-primary);
+    font-family: var(--ceskia-font-display);
+    font-size: 1.375rem;
+    font-weight: var(--ceskia-font-semibold);
+    letter-spacing: var(--ceskia-tracking-tight);
+  }
+
+  .page-subtitle {
+    margin: 0;
+    color: var(--ceskia-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 1rem;
+
+    .stat-item {
+      background: var(--ceskia-surface);
+      border: 1px solid var(--ceskia-border-default);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      // los iconos de los KPIs también llevan el acento (nada de blanco plano)
+      > mat-icon { color: var(--ceskia-accent-primary); }
+
+      .stat-value {
+        font-family: var(--ceskia-font-display);
+        font-variant-numeric: tabular-nums;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--ceskia-text-primary);
+      }
+      .stat-label {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: var(--ceskia-tracking-wide);
+        color: var(--ceskia-text-tertiary);
+      }
+    }
+  }
+}
+
+.content-card {
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+// Smart Toolbar
+.smart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--ceskia-border-default);
+
+  .search-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--ceskia-base);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+
+    .search-icon { color: var(--ceskia-text-secondary); margin-right: 0.5rem; }
+    .search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--ceskia-text-primary);
+      outline: none;
+    }
+    .search-clear {
+      background: transparent;
+      border: none;
+      color: var(--ceskia-text-secondary);
+      cursor: pointer;
+    }
+  }
+
+  .view-switcher {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--ceskia-base);
+    border-radius: 8px;
+    padding: 0.25rem;
+
+    .view-btn {
+      &.active {
+        background: var(--ceskia-accent-primary);
+        color: var(--ceskia-text-inverse);
+      }
+    }
+  }
+}
+
+// Bulk Actions Toolbar
+.bulk-actions-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--ceskia-accent-primary-glow);
+  border-bottom: 1px solid var(--ceskia-accent-primary);
+
+  .bulk-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    .bulk-count { color: var(--ceskia-text-primary); font-weight: 500; }
+  }
+
+  .bulk-actions {
+    display: flex;
+    gap: 0.5rem;
+
+    .bulk-btn {
+      &.delete { color: #ef4444; }
+    }
+  }
+}
+
+// Table View
+.table-wrapper {
+  overflow-x: auto;
+
+  .smart-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    // Encabezados discretos (uppercase xs) y jerarquía en celdas: la primera
+    // columna (col-primary) es el dato clave; el resto acompaña en secundario.
+    th {
+      color: var(--ceskia-text-tertiary);
+      font-weight: 600;
+      font-size: var(--ceskia-text-xs);
+      text-transform: uppercase;
+      letter-spacing: var(--ceskia-tracking-wide);
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--ceskia-border-default);
+      white-space: nowrap;
+    }
+    td {
+      color: var(--ceskia-text-secondary);
+      padding: 0.5625rem 1rem;                 // filas ~40px: densidad de trabajo
+      border-bottom: 1px solid var(--ceskia-border-subtle);
+      font-variant-numeric: tabular-nums;      // montos que no bailan entre filas
+    }
+    td.col-primary { color: var(--ceskia-text-primary); font-weight: 600; }
+
+    tr {
+      transition: background var(--ceskia-transition-fast);
+      &:hover { background: var(--ceskia-hover); }
+      // Selección con barra de acento a la izquierda (no fondo teñido entero)
+      &.selected {
+        background: var(--ceskia-accent-primary-glow);
+        box-shadow: inset 2px 0 0 var(--ceskia-accent-primary);
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.25rem;
+
+      // CESKIA 2.0: iconos CON color en reposo (antes eran blancos/planos) +
+      // fondo tonal al hover. El color comunica la acción antes del hover.
+      .action-btn {
+        transition: color var(--ceskia-transition-fast), background var(--ceskia-transition-fast);
+        color: var(--ceskia-accent-primary);
+        border-radius: var(--ceskia-radius-md);
+
+        &:hover { background: var(--ceskia-accent-primary-glow); }
+
+        &.edit {
+          color: var(--ceskia-accent-info);
+          &:hover { background: var(--ceskia-accent-info-glow); }
+        }
+        &.delete {
+          color: var(--ceskia-accent-danger);
+          &:hover { background: var(--ceskia-accent-danger-glow); }
+        }
+        &.more {
+          color: var(--ceskia-text-tertiary);
+          &:hover { background: var(--ceskia-hover); color: var(--ceskia-text-primary); }
+        }
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--ceskia-text-secondary);
+
+  // CESKIA 2.0: icono en círculo tonal con acento (no gris apagado)
+  mat-icon {
+    font-size: 2rem;
+    width: 4.5rem;
+    height: 4.5rem;
+    line-height: 4.5rem;
+    margin-bottom: 1rem;
+    border-radius: var(--ceskia-radius-full);
+    background: var(--ceskia-accent-primary-glow);
+    color: var(--ceskia-accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  h3 { margin: 0 0 1rem; color: var(--ceskia-text-primary); font-family: var(--ceskia-font-display); }
+
+  .empty-btn {
+    &.primary {
+      background: var(--ceskia-accent-primary);
+      color: var(--ceskia-text-inverse);
+      border-radius: var(--ceskia-radius-lg);
+      transition: var(--ceskia-transition-fast);
+      &:hover { background: var(--ceskia-accent-primary-hover); box-shadow: var(--ceskia-shadow-md); }
+    }
+  }
+}
+
+// Cards View
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.item-card {
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: var(--ceskia-transition-fast);
+
+  // CESKIA 2.0: lift sutil + borde acento (movimiento funcional, no rebote)
+  &:hover {
+    border-color: var(--ceskia-accent-primary);
+    box-shadow: var(--ceskia-shadow-md);
+    transform: translateY(-1px);
+  }
+
+  &.selected {
+    border-color: var(--ceskia-accent-primary);
+    background: var(--ceskia-accent-primary-glow);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-title h3 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--ceskia-text-primary);
+  }
+
+  .card-status {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: var(--ceskia-radius-full);
+
+    &.status-active { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+    &.status-inactive { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+  }
+
+  .card-details {
+    .detail-item {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      font-size: 0.8125rem;
+
+      .detail-label { color: var(--ceskia-text-tertiary); }
+      .detail-value { color: var(--ceskia-text-primary); font-variant-numeric: tabular-nums; }
+    }
+  }
+}
+
+// ═══ Kanban operativo ═══
+.kanban-board-i { display: flex; gap: var(--ceskia-space-4); align-items: flex-start; overflow-x: auto; padding: var(--ceskia-space-6); }
+.kanban-col { flex: 1 1 0; min-width: 230px; background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-lg); }
+.kanban-col-header { display: flex; align-items: center; gap: var(--ceskia-space-2); padding: var(--ceskia-space-3) var(--ceskia-space-4); border-bottom: 1px solid var(--ceskia-border-subtle); }
+.kanban-col-title { font-weight: var(--ceskia-font-semibold); font-size: var(--ceskia-text-sm); text-transform: capitalize; }
+.kanban-col-count { margin-left: auto; font-size: var(--ceskia-text-xs); font-variant-numeric: tabular-nums; color: var(--ceskia-text-secondary); background: var(--ceskia-surface); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-full); padding: 1px 8px; }
+.kanban-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.estado-0 { background: var(--ceskia-accent-info); }
+.estado-1 { background: var(--ceskia-accent-primary); }
+.estado-2 { background: var(--ceskia-accent-warning); }
+.estado-3 { background: var(--ceskia-accent-success); }
+.estado-4 { background: var(--ceskia-accent-danger); }
+.estado-5 { background: var(--ceskia-text-tertiary); }
+.estado-off { background: var(--ceskia-border-strong); }
+.kanban-col-list { min-height: 120px; padding: var(--ceskia-space-3); display: flex; flex-direction: column; gap: var(--ceskia-space-3); }
+.kanban-card { position: relative; background: var(--ceskia-surface); border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-md); padding: var(--ceskia-space-3) var(--ceskia-space-4); cursor: grab; transition: var(--ceskia-transition-fast); }
+.kanban-card:hover { border-color: var(--ceskia-accent-primary); box-shadow: var(--ceskia-shadow-sm); transform: translateY(-1px); }
+.kanban-card:hover .kanban-card-edit { opacity: 1; }
+.kanban-card-title { font-weight: var(--ceskia-font-medium); font-size: var(--ceskia-text-sm); }
+.kanban-card-sub { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); margin-top: 2px; }
+.kanban-card-edit { position: absolute; top: 2px; right: 2px; opacity: 0; transform: scale(.8); }
+.kanban-col-empty { text-align: center; color: var(--ceskia-text-muted); font-size: var(--ceskia-text-xs); padding: var(--ceskia-space-4) 0; }
+.kanban-pipeline { display: flex; align-items: baseline; gap: var(--ceskia-space-3); padding: var(--ceskia-space-4) var(--ceskia-space-6) 0; }
+.pipeline-label { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary); }
+.pipeline-total { font-family: var(--ceskia-font-display); font-variant-numeric: tabular-nums; font-size: var(--ceskia-text-2xl); font-weight: var(--ceskia-font-semibold); color: var(--ceskia-accent-primary); }
+.kanban-col-monto { margin-left: auto; font-size: var(--ceskia-text-xs); font-weight: var(--ceskia-font-semibold); color: var(--ceskia-accent-primary); }
+.kanban-col-monto + .kanban-col-count { margin-left: var(--ceskia-space-2); }
+.kanban-card-monto { margin-top: 4px; font-size: var(--ceskia-text-sm); font-weight: var(--ceskia-font-semibold); font-variant-numeric: tabular-nums; color: var(--ceskia-accent-primary); }
+.cdk-drag-preview.kanban-card { box-shadow: var(--ceskia-shadow-lg); }
+.cdk-drag-placeholder { opacity: .25; }
+.kanban-col-list.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) { transition: transform 250ms cubic-bezier(0, 0, .2, 1); }
+
+
+// ═══ Calendario (agenda mensual) ═══
+.cal-view { padding: var(--ceskia-space-6); }
+.cal-header { display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-4); margin-bottom: var(--ceskia-space-4); }
+.cal-titulo { margin: 0; font-weight: var(--ceskia-font-semibold); min-width: 200px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow { margin-bottom: 2px; span { text-align: center; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); padding: var(--ceskia-space-2) 0; text-transform: uppercase; letter-spacing: .06em; } }
+.cal-celda { min-height: 92px; background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-sm); padding: var(--ceskia-space-2); display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.cal-celda.fuera { opacity: .38; }
+.cal-celda.hoy { border-color: var(--ceskia-accent-primary); box-shadow: inset 0 0 0 1px var(--ceskia-accent-primary); }
+.cal-num { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.cal-celda.hoy .cal-num { color: var(--ceskia-accent-primary); font-weight: var(--ceskia-font-semibold); }
+.cal-chip { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-primary); background: var(--ceskia-surface); border-left: 3px solid var(--ceskia-accent-info); border-radius: var(--ceskia-radius-sm); padding: 2px 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-chip:hover { background: var(--ceskia-hover); }
+.cal-chip.estado-0 { border-left-color: var(--ceskia-accent-info); }
+.cal-chip.estado-1 { border-left-color: var(--ceskia-accent-primary); }
+.cal-chip.estado-2 { border-left-color: var(--ceskia-accent-warning); }
+.cal-chip.estado-3 { border-left-color: var(--ceskia-accent-success); }
+.cal-chip.estado-4 { border-left-color: var(--ceskia-accent-danger); }
+.cal-chip.estado-5 { border-left-color: var(--ceskia-text-tertiary); }
+.cal-chip.estado-off { border-left-color: var(--ceskia-border-strong); }
+
+
+// ═══ Gantt / banda temporal ═══
+.gantt-view { padding: var(--ceskia-space-6); }
+.gantt-leyenda { text-align: right; font-size: var(--ceskia-text-xs); color: var(--ceskia-accent-warning); margin-bottom: var(--ceskia-space-2); }
+.gantt-fila { display: flex; align-items: center; gap: var(--ceskia-space-3); margin-bottom: var(--ceskia-space-2); }
+.gantt-label { width: 220px; min-width: 220px; font-size: var(--ceskia-text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.gantt-label:hover { color: var(--ceskia-accent-primary); }
+.gantt-track { position: relative; flex: 1; height: 26px; background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-sm); overflow: hidden; }
+.gantt-barra { position: absolute; top: 5px; bottom: 5px; background: var(--ceskia-accent-primary); border-radius: var(--ceskia-radius-full); cursor: pointer; opacity: .85; transition: var(--ceskia-transition-fast); }
+.gantt-barra:hover { opacity: 1; box-shadow: var(--ceskia-shadow-sm); }
+.gantt-barra.vencida { background: var(--ceskia-text-tertiary); }
+.gantt-hoy { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ceskia-accent-warning); z-index: 1; }
+
+
+// Timeline View
+.timeline-container {
+  padding: 1rem;
+}
+
+.timeline-group {
+  margin-bottom: 2rem;
+
+  .timeline-header {
+    margin-bottom: 1rem;
+
+    .timeline-period {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--ceskia-text-primary);
+
+      .period-label { font-family: var(--ceskia-font-display); font-weight: 600; font-size: 1rem; letter-spacing: var(--ceskia-tracking-tight); }
+      .period-count { color: var(--ceskia-text-tertiary); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+    }
+  }
+
+  .timeline-items {
+    position: relative;
+    padding-left: 2rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0.75rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--ceskia-border-default);
+    }
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 1rem;
+
+    .timeline-dot {
+      position: absolute;
+      left: -1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: var(--ceskia-surface);
+      border: 2px solid var(--ceskia-border-default);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon { font-size: 0.75rem; width: 0.75rem; height: 0.75rem; }
+
+      &.status-active { border-color: var(--ceskia-accent-success); color: var(--ceskia-accent-success); }
+      &.status-inactive { border-color: var(--ceskia-accent-danger); color: var(--ceskia-accent-danger); }
+    }
+
+    .timeline-card {
+      background: var(--ceskia-surface);
+      border: 1px solid var(--ceskia-border-default);
+      border-radius: 8px;
+      padding: 1rem;
+
+      .tl-card-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+
+        .tl-card-name { font-weight: 600; color: var(--ceskia-text-primary); }
+        .tl-card-status {
+          font-size: 0.75rem;
+          padding: 2px 8px;
+          border-radius: 4px;
+
+          &.status-active { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+          &.status-inactive { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+        }
+      }
+
+      .tl-card-body {
+        .tl-card-field {
+          display: flex;
+          gap: 0.5rem;
+          padding: 0.25rem 0;
+          font-size: 0.875rem;
+          color: var(--ceskia-text-secondary);
+
+          .field-label { color: var(--ceskia-text-secondary); }
+        }
+      }
+
+      .tl-card-actions {
+        display: flex;
+        gap: 0.25rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--ceskia-border-default);
+      }
+    }
+  }
+}
+
+// Master-Detail View
+.master-detail-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1rem;
+  height: calc(100vh - 300px);
+  min-height: 400px;
+
+  .master-list {
+    background: var(--ceskia-surface);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: 8px;
+    overflow-y: auto;
+
+    .master-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--ceskia-border-subtle);
+      cursor: pointer;
+      transition: background var(--ceskia-transition-fast);
+
+      // CESKIA 2.0: hover neutro (el acento queda solo para la selección)
+      &:hover { background: var(--ceskia-hover); }
+      &.selected { background: var(--ceskia-accent-primary-glow); box-shadow: inset 2px 0 0 var(--ceskia-accent-primary); }
+
+      .master-item-title {
+        font-weight: 600;
+        color: var(--ceskia-text-primary);
+        margin-bottom: 0.25rem;
+      }
+
+      .master-item-subtitle {
+        font-size: 0.875rem;
+        color: var(--ceskia-text-secondary);
+      }
+    }
+  }
+
+  .detail-panel {
+    background: var(--ceskia-surface);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: 8px;
+    padding: 1.5rem;
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--ceskia-border-default);
+
+      h2 { margin: 0; color: var(--ceskia-text-primary); }
+    }
+
+    .no-selection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--ceskia-text-secondary);
+
+      mat-icon { font-size: 3rem; width: 3rem; height: 3rem; margin-bottom: 1rem; }
+    }
+  }
+}
+
+// With-Relations View
+.with-relations-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+  height: calc(100vh - 300px);
+  min-height: 500px;
+
+  .wr-list-panel {
+    background: var(--ceskia-surface);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .wr-list-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--ceskia-border-default);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h3 { margin: 0; font-size: 0.875rem; font-weight: 600; }
+      // contador tonal (el bloque sólido pesaba de más)
+      .wr-count {
+        background: var(--ceskia-accent-primary-glow);
+        color: var(--ceskia-accent-primary);
+        padding: 0.125rem 0.5rem;
+        border-radius: var(--ceskia-radius-full);
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+
+    .wr-list-items {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .wr-list-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--ceskia-border-subtle);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background var(--ceskia-transition-fast);
+
+      &:hover { background: var(--ceskia-hover); }
+      &.selected {
+        background: var(--ceskia-accent-primary-glow);
+        box-shadow: inset 2px 0 0 var(--ceskia-accent-primary);
+      }
+
+      .wr-item-content {
+        flex: 1;
+        .wr-item-title { font-weight: 500; color: var(--ceskia-text-primary); }
+        .wr-item-subtitle { font-size: 0.8rem; color: var(--ceskia-text-secondary); }
+      }
+
+      .wr-item-arrow { color: var(--ceskia-text-secondary); }
+    }
+  }
+
+  .wr-detail-panel {
+    background: var(--ceskia-surface);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: 8px;
+    padding: 1.5rem;
+    overflow-y: auto;
+
+    .wr-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--ceskia-border-default);
+
+      h2 { margin: 0; font-size: 1.25rem; }
+    }
+
+    .wr-detail-info {
+      margin-bottom: 1.5rem;
+    }
+
+    .wr-relations {
+      h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        color: var(--ceskia-text-primary);
+
+        mat-icon { font-size: 1.25rem; width: 1.25rem; height: 1.25rem; }
+      }
+
+      .relation-tabs {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--ceskia-border-default);
+      }
+
+      .relation-tab-content {
+        .relation-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+
+          h3 { margin: 0; font-size: 0.9rem; }
+        }
+
+        .relation-table-wrapper {
+          overflow-x: auto;
+
+          .relation-table {
+            width: 100%;
+            background: var(--ceskia-base);
+
+            th.mat-header-cell {
+              font-weight: 600;
+              font-size: 0.75rem;
+              text-transform: capitalize;
+              color: var(--ceskia-text-secondary);
+              padding: 0.5rem 0.75rem;
+            }
+
+            td.mat-cell {
+              padding: 0.5rem 0.75rem;
+              font-size: 0.85rem;
+              color: var(--ceskia-text-primary);
+            }
+
+            tr.mat-row:hover {
+              background: var(--ceskia-hover);
+            }
+          }
+        }
+
+        .relation-empty {
+          text-align: center;
+          padding: 2rem;
+          color: var(--ceskia-text-secondary);
+
+          mat-icon { font-size: 2rem; width: 2rem; height: 2rem; margin-bottom: 0.5rem; }
+        }
+      }
+    }
+
+    .wr-no-selection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--ceskia-text-secondary);
+
+      mat-icon { font-size: 3rem; width: 3rem; height: 3rem; margin-bottom: 1rem; }
+    }
+  }
+}
+
+// Floating Actions
+.floating-actions {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1000;
+
+  // Rediseño 2026-08-29 (pedido Pablo): CUADRADOS con esquinas suaves, no
+  // círculos. El "+" (fab-primary) es el ÚNICO relleno con el azul — con los
+  // bordes neutros del chrome ahora resalta; el resto va sobrio en superficie.
+  .fab-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--ceskia-radius-lg);
+    border: 1px solid var(--ceskia-border-default);
+    background: var(--ceskia-elevated);
+    color: var(--ceskia-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--ceskia-shadow-md);
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: var(--ceskia-text-primary);
+      border-color: var(--ceskia-border-strong);
+    }
+
+    &.fab-primary {
+      background: var(--ceskia-accent-primary);
+      border-color: var(--ceskia-accent-primary);
+      color: #ffffff;
+      width: 48px;
+      height: 48px;
+      box-shadow: var(--ceskia-shadow-lg);
+
+      &:hover {
+        background: var(--ceskia-accent-primary-hover);
+        border-color: var(--ceskia-accent-primary-hover);
+        color: #ffffff;
+      }
+    }
+
+    &.fab-secondary {
+      background: var(--ceskia-elevated);
+      color: var(--ceskia-text-secondary);
+    }
+
+    &.fab-menu {
+      background: var(--ceskia-elevated);
+      color: var(--ceskia-text-secondary);
+    }
+
+    &.fab-exit {
+      background: var(--ceskia-elevated);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: var(--ceskia-accent-danger);
+
+      &:hover {
+        background: var(--ceskia-accent-danger-glow);
+        border-color: var(--ceskia-accent-danger);
+        color: var(--ceskia-accent-danger);
+      }
+    }
+  }
+
+  .fab-expandable {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.2s ease;
+  }
+
+  &.expanded .fab-expandable {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+// ═══ CESKIA 2.0: acciones con color en TODAS las vistas ═══
+// (cards, timeline, master-detail, with-relations — la tabla ya tiene su regla
+// más específica con los mismos valores). El color comunica antes del hover.
+.action-btn {
+  color: var(--ceskia-accent-primary);
+  border-radius: var(--ceskia-radius-md);
+  transition: color var(--ceskia-transition-fast), background var(--ceskia-transition-fast);
+
+  &:hover { background: var(--ceskia-accent-primary-glow); }
+
+  &.edit {
+    color: var(--ceskia-accent-info);
+    &:hover { background: var(--ceskia-accent-info-glow); }
+  }
+  &.delete {
+    color: var(--ceskia-accent-danger);
+    &:hover { background: var(--ceskia-accent-danger-glow); }
+  }
+  &.more {
+    color: var(--ceskia-text-tertiary);
+    &:hover { background: var(--ceskia-hover); color: var(--ceskia-text-primary); }
+  }
+}

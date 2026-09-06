@@ -1,0 +1,254 @@
+// Piel Ratio 2026-08-29: vista especial (asignación de capabilities por módulo)
+// sobre la base del core generado (patrón entity-form), solo tokens var(--ceskia-*).
+@use 'generated/entity-form' as *;
+
+.dialog-container { max-width: 700px; max-height: 80vh; }
+
+// Header con ícono a la izquierda + contador de selección
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-4);
+}
+.header-icon { margin: 0; flex-shrink: 0; }
+.header-text { flex: 1; }
+
+.dialog-title {
+  margin: 0;
+  color: var(--ceskia-text-primary);
+  font-family: var(--ceskia-font-display);
+  font-size: var(--ceskia-text-md);
+  font-weight: var(--ceskia-font-semibold);
+  letter-spacing: var(--ceskia-tracking-tight);
+}
+
+.header-badge {
+  margin-right: var(--ceskia-space-8);
+
+  .count-badge {
+    background: var(--ceskia-accent-primary-glow);
+    color: var(--ceskia-accent-primary);
+    padding: 2px 10px;
+    border-radius: var(--ceskia-radius-full);
+    font-size: var(--ceskia-text-xs);
+    font-weight: var(--ceskia-font-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: var(--ceskia-space-2);
+  right: var(--ceskia-space-2);
+  color: var(--ceskia-text-tertiary);
+
+  &:hover { color: var(--ceskia-text-primary); background: var(--ceskia-hover); }
+}
+
+// Buscador: mismo pill que el smart-toolbar del core de listas
+.search-section {
+  padding: var(--ceskia-space-4) var(--ceskia-space-6);
+  border-bottom: 1px solid var(--ceskia-border-default);
+  background: var(--ceskia-surface);
+  flex-shrink: 0;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  background: var(--ceskia-base);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-md);
+  padding: var(--ceskia-space-2) var(--ceskia-space-4);
+}
+
+.search-icon { color: var(--ceskia-text-secondary); margin-right: var(--ceskia-space-2); }
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--ceskia-text-primary);
+  font-size: var(--ceskia-text-sm);
+  outline: none;
+
+  &::placeholder { color: var(--ceskia-text-tertiary); }
+}
+
+.search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ceskia-text-secondary);
+  cursor: pointer;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { color: var(--ceskia-text-primary); }
+}
+
+.dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ceskia-space-4) var(--ceskia-space-6);
+  background: var(--ceskia-surface);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ceskia-space-12) var(--ceskia-space-6);
+  gap: var(--ceskia-space-4);
+
+  p { color: var(--ceskia-text-secondary); margin: 0; }
+}
+
+// Grupo por módulo: card elevada, borde sutil (mismo look que las cards del core)
+.modulo-group {
+  margin-bottom: var(--ceskia-space-2);
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-lg);
+  overflow: hidden;
+}
+
+.modulo-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  cursor: pointer;
+  transition: background var(--ceskia-transition-fast);
+
+  &:hover { background: var(--ceskia-hover); }
+}
+
+.expand-icon {
+  color: var(--ceskia-text-tertiary);
+  transition: transform var(--ceskia-transition-fast);
+
+  &.expanded { transform: rotate(180deg); }
+}
+
+.modulo-name {
+  flex: 1;
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  font-size: var(--ceskia-text-sm);
+}
+
+.modulo-count {
+  font-size: var(--ceskia-text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ceskia-text-secondary);
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  padding: 1px 8px;
+  border-radius: var(--ceskia-radius-full);
+}
+
+.capabilities-list {
+  border-top: 1px solid var(--ceskia-border-subtle);
+  padding: var(--ceskia-space-2);
+}
+
+.capability-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-2) var(--ceskia-space-3);
+  border-radius: var(--ceskia-radius-md);
+  cursor: pointer;
+  transition: background var(--ceskia-transition-fast);
+
+  &:hover { background: var(--ceskia-hover); }
+}
+
+.capability-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.capability-name { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-primary); }
+.capability-desc { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.capability-code { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); font-family: var(--ceskia-font-mono); }
+
+// Checkboxes en el acento del producto
+.dialog-content ::ng-deep .mat-mdc-checkbox {
+  .mdc-checkbox__background { border-color: var(--ceskia-border-strong); }
+
+  .mdc-checkbox--selected .mdc-checkbox__background {
+    background-color: var(--ceskia-accent-primary) !important;
+    border-color: var(--ceskia-accent-primary) !important;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ceskia-space-12) var(--ceskia-space-6);
+  color: var(--ceskia-text-tertiary);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; margin-bottom: var(--ceskia-space-3); }
+  p { margin: 0; font-size: var(--ceskia-text-sm); }
+}
+
+// Pie compacto: mismos tokens que cancel-btn/save-btn del core
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-3) var(--ceskia-space-6);
+  background: var(--ceskia-elevated);
+  border-top: 1px solid var(--ceskia-border-default);
+  flex-shrink: 0;
+}
+
+.btn-cancel {
+  color: var(--ceskia-text-secondary) !important;
+  border: 1px solid var(--ceskia-border-default) !important;
+  border-radius: var(--ceskia-radius-lg) !important;
+  padding: 0 var(--ceskia-space-4) !important;
+  height: 36px !important;
+  font-weight: var(--ceskia-font-medium) !important;
+  transition: var(--ceskia-transition-fast) !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--ceskia-hover) !important;
+    border-color: var(--ceskia-border-strong) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+  &:disabled { opacity: 0.5; }
+}
+
+.btn-submit {
+  background: var(--ceskia-accent-primary) !important;
+  color: var(--ceskia-text-inverse) !important;
+  border-radius: var(--ceskia-radius-lg) !important;
+  padding: 0 var(--ceskia-space-5) !important;
+  height: 36px !important;
+  font-weight: var(--ceskia-font-semibold) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--ceskia-space-2) !important;
+  transition: var(--ceskia-transition-fast) !important;
+  box-shadow: var(--ceskia-shadow-sm) !important;
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-accent-primary-hover) !important;
+    box-shadow: var(--ceskia-shadow-md) !important;
+  }
+  &:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  ::ng-deep .mat-mdc-progress-spinner circle { stroke: var(--ceskia-text-inverse) !important; }
+}

@@ -1,0 +1,76 @@
+services:
+  # SQL Server: base del sitio Motos (AppDB). Edición Express (gratuita); la contraseña
+  # de sa viene del .env (no commiteado). El backend provisiona el esquema al arrancar
+  # (DbBootstrap: EnsureCreated + FK_*.sql + seeds Cfg_*.sql).
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: motos-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+      - MSSQL_PID=Express
+    # Sin puerto publicado: solo el backend le habla por la red interna de compose.
+    # Para inspeccionar desde SSMS/Azure Data Studio, agregar temporalmente "14335:1433".
+    volumes:
+      # Volumen nombrado (no bind mount): mssql corre como usuario no-root y un bind
+      # mount da problemas de permisos tanto en Windows como en Linux.
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      # El backend migra la base al arrancar y NO reintenta: hay que esperar a que
+      # SQL Server esté listo de verdad (tarda 20-60 s), no solo a que el proceso exista.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  # Inicialización de la base: crea AppDB, esquema (Core_Schema.sql) y entidades (PC_*.sql).
+  # Necesario porque en Production el backend NO autoprovisiona (DbBootstrap solo corre en Dev).
+  # Idempotente (todo con IF NOT EXISTS); corre una vez y termina.
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: motos-db-init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SA_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./src/ApiMotos/Scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/init-db.sh"]
+    restart: "no"
+
+  # Backend API .NET 8 (ApiMotos).
+  api:
+    image: ghcr.io/mceschiuy/motos-backend:${IMAGE_TAG:-latest}
+    container_name: motos-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # SQL auth (Trusted_Connection no existe en Linux); password compartida vía .env.
+      - ConnectionStrings__DefaultConnection=Server=db;Database=AppDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      - ConnectionStrings__MasterConnection=Server=db;Database=master;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+    ports:
+      # Puerto de diagnóstico directo; el SPA no lo usa (va por /api del nginx del front).
+      # 5309 para no chocar con inac (5109) ni regula (5209).
+      - "5309:8080"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Frontend Angular servido por nginx (reverse-proxy de /api al backend, mismo origen).
+  frontend:
+    image: ghcr.io/mceschiuy/motos-frontend:${IMAGE_TAG:-latest}
+    container_name: motos-frontend
+    ports:
+      # 8092 para no chocar con inac-frontend (8090) ni regula-frontend (8091).
+      # Subdominio sugerido: motos.ceskia.tech → host:8092 (regla en Cloudflare Zero Trust).
+      - "8092:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mssql-data:

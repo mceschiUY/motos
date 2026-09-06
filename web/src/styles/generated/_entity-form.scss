@@ -1,0 +1,388 @@
+// Compartido del core (A1.1): antes se estampaba por entidad. Es la UNION de
+// las variantes por vista: los selectores de vistas ausentes no matchean DOM.
+// ═══════════════════════════════════════════════════════════════════════════════
+// KOSMOS FORM COMPONENT - Estilos Mínimos (usa CESKIA Design System global)
+// Este archivo solo contiene layout específico del componente.
+// Colores, tipografía y componentes base vienen de _ceskia-tokens.scss y _ceskia-components.scss
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Dialog Container
+// flex column + max-height acotan el diálogo: el header queda fijo arriba y el scroll
+// ocurre SOLO en el content (abajo). Sin esto, el título se solapaba con el primer campo.
+.dialog-container {
+  background-color: var(--ceskia-surface);
+  color: var(--ceskia-text-primary);
+  min-width: 500px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+// FK fijado por el contexto del padre: el control sigue registrado (su valor viaja en
+// form.value), solo se oculta visualmente para no re-pedir el padre.
+.fk-oculto-contexto { display: none; }
+
+// Dialog Header — compacto de verdad (ronda 2 de Pablo: estaba muy alto)
+// Pedido Pablo 2026-08-29: header del form en UNA sola línea —
+// [ícono] Título ············ X/Y campos. Sin subtítulo.
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  text-align: left;
+  padding: 10px var(--ceskia-space-6);
+  border-bottom: 1px solid var(--ceskia-border-default);
+  background: var(--ceskia-elevated);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+// CESKIA 2.0: ícono tonal compacto en el acento (fuera el gradiente verde/violeta)
+.header-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  flex-shrink: 0;
+  background: var(--ceskia-accent-primary-glow);
+  border-radius: var(--ceskia-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--ceskia-accent-primary);
+  }
+}
+
+::ng-deep .mat-mdc-dialog-title {
+  color: var(--ceskia-text-primary) !important;
+  font-family: var(--ceskia-font-display) !important;
+  font-size: var(--ceskia-text-md) !important;
+  font-weight: var(--ceskia-font-semibold) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  letter-spacing: var(--ceskia-tracking-tight);
+
+  // Material 15+ inyecta un ::before de 40px en el título — corre todo el header
+  &::before {
+    display: none !important;
+  }
+}
+
+.dialog-subtitle {
+  color: var(--ceskia-text-secondary);
+  font-size: var(--ceskia-text-base);
+  margin: var(--ceskia-space-2) 0 0 0;
+}
+
+// Dialog Content
+// overflow auto (no visible): los forms largos scrollean adentro del diálogo en vez de
+// desbordarse sobre los botones. Datepicker/select viven en el CDK overlay — no se recortan.
+::ng-deep .mat-mdc-dialog-content {
+  padding: var(--ceskia-space-6) var(--ceskia-space-8) !important;
+  overflow: auto !important;
+  background-color: var(--ceskia-surface);
+  // El content es el área flexible con scroll; min-height:0 lo habilita dentro del flex.
+  // max-height:none anula el tope que inyecta el CDK (el container ya acota); margin:0
+  // neutraliza los márgenes MDC que empujaban el contenido contra el header.
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+  margin: 0 !important;
+}
+
+// Form Layout
+.form-row {
+  display: flex;
+  gap: var(--ceskia-space-4);
+}
+
+// Grilla del formulario: 2 columnas en desktop (evita la columna única eterna),
+// 1 columna en pantallas chicas. Toggles booleanos ocupan el ancho completo.
+.entity-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--ceskia-space-4);
+
+  .form-toggle-wrapper { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .entity-form { grid-template-columns: 1fr; }
+}
+
+.form-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ceskia-space-3);
+
+  &.half {
+    flex: 1;
+  }
+
+  .form-field {
+    flex: 1;
+  }
+}
+
+// Progress Bar — tira fina y discreta arriba del diálogo (piel Salud: sólida, 2px)
+.form-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ceskia-border-subtle);
+  overflow: hidden;
+
+  .progress-bar {
+    height: 100%;
+    background: var(--ceskia-accent-primary);
+    transition: width var(--ceskia-transition-slow);
+  }
+}
+
+// Progress Indicator (field count text)
+.progress-indicator {
+  margin-left: auto;
+  flex-shrink: 0;
+
+  .progress-text {
+    font-size: var(--ceskia-text-xs);
+    color: var(--ceskia-text-tertiary);
+    font-weight: var(--ceskia-font-medium);
+  }
+}
+
+// Field Check Badge — aparece con fade simple (piel Salud: sin spring ni scale)
+@keyframes field-check-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.field-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  background: var(--ceskia-accent-success-glow);
+  border-radius: var(--ceskia-radius-full);
+  margin-top: var(--ceskia-space-4);
+  animation: field-check-in var(--ceskia-transition-normal) forwards;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--ceskia-accent-success);
+  }
+}
+
+// Boolean Toggle Row (for activo/pagado fields)
+.form-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-4);
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-lg);
+  margin-bottom: var(--ceskia-space-4);
+
+  .toggle-label {
+    font-size: var(--ceskia-text-base);
+    color: var(--ceskia-text-secondary);
+    flex: 1;
+  }
+}
+
+.form-field {
+  width: 100%;
+
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--ceskia-elevated) !important;
+      border-radius: var(--ceskia-radius-lg) !important;
+    }
+
+    .mat-mdc-form-field-flex {
+      background-color: transparent !important;
+    }
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--ceskia-border-default) !important;
+    }
+
+    .mdc-notched-outline:hover .mdc-notched-outline__leading,
+    .mdc-notched-outline:hover .mdc-notched-outline__notch,
+    .mdc-notched-outline:hover .mdc-notched-outline__trailing {
+      border-color: var(--ceskia-border-strong) !important;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: transparent !important;
+    }
+
+    // Foco en el ACENTO de marca (celeste Ratio) — el verde queda para validez
+    .mdc-text-field--focused .mdc-notched-outline__leading,
+    .mdc-text-field--focused .mdc-notched-outline__notch,
+    .mdc-text-field--focused .mdc-notched-outline__trailing {
+      border-color: var(--ceskia-accent-primary) !important;
+      border-width: 2px !important;
+    }
+
+    .mat-mdc-form-field-label,
+    .mdc-floating-label {
+      color: var(--ceskia-text-secondary) !important;
+    }
+
+    .mdc-text-field--focused .mdc-floating-label {
+      color: var(--ceskia-accent-primary) !important;
+    }
+
+    .mat-mdc-input-element {
+      color: var(--ceskia-text-primary) !important;
+    }
+
+    .mat-mdc-input-element::placeholder {
+      color: var(--ceskia-text-tertiary) !important;
+    }
+
+    .mat-mdc-form-field-icon-prefix {
+      color: var(--ceskia-text-secondary) !important;
+      padding-right: var(--ceskia-space-2);
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    .mat-mdc-select-value {
+      color: var(--ceskia-text-primary) !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      color: var(--ceskia-text-tertiary) !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: var(--ceskia-text-secondary) !important;
+    }
+  }
+}
+
+// Error Messages
+.form-field ::ng-deep {
+  .mat-mdc-form-field-error {
+    color: var(--ceskia-accent-danger) !important;
+  }
+
+  .mdc-text-field--invalid .mdc-notched-outline__leading,
+  .mdc-text-field--invalid .mdc-notched-outline__notch,
+  .mdc-text-field--invalid .mdc-notched-outline__trailing {
+    border-color: var(--ceskia-accent-danger) !important;
+  }
+}
+
+// Dialog Actions — pie compacto (ronda 2: tenía 32px de aire abajo y botones 44px)
+::ng-deep .mat-mdc-dialog-actions {
+  padding: var(--ceskia-space-3) var(--ceskia-space-6) !important;
+  min-height: 0 !important;
+  border-top: 1px solid var(--ceskia-border-default);
+  gap: var(--ceskia-space-2) !important;
+  background-color: var(--ceskia-elevated);
+  flex-shrink: 0;   // fijo abajo, no se comprime cuando el content scrollea
+}
+
+.cancel-btn {
+  color: var(--ceskia-text-secondary) !important;
+  border: 1px solid var(--ceskia-border-default) !important;
+  border-radius: var(--ceskia-radius-lg) !important;
+  padding: 0 var(--ceskia-space-4) !important;
+  height: 36px !important;
+  font-weight: var(--ceskia-font-medium) !important;
+  transition: var(--ceskia-transition-fast) !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--ceskia-hover) !important;
+    border-color: var(--ceskia-border-strong) !important;
+    color: var(--ceskia-text-primary) !important;
+  }
+}
+
+// CESKIA 2.0: primario sólido en el acento del producto — sin gradiente ni glow
+.save-btn {
+  background: var(--ceskia-accent-primary) !important;
+  color: var(--ceskia-text-inverse) !important;
+  border-radius: var(--ceskia-radius-lg) !important;
+  padding: 0 var(--ceskia-space-5) !important;
+  height: 36px !important;
+  font-weight: var(--ceskia-font-semibold) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--ceskia-space-2) !important;
+  transition: var(--ceskia-transition-fast) !important;
+  box-shadow: var(--ceskia-shadow-sm) !important;
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-accent-primary-hover) !important;
+    box-shadow: var(--ceskia-shadow-md) !important;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  ::ng-deep .mat-mdc-progress-spinner circle {
+    stroke: var(--ceskia-text-inverse) !important;
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .dialog-container {
+    min-width: auto;
+  }
+
+  .dialog-header {
+    padding: 10px var(--ceskia-space-4);
+  }
+
+  ::ng-deep .mat-mdc-dialog-content {
+    padding: var(--ceskia-space-5) !important;
+  }
+
+  ::ng-deep .mat-mdc-dialog-actions {
+    padding: var(--ceskia-space-3) var(--ceskia-space-4) !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: var(--ceskia-space-2);
+  }
+
+  .form-field-wrapper.half {
+    width: 100%;
+    flex: none;
+  }
+}

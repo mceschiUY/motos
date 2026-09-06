@@ -1,0 +1,182 @@
+<!-- Overlay -->
+<div
+  class="mutation-overlay"
+  [class.open]="state.isOpen()"
+  (click)="onClose()">
+</div>
+
+<!-- Modal centrada -->
+<div class="mutation-modal" [class.open]="state.isOpen()">
+
+  <!-- Step: Checking Copy -->
+  @if (isCheckingCopy()) {
+    <div class="modal-content checking">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Verificando sitio copia...</p>
+    </div>
+  }
+
+  <!-- Step: Sentinel Error -->
+  @else if (sentinelError()) {
+    <div class="modal-content copy-error">
+      <mat-icon class="error-icon">cloud_off</mat-icon>
+      <h2>Sentinel no disponible</h2>
+      <p class="error-message">{{ sentinelError() }}</p>
+      <div class="instructions">
+        <code>cd ZAS.Sentinel && dotnet run</code>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="onClose()">Cerrar</button>
+        <button type="button" class="btn-retry" (click)="onRetryCheckCopy()">Reintentar</button>
+      </div>
+    </div>
+  }
+
+  <!-- Step: Copy Not Ready -->
+  @else if (copyHealth() && copyHealth()!.status !== 'ready' && state.step() === 'input') {
+    <div class="modal-content copy-warning">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      <h2>{{ copyHealth()!.message }}</h2>
+
+      <div class="copy-status">
+        <div class="status-item" [class.ok]="copyHealth()!.directoryExists">
+          <mat-icon>{{ copyHealth()!.directoryExists ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Directorio copia</span>
+        </div>
+        <div class="status-item" [class.ok]="copyHealth()!.nodeModulesExists">
+          <mat-icon>{{ copyHealth()!.nodeModulesExists ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>node_modules</span>
+        </div>
+        <div class="status-item" [class.ok]="copyHealth()!.serverRunning">
+          <mat-icon>{{ copyHealth()!.serverRunning ? 'check_circle' : 'cancel' }}</mat-icon>
+          <span>Servidor ({{ copyHealth()!.copyUrl }})</span>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <p>Ejecutar en terminal:</p>
+        @for (instruction of copyHealth()!.instructions; track instruction) {
+          <code>{{ instruction }}</code>
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="onClose()">Cerrar</button>
+        <button type="button" class="btn-retry" (click)="onRetryCheckCopy()">
+          <mat-icon>refresh</mat-icon>
+          Verificar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step: Input (Copy Ready) -->
+  @else if (state.step() === 'input') {
+    <div class="modal-content">
+      <h2>Mutation Engine</h2>
+      <span class="console-label">describe el cambio</span>
+
+      <div class="input-container">
+        <textarea
+          class="input-text"
+          [ngModel]="solicitudText"
+          (ngModelChange)="onSolicitudChange($event)"
+          placeholder="agregar campo telefono al formulario de clientes..."
+          rows="6"
+          autofocus>
+        </textarea>
+
+        <!-- Audio Button (WhatsApp style) -->
+        <button
+          type="button"
+          class="btn-audio"
+          [class.recording]="isRecording"
+          [class.processing]="isProcessingAudio"
+          (mousedown)="onAudioStart($event)"
+          (mouseup)="onAudioStop($event)"
+          (mouseleave)="onAudioCancel($event)"
+          (touchstart)="onAudioStart($event)"
+          (touchend)="onAudioStop($event)"
+          matTooltip="Mantener para grabar"
+          matTooltipPosition="left">
+          <mat-icon>{{ isRecording ? 'stop' : (isProcessingAudio ? 'hourglass_top' : 'mic') }}</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="onClose()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-execute"
+          [disabled]="!solicitudText.trim()"
+          (click)="onAnalyze()">
+          Ejecutar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step: Executing -->
+  @if (state.step() === 'executing') {
+    <div class="modal-content executing">
+      <mat-spinner diameter="56"></mat-spinner>
+      <h2>{{ getPhaseLabel(state.streamingPhase()) }}</h2>
+      <p>{{ state.streamingMessage() || 'iniciando proceso...' }}</p>
+      <mat-progress-bar mode="determinate" [value]="state.streamingProgress()"></mat-progress-bar>
+      <span class="progress-text">{{ state.streamingProgress() }}%</span>
+
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        Abortar
+      </button>
+    </div>
+  }
+
+  <!-- Step: Done -->
+  @if (state.step() === 'done') {
+    <div class="modal-content done">
+      <mat-icon class="success-icon">check_circle</mat-icon>
+      <h2>Completado</h2>
+
+      @if (state.ejecutado(); as result) {
+        <p class="stats">
+          {{ result.archivosModificados }} modificado(s), {{ result.archivosCreados }} creado(s)
+        </p>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn-revert" (click)="onRevert()">
+          Revertir
+        </button>
+        <button type="button" class="btn-new" (click)="onNewMutation()">
+          Nueva Mutacion
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step: Error -->
+  @if (state.step() === 'error') {
+    <div class="modal-content error">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2>Fallo</h2>
+      <p class="error-message">{{ state.error() }}</p>
+
+      <button type="button" class="btn-retry" (click)="onNewMutation()">
+        Reintentar
+      </button>
+    </div>
+  }
+</div>
+
+<!-- FAB Button -->
+<button
+  type="button"
+  class="mutation-fab"
+  [class.hidden]="state.isOpen()"
+  (click)="onOpenFab($event)"
+  matTooltip="ZAS - Cambios con IA"
+  matTooltipPosition="left">
+  <mat-icon>auto_fix_high</mat-icon>
+</button>

@@ -1,0 +1,72 @@
+﻿<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Nombre Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('nombre')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Teléfono Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Teléfono</mat-label>
+          <input matInput type="tel" formControlName="telefono">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('telefono')?.touched && form.get('telefono')?.invalid) {
+            <mat-error>{{ getErrorMessage('telefono') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('telefono')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Dirección Entrega Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Dirección Entrega</mat-label>
+          <input matInput type="text" formControlName="direccionEntrega">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('direccionEntrega')?.touched && form.get('direccionEntrega')?.invalid) {
+            <mat-error>{{ getErrorMessage('direccionEntrega') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('direccionEntrega')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

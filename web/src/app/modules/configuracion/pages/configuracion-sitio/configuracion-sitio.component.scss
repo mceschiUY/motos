@@ -1,0 +1,163 @@
+.config-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--ceskia-base) 0%, var(--ceskia-surface) 100%);
+  padding: 0 24px 24px;
+}
+
+// Header
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 32px 0 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-content {
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: var(--ceskia-accent-primary);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ceskia-text-primary);
+      margin: 0;
+    }
+  }
+
+  .header-subtitle {
+    color: var(--ceskia-text-secondary);
+    font-size: 15px;
+    margin: 8px 0 0 44px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-spinner {
+      margin-right: 4px;
+    }
+  }
+}
+
+// Loading State
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  color: var(--ceskia-text-secondary);
+
+  p {
+    margin-top: 16px;
+    font-size: 15px;
+  }
+}
+
+// Config Groups
+.config-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.config-group {
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: 16px;
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--ceskia-border-default);
+
+    .group-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--ceskia-accent-primary-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        color: var(--ceskia-accent-primary);
+      }
+    }
+
+    mat-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ceskia-text-primary);
+      margin: 0;
+    }
+  }
+
+  mat-card-content {
+    padding: 24px;
+  }
+}
+
+// Config Fields
+.config-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.config-field {
+  width: 100%;
+
+  mat-icon[matSuffix] {
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+// Responsive
+@media (max-width: 767px) {
+  .config-container {
+    padding: 0 16px 16px;
+  }
+
+  .config-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: flex-end;
+  }
+
+  .header-content .header-subtitle {
+    margin-left: 0;
+  }
+
+  .config-fields {
+    grid-template-columns: 1fr;
+  }
+}

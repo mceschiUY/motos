@@ -1,0 +1,187 @@
+<div class="kosmos-page">
+
+  <!-- BREADCRUMB -->
+  <app-breadcrumb
+    [items]="breadcrumbItems"
+    subtitle="Permisos atomicos del sistema">
+  </app-breadcrumb>
+
+  <!-- PAGE HEADER CON STATS -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon">
+          <mat-icon>key</mat-icon>
+        </div>
+        <div class="header-text">
+          <h1 class="page-title">Capabilities</h1>
+          <p class="page-subtitle">Permisos atomicos generados por Kosmos</p>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>vpn_key</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ totalCount() }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>widgets</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ modulosCount() }}</span>
+            <span class="stat-label">Modulos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <!-- SMART TOOLBAR -->
+    <div class="smart-toolbar">
+      <!-- Buscador Pill -->
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Buscar capabilities..."
+          [value]="searchTerm()"
+          (input)="onSearchChange($event)">
+        @if (searchTerm()) {
+          <button class="search-clear" (click)="searchTerm.set(''); updateDataSource()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Filtro por Modulo -->
+      <mat-form-field class="filter-select" appearance="outline">
+        <mat-label>Modulo</mat-label>
+        <mat-select [value]="selectedModulo()" (selectionChange)="onModuloChange($event.value)">
+          <mat-option value="">Todos</mat-option>
+          @for (modulo of modulos(); track modulo) {
+            <mat-option [value]="modulo">{{ modulo }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (searchTerm() || selectedModulo()) {
+        <button mat-stroked-button class="clear-filters-btn" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar
+        </button>
+      }
+
+      <!-- Contador de resultados -->
+      @if (filteredCount() !== totalCount()) {
+        <span class="results-count">{{ filteredCount() }} de {{ totalCount() }}</span>
+      }
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="dataSource" matSort class="smart-table capability-table">
+
+        <!-- Nombre Column -->
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Capability</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="capability-name">
+              <mat-icon class="capability-icon">vpn_key</mat-icon>
+              <span class="name-text">{{ item.nombre }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Descripcion Column -->
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Descripcion</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="descripcion-text">{{ item.descripcion }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Modulo Column -->
+        <ng-container matColumnDef="modulo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Modulo</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip class="modulo-chip">{{ item.modulo }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Activo Column -->
+        <ng-container matColumnDef="activo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="status-badge" [class.active]="item.activo" [class.inactive]="!item.activo">
+              {{ item.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Header Row -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+        <!-- Data Rows -->
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <!-- SKELETON LOADING ROWS -->
+        @if (isLoading()) {
+          @for (skeleton of skeletonRows; track $index) {
+            <tr class="skeleton-row">
+              <td class="skeleton-cell"><div class="skeleton skeleton-text"></div></td>
+              <td class="skeleton-cell"><div class="skeleton skeleton-text long"></div></td>
+              <td class="skeleton-cell"><div class="skeleton skeleton-chip"></div></td>
+              <td class="skeleton-cell"><div class="skeleton skeleton-badge"></div></td>
+            </tr>
+          }
+        }
+
+        <!-- EMPTY STATE -->
+        <tr class="mat-row" *matNoDataRow>
+          @if (!isLoading()) {
+            <td class="mat-cell empty-state-cell" [attr.colspan]="displayedColumns.length">
+              <div class="empty-state">
+                <div class="empty-illustration">
+                  <mat-icon>key_off</mat-icon>
+                </div>
+                <h3 class="empty-title">No hay capabilities</h3>
+                <p class="empty-description">
+                  @if (searchTerm() || selectedModulo()) {
+                    No hay resultados para los filtros aplicados
+                  } @else {
+                    Las capabilities se generan automaticamente con Kosmos
+                  }
+                </p>
+                @if (searchTerm() || selectedModulo()) {
+                  <div class="empty-actions">
+                    <button mat-stroked-button class="empty-btn secondary" (click)="clearFilters()">
+                      <mat-icon>filter_alt_off</mat-icon>
+                      Limpiar filtros
+                    </button>
+                  </div>
+                }
+              </div>
+            </td>
+          }
+        </tr>
+
+      </table>
+    </div>
+
+  </div>
+
+  <!-- FLOATING ACTION BUTTONS -->
+  <div class="floating-actions">
+    <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+</div>

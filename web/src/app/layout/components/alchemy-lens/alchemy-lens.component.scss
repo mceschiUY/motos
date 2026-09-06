@@ -1,0 +1,487 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// ALCHEMY LENS - Obsidian Theme + Monaco Diff Editor
+// Git diff viewer con lista de archivos y Monaco side-by-side
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Variables Obsidian
+$obsidian-bg: #0a0a0f;
+$obsidian-surface: #12121a;
+$obsidian-border: #1e1e2e;
+$neon-cyan: #00d9ff;
+$neon-purple: #a371f7;
+$neon-green: #3fb950;
+$neon-orange: #f97316;
+$neon-red: #f85149;
+$text-primary: #e6edf3;
+$text-secondary: #7d8590;
+$font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+// Overlay
+.lens-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(8px);
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// Panel principal
+.lens-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 95vw;
+  height: 90vh;
+  max-width: 1800px;
+  background: $obsidian-bg;
+  border: 1px solid $obsidian-border;
+  border-radius: 16px;
+  z-index: 1101;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  box-shadow:
+    0 0 0 1px rgba($neon-cyan, 0.1),
+    0 25px 80px rgba(0, 0, 0, 0.8),
+    0 0 60px rgba($neon-cyan, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// Header
+.lens-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: $obsidian-surface;
+  border-bottom: 1px solid $obsidian-border;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .lens-icon {
+      color: $neon-cyan;
+      font-size: 24px;
+    }
+
+    h3 {
+      margin: 0;
+      color: $text-primary;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: $font-mono;
+    }
+
+    .git-branch-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: $neon-purple;
+      font-size: 12px;
+      font-family: $font-mono;
+      background: rgba($neon-purple, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba($neon-purple, 0.3);
+
+      .branch-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .header-center {
+    .diff-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: $font-mono;
+      font-size: 13px;
+
+      .file-count {
+        color: $text-secondary;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    gap: 8px;
+
+    .action-btn,
+    .close-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid $obsidian-border;
+      background: transparent;
+      color: $text-secondary;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: $obsidian-surface;
+        color: $text-primary;
+        border-color: $neon-cyan;
+      }
+    }
+
+    .close-btn:hover {
+      border-color: $neon-red;
+      color: $neon-red;
+    }
+  }
+}
+
+// Diff stats colors
+.additions {
+  color: $neon-green;
+  font-weight: 600;
+}
+
+.deletions {
+  color: $neon-red;
+  font-weight: 600;
+}
+
+// Content
+.lens-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+// File List Sidebar
+.file-list {
+  width: 250px;
+  min-width: 250px;
+  background: $obsidian-surface;
+  border-right: 1px solid $obsidian-border;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  .file-list-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid $obsidian-border;
+    color: $text-secondary;
+    font-size: 11px;
+    font-family: $font-mono;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .loading-state,
+  .error-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    font-size: 12px;
+    font-family: $font-mono;
+    color: $text-secondary;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .error-state {
+    color: $neon-red;
+
+    mat-icon {
+      color: $neon-red;
+    }
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: $text-primary;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+    border-left: 3px solid transparent;
+
+    &:hover {
+      background: rgba($neon-cyan, 0.05);
+    }
+
+    &.selected {
+      background: rgba($neon-cyan, 0.1);
+      border-left-color: $neon-cyan;
+    }
+
+    .file-status-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    &.status-added .file-status-icon {
+      color: $neon-green;
+    }
+
+    &.status-modified .file-status-icon {
+      color: $neon-orange;
+    }
+
+    &.status-deleted .file-status-icon {
+      color: $neon-red;
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+
+      .file-name {
+        font-size: 12px;
+        font-family: $font-mono;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-path {
+        font-size: 10px;
+        font-family: $font-mono;
+        color: $text-secondary;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .file-stats {
+      display: flex;
+      gap: 4px;
+      font-size: 10px;
+      font-family: $font-mono;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Editor Container
+.editor-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: $obsidian-bg;
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: $text-secondary;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+      font-family: $font-mono;
+    }
+  }
+}
+
+.monaco-diff-container {
+  width: 100%;
+  height: 100%;
+}
+
+// Footer
+.lens-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: $obsidian-surface;
+  border-top: 1px solid $obsidian-border;
+
+  .logs-container {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    overflow-x: auto;
+
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: $font-mono;
+      white-space: nowrap;
+
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      &.log-info {
+        color: $text-secondary;
+      }
+
+      &.log-success {
+        color: $neon-green;
+      }
+
+      &.log-warning {
+        color: $neon-orange;
+      }
+
+      &.log-error {
+        color: $neon-red;
+      }
+    }
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 12px;
+
+    .btn-revert,
+    .btn-commit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: $font-mono;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .btn-revert {
+      background: transparent;
+      border: 1px solid rgba($neon-red, 0.5);
+      color: $neon-red;
+
+      &:hover {
+        background: rgba($neon-red, 0.1);
+        border-color: $neon-red;
+      }
+    }
+
+    .btn-commit {
+      background: linear-gradient(135deg, $neon-purple 0%, #8b5cf6 100%);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba($neon-purple, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 30px rgba($neon-purple, 0.5);
+      }
+    }
+  }
+}
+
+// FAB
+.lens-fab {
+  position: fixed;
+  top: 16px;
+  left: calc(50% + 38px);
+  width: 52px;
+  height: 52px;
+  border: 2px solid $neon-purple;
+  background: $obsidian-bg;
+  color: $neon-purple;
+  border-radius: 16px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba($neon-purple, 0.3);
+  transition: all 0.3s ease;
+  animation: float 3s ease-in-out infinite;
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba($neon-purple, 0.5);
+  }
+}
+
+// Animations
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}

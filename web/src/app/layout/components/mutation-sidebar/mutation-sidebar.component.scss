@@ -1,0 +1,694 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// ZAS MUTATION CONSOLE - Terminal/Console Style
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Variables
+$console-bg: #0d1117;
+$console-surface: #161b22;
+$console-border: #30363d;
+$console-cyan: #00d9ff;
+$console-green: #3fb950;
+$console-orange: #f97316;
+$console-red: #f85149;
+$console-text: #e6edf3;
+$console-dim: #7d8590;
+$font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+
+// Overlay
+.mutation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// Modal - Console Style
+.mutation-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 680px;
+  max-width: 95vw;
+  background: $console-bg;
+  border: 1px solid $console-border;
+  border-radius: 12px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 0 0 1px rgba($console-cyan, 0.1),
+    0 25px 80px rgba(0, 0, 0, 0.7),
+    0 0 40px rgba($console-cyan, 0.05);
+  overflow: hidden;
+
+  // Terminal header bar
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: $console-surface;
+    border-bottom: 1px solid $console-border;
+  }
+
+  // Terminal dots
+  &::after {
+    content: '● ● ●';
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    font-size: 10px;
+    letter-spacing: 6px;
+    color: $console-dim;
+    z-index: 1;
+  }
+
+  &.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// Contenido
+.modal-content {
+  padding: 56px 32px 32px;
+  font-family: $font-mono;
+
+  h2 {
+    margin: 0 0 24px;
+    color: $console-cyan;
+    font-size: 22px;
+    font-weight: 500;
+    font-family: $font-mono;
+    letter-spacing: -0.5px;
+
+    &::before {
+      content: '> ';
+      color: $console-green;
+    }
+  }
+
+  p {
+    color: $console-dim;
+    font-size: 15px;
+    font-family: $font-mono;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+}
+
+// Console label
+.console-label {
+  display: block;
+  color: $console-dim;
+  font-size: 12px;
+  font-family: $font-mono;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  text-align: left;
+
+  &::before {
+    content: '// ';
+    color: $console-border;
+  }
+}
+
+// Input container con boton de audio
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+// Input de texto - Terminal style (50% más grande)
+.input-text {
+  width: 100%;
+  min-height: 210px;
+  padding: 24px;
+  padding-right: 70px; // Espacio para el boton de audio
+  background: $console-surface;
+  border: 1px solid $console-border;
+  border-radius: 8px;
+  color: $console-text;
+  font-size: 22px;
+  font-family: $font-mono;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $console-cyan;
+    box-shadow:
+      0 0 0 3px rgba($console-cyan, 0.1),
+      inset 0 0 20px rgba($console-cyan, 0.03);
+  }
+
+  &::placeholder {
+    color: $console-dim;
+    font-style: italic;
+    font-size: 18px;
+  }
+
+  &:focus::placeholder {
+    color: transparent;
+  }
+}
+
+// Boton de audio estilo WhatsApp
+.btn-audio {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, $console-cyan 0%, #0891b2 100%);
+  color: $console-bg;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba($console-cyan, 0.3);
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba($console-cyan, 0.5);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  // Estado grabando
+  &.recording {
+    background: linear-gradient(135deg, $console-red 0%, #dc2626 100%);
+    animation: pulse-recording 1s infinite;
+    box-shadow: 0 4px 20px rgba($console-red, 0.5);
+
+    mat-icon {
+      animation: none;
+    }
+  }
+
+  // Estado procesando
+  &.processing {
+    background: $console-surface;
+    border: 2px solid $console-cyan;
+    color: $console-cyan;
+    cursor: wait;
+
+    mat-icon {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba($console-red, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba($console-red, 0.8);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Acciones
+.modal-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+  justify-content: flex-end;
+}
+
+// Botones - Console style
+.btn-cancel,
+.btn-execute,
+.btn-revert,
+.btn-new,
+.btn-retry {
+  padding: 14px 24px;
+  border: 1px solid $console-border;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: $font-mono;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: $console-dim;
+  border-color: $console-border;
+
+  &:hover {
+    background: $console-surface;
+    color: $console-text;
+    border-color: $console-dim;
+  }
+}
+
+.btn-execute,
+.btn-new {
+  background: linear-gradient(135deg, $console-cyan 0%, #0891b2 100%);
+  color: $console-bg;
+  border: none;
+  min-width: 160px;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 20px rgba($console-cyan, 0.4),
+      0 0 30px rgba($console-cyan, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-revert {
+  background: transparent;
+  color: $console-red;
+  border-color: rgba($console-red, 0.5);
+
+  &:hover {
+    background: rgba($console-red, 0.1);
+    border-color: $console-red;
+  }
+}
+
+.btn-retry {
+  background: transparent;
+  color: $console-dim;
+  border-color: $console-border;
+
+  &:hover {
+    background: $console-surface;
+    color: $console-text;
+  }
+}
+
+// Estado: Executing
+.modal-content.executing {
+  text-align: center;
+
+  mat-spinner {
+    margin: 0 auto 24px;
+
+    ::ng-deep circle {
+      stroke: $console-cyan;
+    }
+  }
+
+  h2 {
+    &::before {
+      content: '⟳ ';
+      color: $console-cyan;
+      animation: pulse 1s infinite;
+    }
+  }
+
+  mat-progress-bar {
+    margin-top: 20px;
+    height: 6px;
+    border-radius: 3px;
+    background: $console-surface;
+
+    ::ng-deep {
+      .mdc-linear-progress__buffer-bar {
+        background: $console-surface;
+      }
+      .mdc-linear-progress__bar-inner {
+        border-color: $console-cyan;
+      }
+    }
+  }
+
+  .progress-text {
+    display: block;
+    margin-top: 12px;
+    color: $console-cyan;
+    font-size: 24px;
+    font-weight: 600;
+    font-family: $font-mono;
+  }
+
+  .btn-cancel {
+    margin-top: 28px;
+  }
+}
+
+// Estado: Done
+.modal-content.done {
+  text-align: center;
+
+  .success-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: $console-green;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    color: $console-green;
+
+    &::before {
+      content: '✓ ';
+      color: $console-green;
+    }
+  }
+
+  .stats {
+    color: $console-dim;
+    font-size: 15px;
+    font-family: $font-mono;
+
+    &::before {
+      content: 'output: ';
+      color: $console-border;
+    }
+  }
+}
+
+// Estado: Error
+.modal-content.error {
+  text-align: center;
+
+  .error-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    color: $console-red;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    color: $console-red;
+
+    &::before {
+      content: '✗ ';
+      color: $console-red;
+    }
+  }
+
+  .error-message {
+    color: $console-red;
+    background: rgba($console-red, 0.1);
+    border: 1px solid rgba($console-red, 0.3);
+    padding: 16px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: $font-mono;
+    text-align: left;
+
+    &::before {
+      content: 'Error: ';
+      font-weight: 600;
+    }
+  }
+
+  .btn-retry {
+    margin-top: 24px;
+  }
+}
+
+// Estado: Checking Copy
+.modal-content.checking {
+  text-align: center;
+  padding: 80px 32px;
+
+  mat-spinner {
+    margin: 0 auto 24px;
+
+    ::ng-deep circle {
+      stroke: $console-cyan;
+    }
+  }
+
+  p {
+    color: $console-dim;
+    font-size: 16px;
+  }
+}
+
+// Estado: Copy Warning (sitio copia no listo)
+.modal-content.copy-warning {
+  text-align: center;
+
+  .warning-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $console-orange;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    color: $console-orange;
+    font-size: 18px;
+
+    &::before {
+      content: '⚠ ';
+      color: $console-orange;
+    }
+  }
+
+  .copy-status {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 24px 0;
+    padding: 20px;
+    background: $console-surface;
+    border-radius: 8px;
+    border: 1px solid $console-border;
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: $console-red;
+      font-size: 14px;
+      text-align: left;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      &.ok {
+        color: $console-green;
+      }
+    }
+  }
+
+  .instructions {
+    background: rgba($console-cyan, 0.05);
+    border: 1px solid rgba($console-cyan, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: left;
+
+    p {
+      margin: 0 0 12px;
+      color: $console-dim;
+      font-size: 13px;
+    }
+
+    code {
+      display: block;
+      background: $console-bg;
+      color: $console-cyan;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-family: $font-mono;
+      font-size: 13px;
+      margin-bottom: 8px;
+      border-left: 3px solid $console-cyan;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .btn-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, $console-cyan 0%, #0891b2 100%);
+    color: $console-bg;
+    border: none;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba($console-cyan, 0.4);
+    }
+  }
+}
+
+// Estado: Copy Error (Sentinel no disponible)
+.modal-content.copy-error {
+  text-align: center;
+
+  .error-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $console-red;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    color: $console-red;
+    font-size: 18px;
+
+    &::before {
+      content: '✗ ';
+      color: $console-red;
+    }
+  }
+
+  .error-message {
+    color: $console-dim;
+    font-size: 14px;
+    margin: 16px 0;
+  }
+
+  .instructions {
+    background: $console-surface;
+    border: 1px solid $console-border;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+
+    code {
+      display: block;
+      color: $console-cyan;
+      font-family: $font-mono;
+      font-size: 13px;
+    }
+  }
+
+  .btn-retry {
+    background: linear-gradient(135deg, $console-cyan 0%, #0891b2 100%);
+    color: $console-bg;
+    border: none;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba($console-cyan, 0.4);
+    }
+  }
+}
+
+// FAB Button - Console style
+.mutation-fab {
+  position: fixed;
+  top: 16px;
+  left: calc(50% - 26px);
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $console-bg;
+  border: 2px solid $console-cyan;
+  border-radius: 16px;
+  color: $console-cyan;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba($console-cyan, 0.3),
+    inset 0 0 20px rgba($console-cyan, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  mat-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  &:hover {
+    transform: scale(1.08);
+    border-color: $console-green;
+    color: $console-green;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba($console-cyan, 0.4);
+  }
+
+  &.hidden {
+    transform: scale(0) rotate(45deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// Scanline effect (subtle)
+.mutation-modal {
+  &::before {
+    background:
+      $console-surface
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+  }
+}

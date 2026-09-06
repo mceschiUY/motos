@@ -1,0 +1,57 @@
+﻿<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Parametro SLA' : 'Nuevo Parametro SLA' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Rango Alerta Umbral Advertencia Dias Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Rango Alerta Umbral Advertencia Dias</mat-label>
+          <input matInput type="number" formControlName="rangoAlertaUmbralAdvertenciaDias">
+          <mat-icon matPrefix>numbers</mat-icon>
+          @if (form.get('rangoAlertaUmbralAdvertenciaDias')?.touched && form.get('rangoAlertaUmbralAdvertenciaDias')?.invalid) {
+            <mat-error>{{ getErrorMessage('rangoAlertaUmbralAdvertenciaDias') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('rangoAlertaUmbralAdvertenciaDias')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Rango Alerta Limite Dias Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Rango Alerta Limite Dias</mat-label>
+          <input matInput type="number" formControlName="rangoAlertaLimiteDias">
+          <mat-icon matPrefix>numbers</mat-icon>
+          @if (form.get('rangoAlertaLimiteDias')?.touched && form.get('rangoAlertaLimiteDias')?.invalid) {
+            <mat-error>{{ getErrorMessage('rangoAlertaLimiteDias') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('rangoAlertaLimiteDias')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

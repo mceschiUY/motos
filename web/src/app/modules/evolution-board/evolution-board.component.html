@@ -1,0 +1,120 @@
+<div class="board-container">
+  <!-- Header -->
+  <div class="board-header">
+    <div class="board-title">
+      <mat-icon>dashboard_customize</mat-icon>
+      <h1>Evolution Board</h1>
+      <span class="board-count">{{ boardService.totalItems() }} items</span>
+    </div>
+    <div class="board-actions">
+      <button mat-flat-button class="import-btn" (click)="onImportProposals()" matTooltip="Importar propuestas del Evolution Hub">
+        <mat-icon>download</mat-icon>
+        Importar Propuestas
+      </button>
+      <button mat-icon-button (click)="boardService.loadBoard()" matTooltip="Recargar">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (boardService.loading()) {
+    <div class="board-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando board...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (boardService.error()) {
+    <div class="board-error">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ boardService.error() }}</p>
+      <button mat-flat-button (click)="boardService.loadBoard()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Kanban Board -->
+  @if (!boardService.loading() && !boardService.error()) {
+    <div class="kanban" cdkDropListGroup>
+      @for (column of boardService.columns(); track column.id) {
+        <div class="kanban-column">
+          <div class="column-header" [style.border-top-color]="column.color">
+            <div class="column-title">
+              <mat-icon [style.color]="column.color">{{ column.icon }}</mat-icon>
+              <span>{{ column.label }}</span>
+              <span class="column-count" [style.background]="column.color + '20'" [style.color]="column.color">
+                {{ column.items.length }}
+              </span>
+            </div>
+          </div>
+
+          <div
+            class="column-body"
+            cdkDropList
+            [id]="'column-' + column.id"
+            [cdkDropListData]="column.items"
+            [cdkDropListConnectedTo]="getConnectedLists()"
+            (cdkDropListDropped)="onDrop($event, column)">
+
+            @for (item of column.items; track item.id) {
+              <div cdkDrag [cdkDragData]="item">
+                <app-evolution-board-card
+                  [item]="item"
+                  (onCommit)="onCommitItem($event)"
+                  (onReject)="onRejectItem($event)"
+                  (onRetry)="onRetryItem($event)"
+                ></app-evolution-board-card>
+
+                <!-- Drag Placeholder -->
+                <div class="drag-placeholder" *cdkDragPlaceholder></div>
+              </div>
+            }
+
+            @if (column.items.length === 0) {
+              <div class="column-empty">
+                <mat-icon>{{ column.icon }}</mat-icon>
+                <span>Sin items</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Failed & Rejected Section -->
+    @if (boardService.failedItems().length > 0 || boardService.rejectedItems().length > 0) {
+      <div class="secondary-section">
+        @if (boardService.failedItems().length > 0) {
+          <div class="secondary-column failed">
+            <h3><mat-icon>error</mat-icon> Fallidos ({{ boardService.failedItems().length }})</h3>
+            <div class="secondary-items">
+              @for (item of boardService.failedItems(); track item.id) {
+                <app-evolution-board-card
+                  [item]="item"
+                  (onRetry)="onRetryItem($event)"
+                ></app-evolution-board-card>
+              }
+            </div>
+          </div>
+        }
+        @if (boardService.rejectedItems().length > 0) {
+          <div class="secondary-column rejected">
+            <h3><mat-icon>cancel</mat-icon> Rechazados ({{ boardService.rejectedItems().length }})</h3>
+            <div class="secondary-items">
+              @for (item of boardService.rejectedItems(); track item.id) {
+                <app-evolution-board-card
+                  [item]="item"
+                  (onRetry)="onRetryItem($event)"
+                ></app-evolution-board-card>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

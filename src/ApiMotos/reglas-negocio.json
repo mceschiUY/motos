@@ -1,0 +1,51 @@
+﻿{
+  "version": 1,
+  "universo": "motos",
+  "reglas": [
+    {
+      "id": "R-004",
+      "tipo": "proteccion_referencial",
+      "entidad": "Cliente",
+      "operaciones": [
+        "eliminar"
+      ],
+      "enforcement": "bloquear",
+      "mensaje": "No se puede eliminar: tiene envios asociados",
+      "perillas": {
+        "tablaHija": "PC_ENVIOS",
+        "fkColumna": "ClienteId"
+      }
+    },
+    {
+      "id": "R-005",
+      "tipo": "proteccion_referencial",
+      "entidad": "Agencia",
+      "operaciones": [
+        "eliminar"
+      ],
+      "enforcement": "bloquear",
+      "mensaje": "No se puede eliminar: tiene envios asociados",
+      "perillas": {
+        "tablaHija": "PC_ENVIOS",
+        "fkColumna": "AgenciaId"
+      }
+    },
+    {
+      "id": "R-007",
+      "tipo": "autorizacion_rol",
+      "entidad": "Envio",
+      "operaciones": [
+        "accion"
+      ],
+      "enforcement": "bloquear",
+      "mensaje": "Solo el rol Deposito puede realizar esta operaci\u00F3n",
+      "perillas": {
+        "exigeRol": [
+          "Deposito"
+        ],
+        "aplicaARol": [],
+        "accion": "PasarADespachado"
+      }
+    }
+  ]
+}

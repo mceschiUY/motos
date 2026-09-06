@@ -1,0 +1,280 @@
+// ╔═══════════════════════════════════════════════════════════════════════════════╗
+// ║                     CESKIA DESIGN SYSTEM - DESIGN TOKENS                      ║
+// ║                         "Estándar Oro" v1.0                                   ║
+// ╚═══════════════════════════════════════════════════════════════════════════════╝
+//
+// Arquitectura de tokens inspirada en Linear.app, Apple Dashboard y Stripe
+// Contraste WCAG 2.1 AA compliant
+//
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// THEME: RATIO DARK (Dark — DEFAULT)
+// Paleta del LOGIN elevada a paleta única del sitio (decisión Pablo 2026-08-29,
+// "no quiero dos azules"): fondos casi negros azulados del login
+// (#060A12 / #0B1120 / #111928 / #172030), UN solo azul protagonista #009FE3
+// con hover/glow en su misma familia. Bordes NEUTROS (el tinte celeste global
+// se descartó: "es muy celeste" — el color queda solo en lo interactivo).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+:root,
+[data-theme='dark'],
+.dark-theme {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FOUNDATION - Colores Base (escala del login)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-void: #060A12;           // El vacío ($rl-void del login)
+  --ceskia-base: #0B1120;           // Fondo del universo ($rl-deep)
+  --ceskia-surface: #111928;        // Cards/Sidebar ($rl-surface)
+  --ceskia-elevated: #172030;       // Modales/Dropdowns ($rl-raised)
+  --ceskia-hover: #1c2739;          // Estado hover (un paso sobre elevated)
+  --ceskia-active: #223046;         // Estado activo/selected
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // BORDERS - Hilos de Luz (NEUTROS — feedback Pablo 2026-08-29 "es muy celeste":
+  // el tinte celeste en todos los bordes teñía el sitio entero y el azul de las
+  // acciones dejaba de resaltar; el color queda reservado a lo interactivo)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-border-subtle: rgba(255, 255, 255, 0.06);
+  --ceskia-border-default: rgba(255, 255, 255, 0.09);
+  --ceskia-border-strong: rgba(255, 255, 255, 0.16);
+  --ceskia-border-focus: rgba(0, 159, 227, 0.5);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TEXT - Jerarquía Tipográfica (la del login)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-text-primary: #EDF2F7;
+  --ceskia-text-secondary: #7A8FA6;
+  --ceskia-text-tertiary: #5E738A;
+  --ceskia-text-muted: #3A4A5C;
+  --ceskia-text-inverse: #060A12;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ACCENT - Colores de Acento con Glow
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UN SOLO AZUL (decisión 2026-08-29): #009FE3 ($rl-signal del login) es el
+  // protagonista. Hover y glow en la MISMA familia del azul — nada de celeste
+  // #5ab8e8 suelto ("es muy celeste"). *-glow = fondos TONALES ~12%, no halos.
+  --ceskia-accent-primary: #009FE3;      // Azul señal del login — el protagonista
+  --ceskia-accent-primary-hover: #33b4f0;
+  --ceskia-accent-primary-glow: rgba(0, 159, 227, 0.12);
+
+  --ceskia-accent-success: #1ebe57;      // Verde Ratio
+  --ceskia-accent-success-hover: #3fd97a;
+  --ceskia-accent-success-glow: rgba(30, 190, 87, 0.12);
+
+  --ceskia-accent-warning: #ffcc44;      // Amarillo Ratio
+  --ceskia-accent-warning-hover: #ffd76b;
+  --ceskia-accent-warning-glow: rgba(255, 204, 68, 0.12);
+
+  --ceskia-accent-danger: #ef4444;       // Red (legible sobre navy)
+  --ceskia-accent-danger-hover: #f87171;
+  --ceskia-accent-danger-glow: rgba(239, 68, 68, 0.12);
+
+  // Info = el MISMO azul del sitio (un solo azul; no reintroducir celestes aparte)
+  --ceskia-accent-info: #009FE3;
+  --ceskia-accent-info-hover: #33b4f0;
+  --ceskia-accent-info-glow: rgba(0, 159, 227, 0.12);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SHADOWS - Sistema de Elevación (Difusas, multi-layer)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ceskia-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --ceskia-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --ceskia-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --ceskia-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4);
+
+  // Piel Salud: anillo FINO y quieto de 2px (era 3px). Mismo nombre de token —
+  // una línea acá calma los ~40 usos de golpe.
+  --ceskia-glow-primary: 0 0 0 2px var(--ceskia-accent-primary-glow);
+  --ceskia-glow-success: 0 0 0 2px var(--ceskia-accent-success-glow);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GLASS - Efecto Glassmorphism
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-glass-bg: rgba(11, 17, 32, 0.8);
+  --ceskia-glass-border: rgba(255, 255, 255, 0.1);
+  --ceskia-glass-blur: blur(20px);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCROLLBAR
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-scrollbar-track: var(--ceskia-base);
+  --ceskia-scrollbar-thumb: var(--ceskia-border-strong);
+  --ceskia-scrollbar-thumb-hover: var(--ceskia-text-tertiary);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// THEME: RATIO WHITE (Light)
+// El ratio.uy claro tal cual: blanco/azulado, azul #005ab9, texto carbón #071b31
+// ═══════════════════════════════════════════════════════════════════════════════
+
+[data-theme='light'],
+.light-theme {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FOUNDATION - Colores Base (escala clara de ratio.uy)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-void: #edf2f7;           // Fondo externo (muted de ratio.uy)
+  --ceskia-base: #f2f7fc;           // Fondo del universo (surface de ratio.uy)
+  --ceskia-surface: #ffffff;        // Cards/Sidebar (Nivel 1)
+  --ceskia-elevated: #ffffff;       // Modales/Dropdowns (Nivel 2)
+  --ceskia-hover: #edf2f7;          // Estado hover
+  --ceskia-active: #e0e5ea;         // Estado activo (border de ratio.uy)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // BORDERS - Líneas sutiles (casi invisibles, profundidad via sombras)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-border-subtle: rgba(7, 27, 49, 0.05);
+  --ceskia-border-default: rgba(7, 27, 49, 0.08);
+  --ceskia-border-strong: rgba(7, 27, 49, 0.14);
+  --ceskia-border-focus: rgba(0, 90, 185, 0.4);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TEXT - Jerarquía (nunca negro puro)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-text-primary: #071b31;   // Carbón azulado de ratio.uy
+  --ceskia-text-secondary: #515f6e;
+  --ceskia-text-tertiary: #5e7488;  // steel de ratio.uy
+  --ceskia-text-muted: #a7bac9;
+  --ceskia-text-inverse: #f9fcff;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ACCENT - Colores ligeramente más saturados para light
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Paleta única de marca (2026-08-29): los acentos EXACTOS de ratio.uy claro.
+  --ceskia-accent-primary: #005ab9;      // Azul Ratio (primary del sitio)
+  --ceskia-accent-primary-hover: #106ed7; // accent del sitio
+  --ceskia-accent-primary-glow: rgba(0, 90, 185, 0.10);
+
+  --ceskia-accent-success: #1ebe57;      // Verde Ratio
+  --ceskia-accent-success-hover: #25d366;
+  --ceskia-accent-success-glow: rgba(30, 190, 87, 0.10);
+
+  --ceskia-accent-warning: #d97706;      // Ámbar (el #ffcc44 no contrasta en claro)
+  --ceskia-accent-warning-hover: #f59e0b;
+  --ceskia-accent-warning-glow: rgba(217, 119, 6, 0.10);
+
+  --ceskia-accent-danger: #df202e;       // destructive de ratio.uy
+  --ceskia-accent-danger-hover: #ef4444;
+  --ceskia-accent-danger-glow: rgba(223, 32, 46, 0.10);
+
+  --ceskia-accent-info: #3fa3d8;         // Celeste profundo Ratio
+  --ceskia-accent-info-hover: #5ab8e8;
+  --ceskia-accent-info-glow: rgba(63, 163, 216, 0.10);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SHADOWS - Gran radio, baja opacidad (profundidad sin líneas)
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ceskia-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ceskia-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --ceskia-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+  --ceskia-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.06);
+
+  --ceskia-glow-primary: 0 0 0 2px var(--ceskia-accent-primary-glow);
+  --ceskia-glow-success: 0 0 0 2px var(--ceskia-accent-success-glow);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GLASS - solo para superficies sticky (topbar), sobrio
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-glass-bg: rgba(255, 255, 255, 0.85);
+  --ceskia-glass-border: rgba(0, 0, 0, 0.06);
+  --ceskia-glass-blur: blur(20px);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCROLLBAR
+  // ─────────────────────────────────────────────────────────────────────────────
+  --ceskia-scrollbar-track: var(--ceskia-void);
+  --ceskia-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --ceskia-scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPOGRAPHY TOKENS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+:root {
+  // Font Family (CESKIA 2.0: las tres se CARGAN de verdad en index.html —
+  // antes se declaraba Inter pero se cargaba Roboto y todo caía al fallback)
+  --ceskia-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ceskia-font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif; // títulos, KPIs, números grandes
+  --ceskia-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;  // ids, RUTs, códigos
+
+  // Números tabulares: columnas de montos que NO bailan (aplicar en celdas/KPIs)
+  --ceskia-font-numeric: 'tnum' 1;
+
+  // Font Sizes (Escala modular 1.25)
+  --ceskia-text-xs: 0.75rem;     // 12px
+  --ceskia-text-sm: 0.8125rem;   // 13px
+  --ceskia-text-base: 0.875rem;  // 14px
+  --ceskia-text-md: 1rem;        // 16px
+  --ceskia-text-lg: 1.125rem;    // 18px
+  --ceskia-text-xl: 1.25rem;     // 20px
+  --ceskia-text-2xl: 1.5rem;     // 24px
+  --ceskia-text-3xl: 1.875rem;   // 30px
+  --ceskia-text-4xl: 2.25rem;    // 36px
+
+  // Font Weights
+  --ceskia-font-normal: 400;
+  --ceskia-font-medium: 500;
+  --ceskia-font-semibold: 600;
+  --ceskia-font-bold: 700;
+
+  // Letter Spacing (Premium look: negativo para títulos)
+  --ceskia-tracking-tighter: -0.03em;
+  --ceskia-tracking-tight: -0.02em;
+  --ceskia-tracking-normal: 0;
+  --ceskia-tracking-wide: 0.025em;
+  --ceskia-tracking-wider: 0.05em;
+
+  // Line Heights
+  --ceskia-leading-none: 1;
+  --ceskia-leading-tight: 1.25;
+  --ceskia-leading-snug: 1.375;
+  --ceskia-leading-normal: 1.5;
+  --ceskia-leading-relaxed: 1.625;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SPACING & SIZING TOKENS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+:root {
+  // Spacing Scale (4px base)
+  --ceskia-space-0: 0;
+  --ceskia-space-1: 0.25rem;   // 4px
+  --ceskia-space-2: 0.5rem;    // 8px
+  --ceskia-space-3: 0.75rem;   // 12px
+  --ceskia-space-4: 1rem;      // 16px
+  --ceskia-space-5: 1.25rem;   // 20px
+  --ceskia-space-6: 1.5rem;    // 24px
+  --ceskia-space-8: 2rem;      // 32px
+  --ceskia-space-10: 2.5rem;   // 40px
+  --ceskia-space-12: 3rem;     // 48px
+  --ceskia-space-16: 4rem;     // 64px
+  --ceskia-space-20: 5rem;     // 80px
+
+  // Border Radius
+  --ceskia-radius-none: 0;
+  --ceskia-radius-sm: 4px;
+  --ceskia-radius-md: 6px;
+  --ceskia-radius-lg: 8px;
+  --ceskia-radius-xl: 12px;
+  --ceskia-radius-2xl: 16px;
+  --ceskia-radius-full: 9999px;
+
+  // Transitions
+  --ceskia-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ceskia-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ceskia-transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ceskia-transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // Z-Index Scale
+  --ceskia-z-base: 0;
+  --ceskia-z-dropdown: 100;
+  --ceskia-z-sticky: 200;
+  --ceskia-z-modal: 300;
+  --ceskia-z-popover: 400;
+  --ceskia-z-tooltip: 500;
+  --ceskia-z-toast: 600;
+}

@@ -1,0 +1,27 @@
+﻿// Home del producto — generado por Forja (números del negocio en vivo)
+.home-view { padding: var(--ceskia-space-8); }
+.home-header { margin-bottom: var(--ceskia-space-8); }
+.home-titulo { margin: 0; font-size: var(--ceskia-text-3xl); font-weight: var(--ceskia-font-semibold); letter-spacing: var(--ceskia-tracking-tight); }
+.home-sub { margin: var(--ceskia-space-2) 0 0 0; color: var(--ceskia-text-secondary); }
+.home-pulso { background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-lg); padding: var(--ceskia-space-4) var(--ceskia-space-6); margin-bottom: var(--ceskia-space-6); }
+.pulso-titulo { margin: 0 0 var(--ceskia-space-3) 0; font-size: var(--ceskia-text-sm); text-transform: uppercase; letter-spacing: .08em; color: var(--ceskia-text-tertiary); }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--ceskia-space-5); }
+.home-card { background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-lg); padding: var(--ceskia-space-5); display: flex; flex-direction: column; gap: var(--ceskia-space-4); }
+.home-card:hover { border-color: var(--ceskia-border-default); box-shadow: var(--ceskia-shadow-sm); }
+.home-card-header { display: flex; align-items: center; gap: var(--ceskia-space-3); cursor: pointer; }
+.home-card-icon { width: 42px; height: 42px; border-radius: var(--ceskia-radius-md); background: var(--ceskia-surface); border: 1px solid var(--ceskia-border-subtle); display: flex; align-items: center; justify-content: center; mat-icon { color: var(--ceskia-accent-primary); } }
+.home-card-info { display: flex; flex-direction: column; min-width: 0; }
+.home-card-title { font-weight: var(--ceskia-font-semibold); }
+.home-card-modulo { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.home-card-total { margin-left: auto; font-size: var(--ceskia-text-2xl); font-weight: var(--ceskia-font-semibold); color: var(--ceskia-accent-primary); }
+.home-dist { display: flex; flex-direction: column; gap: var(--ceskia-space-2); }
+.dist-row { display: flex; align-items: center; gap: var(--ceskia-space-2); }
+.dist-label { width: 110px; min-width: 110px; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-secondary); text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dist-bar { flex: 1; height: 8px; background: var(--ceskia-surface); border-radius: var(--ceskia-radius-full); overflow: hidden; }
+.dist-fill { height: 100%; background: var(--ceskia-accent-primary); border-radius: var(--ceskia-radius-full); }
+.dist-num { width: 34px; text-align: right; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.home-meses { display: flex; align-items: flex-end; gap: var(--ceskia-space-2); height: 76px; }
+.mes-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; }
+.mes-track { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.mes-bar { width: 100%; background: var(--ceskia-accent-info); border-radius: var(--ceskia-radius-sm) var(--ceskia-radius-sm) 0 0; min-height: 2px; }
+.mes-label { font-size: 10px; color: var(--ceskia-text-muted); }

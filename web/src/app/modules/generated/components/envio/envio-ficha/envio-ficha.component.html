@@ -1,0 +1,149 @@
+﻿<div class="ficha-view">
+  @if (cargando()) {
+    <div class="ficha-cargando">Cargando…</div>
+  } @else if (!item()) {
+    <div class="ficha-cargando">No se encontró el registro <button mat-button (click)="volver()">← Volver</button></div>
+  } @else {
+
+    <!-- Membrete: solo existe en papel (PDF con marca) -->
+    <app-membrete-impresion [titulo]="titulo()" tipo="Envio"></app-membrete-impresion>
+
+    <!-- ═══ Encabezado: título, estado, acciones ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo">
+        <h1>{{ titulo() }}</h1>
+        <span class="ficha-estado" [class]="claseEstado()">{{ estadoActual().replace('_', ' ') }}</span>
+      </div>
+      <div class="ficha-acciones">
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir / guardar PDF"><mat-icon>picture_as_pdf</mat-icon></button>
+        <button mat-icon-button (click)="documentos()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
+        <button mat-icon-button (click)="editar()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button class="peligro" (click)="eliminar()" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ Proceso guiado: el ciclo como camino ═══ -->
+    <section class="ficha-proceso">
+      <div class="proceso-camino">
+        @for (paso of pasos; track paso.id; let i = $index) {
+          <div class="proceso-paso" [class.recorrido]="i < indicePaso()" [class.actual]="i === indicePaso()">
+            <span class="paso-dot {{ paso.clase }}"></span>
+            <span class="paso-label">{{ paso.label }}</span>
+          </div>
+          @if (!$last) { <span class="paso-linea" [class.recorrida]="i < indicePaso()"></span> }
+        }
+      </div>
+      @if (pasosPosibles().length > 0) {
+        <div class="proceso-siguientes">
+          @for (p of pasosPosibles(); track p.id) {
+            <div class="siguiente">
+              <button mat-stroked-button (click)="ejecutarPaso(p.id)">→ {{ p.label }}</button>
+              @if (guia[p.id]?.condicion || guia[p.id]?.actor) {
+                <span class="siguiente-guia">
+                  @if (guia[p.id].condicion) { {{ guia[p.id].condicion }} }
+                  @if (guia[p.id].actor) { · lo hace: {{ guia[p.id].actor }} }
+                </span>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="proceso-cerrado">Este registro no tiene pasos siguientes</div>
+      }
+    </section>
+
+    <!-- ═══ Datos ═══ -->
+    <section class="ficha-datos">
+      <h2>Datos</h2>
+      <div class="datos-grid">
+        <div class="dato">
+          <span class="dato-label">Código Rastreo</span>
+          <span class="dato-valor">{{ $any(item()).codigoRastreo }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Fecha Recibido</span>
+          <span class="dato-valor">{{ $any(item()).fechaRecibido | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Fecha Factura</span>
+          <span class="dato-valor">{{ $any(item()).fechaFactura | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Fecha Envio</span>
+          <span class="dato-valor">{{ $any(item()).fechaEnvio | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Fecha Entrega</span>
+          <span class="dato-valor">{{ $any(item()).fechaEntrega | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Motivo Anulacion</span>
+          <span class="dato-valor">{{ $any(item()).motivoAnulacion }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Cliente</span>
+          <span class="dato-valor">{{ $any(item()).clienteDisplay || $any(item()).clienteId }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Agencia</span>
+          <span class="dato-valor">{{ $any(item()).agenciaDisplay || $any(item()).agenciaId }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Fotos: los Documentos con imagen del registro; sin fotos, sin sección ═══ -->
+    <app-foto-galeria [relacionId]="id" relacionNombre="Envio"></app-foto-galeria>
+
+    <!-- ═══ Relacionados ═══ -->
+    <section class="ficha-relacionados">
+      <div class="rel-tabs">
+        @for (r of relaciones; track r.nombre) {
+          <button class="rel-tab" [class.activa]="tabActiva() === r.nombre" (click)="tabActiva.set(r.nombre)">
+            <mat-icon>{{ r.icon }}</mat-icon> {{ r.label }}
+            <span class="rel-count">{{ itemsDe(r.nombre).length }}</span>
+          </button>
+        }
+      </div>
+      @for (r of relaciones; track r.nombre) {
+        @if (tabActiva() === r.nombre) {
+          @if (itemsDe(r.nombre).length === 0) {
+            <div class="rel-vacio">Sin {{ r.label.toLowerCase() }} todavía</div>
+          } @else {
+            <table class="rel-tabla">
+              <thead><tr>
+                @for (col of columnasDe(r.nombre); track col) { <th>{{ col }}</th> }
+                <th></th>
+              </tr></thead>
+              <tbody>
+                @for (row of itemsDe(r.nombre); track row.id) {
+                  <tr (click)="irA(r, row)">
+                    @for (col of columnasDe(r.nombre); track col) { <td>{{ row[col] }}</td> }
+                    <td><mat-icon class="rel-ir">chevron_right</mat-icon></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      }
+    </section>
+
+    <!-- ═══ Historia (auditoría) ═══ -->
+    @if (historia().length > 0) {
+      <section class="ficha-historia">
+        <h2>Historia</h2>
+        <div class="historia-linea">
+          @for (e of historia(); track $index) {
+            <div class="evento" [class.fallo]="!e.ok">
+              <span class="evento-dot"></span>
+              <span class="evento-que">{{ e.que }}</span>
+              <span class="evento-quien">{{ e.quien }}</span>
+              <span class="evento-fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

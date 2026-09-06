@@ -1,0 +1,61 @@
+<!-- CESKIA 2.0: footer utilitario de UNA línea (el bloque tipo "sitio web
+     marketing" no va en una herramienta de trabajo). Config intacta. -->
+<footer class="site-footer">
+  <div class="footer-left">
+    <span class="footer-empresa">{{ siteConfig.empresaNombre() || siteConfig.sitioNombre() }}</span>
+    @if (siteConfig.legalCopyright()) {
+      <span class="footer-sep">·</span>
+      <span class="footer-copy">{{ siteConfig.legalCopyright() }}</span>
+    }
+  </div>
+
+  <div class="footer-right">
+    @if (hasContacto) {
+      @if (siteConfig.empresaTelefono()) {
+        <span class="footer-dato">
+          <mat-icon>phone</mat-icon>{{ siteConfig.empresaTelefono() }}
+        </span>
+      }
+      @if (siteConfig.empresaEmail()) {
+        <span class="footer-dato clickable" (click)="sendEmail()" (keydown.enter)="sendEmail()" role="button" tabindex="0">
+          <mat-icon>email</mat-icon>{{ siteConfig.empresaEmail() }}
+        </span>
+      }
+    }
+
+    @if (hasRedes) {
+      <span class="footer-redes">
+        @if (siteConfig.socialWhatsapp()) {
+          <button class="red-btn whatsapp" matTooltip="WhatsApp" (click)="openWhatsApp()">
+            <mat-icon>chat</mat-icon>
+          </button>
+        }
+        @if (siteConfig.socialInstagram()) {
+          <button class="red-btn instagram" matTooltip="Instagram" (click)="openLink(siteConfig.socialInstagram())">
+            <mat-icon>photo_camera</mat-icon>
+          </button>
+        }
+        @if (siteConfig.socialFacebook()) {
+          <button class="red-btn facebook" matTooltip="Facebook" (click)="openLink(siteConfig.socialFacebook())">
+            <mat-icon>thumb_up</mat-icon>
+          </button>
+        }
+        @if (siteConfig.socialLinkedin()) {
+          <button class="red-btn linkedin" matTooltip="LinkedIn" (click)="openLink(siteConfig.socialLinkedin())">
+            <mat-icon>work</mat-icon>
+          </button>
+        }
+        @if (siteConfig.socialTwitter()) {
+          <button class="red-btn twitter" matTooltip="Twitter/X" (click)="openLink(siteConfig.socialTwitter())">
+            <mat-icon>alternate_email</mat-icon>
+          </button>
+        }
+        @if (siteConfig.socialYoutube()) {
+          <button class="red-btn youtube" matTooltip="YouTube" (click)="openLink(siteConfig.socialYoutube())">
+            <mat-icon>play_circle</mat-icon>
+          </button>
+        }
+      </span>
+    }
+  </div>
+</footer>

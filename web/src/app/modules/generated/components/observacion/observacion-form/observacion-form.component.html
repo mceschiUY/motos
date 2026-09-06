@@ -1,0 +1,93 @@
+﻿<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Observación' : 'Nuevo Observación' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Texto Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Texto</mat-label>
+          <input matInput type="text" formControlName="texto">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('texto')?.touched && form.get('texto')?.invalid) {
+            <mat-error>{{ getErrorMessage('texto') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('texto')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- FechaHora Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha Hora</mat-label>
+          <input matInput [matDatepicker]="pickerFechaHora" formControlName="fechaHora">
+          <mat-datepicker-toggle matIconSuffix [for]="pickerFechaHora"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFechaHora></mat-datepicker>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          @if (form.get('fechaHora')?.touched && form.get('fechaHora')?.invalid) {
+            <mat-error>{{ getErrorMessage('fechaHora') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('fechaHora')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Usuario Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Usuario</mat-label>
+          <input matInput type="text" formControlName="usuario">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('usuario')?.touched && form.get('usuario')?.invalid) {
+            <mat-error>{{ getErrorMessage('usuario') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('usuario')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Envio Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('envioId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Envio</mat-label>
+          <mat-select formControlName="envioId">
+            @for (option of envios(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'codigoRastreo') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>business</mat-icon>
+          @if (form.get('envioId')?.touched && form.get('envioId')?.invalid) {
+            <mat-error>{{ getErrorMessage('envioId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('envioId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

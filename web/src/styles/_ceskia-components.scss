@@ -1,0 +1,1047 @@
+// ╔═══════════════════════════════════════════════════════════════════════════════╗
+// ║                    CESKIA DESIGN SYSTEM - COMPONENT LIBRARY                   ║
+// ║                         "Estándar Oro" v1.0                                   ║
+// ╚═══════════════════════════════════════════════════════════════════════════════╝
+//
+// Componentes globales reutilizables
+// PROHIBIDO: Estilos locales duplicados en componentes individuales
+//
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BASE RESET & GLOBAL STYLES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--ceskia-font-sans);
+  font-size: var(--ceskia-text-base);
+  line-height: var(--ceskia-leading-normal);
+  color: var(--ceskia-text-primary);
+  background-color: var(--ceskia-base);
+  transition: background-color var(--ceskia-transition-normal), color var(--ceskia-transition-normal);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCROLLBAR - Estilo Premium
+// ═══════════════════════════════════════════════════════════════════════════════
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ceskia-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ceskia-scrollbar-thumb);
+  border-radius: var(--ceskia-radius-full);
+
+  &:hover {
+    background: var(--ceskia-scrollbar-thumb-hover);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPOGRAPHY CLASSES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-heading-1 {
+  font-size: var(--ceskia-text-4xl);
+  font-weight: var(--ceskia-font-bold);
+  letter-spacing: var(--ceskia-tracking-tighter);
+  line-height: var(--ceskia-leading-tight);
+  color: var(--ceskia-text-primary);
+}
+
+.ceskia-heading-2 {
+  font-size: var(--ceskia-text-3xl);
+  font-weight: var(--ceskia-font-semibold);
+  letter-spacing: var(--ceskia-tracking-tight);
+  line-height: var(--ceskia-leading-tight);
+  color: var(--ceskia-text-primary);
+}
+
+.ceskia-heading-3 {
+  font-size: var(--ceskia-text-2xl);
+  font-weight: var(--ceskia-font-semibold);
+  letter-spacing: var(--ceskia-tracking-tight);
+  line-height: var(--ceskia-leading-snug);
+  color: var(--ceskia-text-primary);
+}
+
+.ceskia-heading-4 {
+  font-size: var(--ceskia-text-xl);
+  font-weight: var(--ceskia-font-medium);
+  letter-spacing: var(--ceskia-tracking-tight);
+  line-height: var(--ceskia-leading-snug);
+  color: var(--ceskia-text-primary);
+}
+
+.ceskia-text-body {
+  font-size: var(--ceskia-text-base);
+  color: var(--ceskia-text-primary);
+}
+
+.ceskia-text-secondary {
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-secondary);
+}
+
+.ceskia-text-muted {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-muted);
+}
+
+.ceskia-text-mono {
+  font-family: var(--ceskia-font-mono);
+  font-size: var(--ceskia-text-sm);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ELEVATION LAYERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-layer-base {
+  background-color: var(--ceskia-base);
+}
+
+.ceskia-layer-surface {
+  background-color: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-xl);
+  box-shadow: var(--ceskia-shadow-sm);
+}
+
+.ceskia-layer-elevated {
+  background-color: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-xl);
+  box-shadow: var(--ceskia-shadow-lg);
+}
+
+.ceskia-layer-glass {
+  background: var(--ceskia-glass-bg);
+  backdrop-filter: var(--ceskia-glass-blur);
+  -webkit-backdrop-filter: var(--ceskia-glass-blur);
+  border: 1px solid var(--ceskia-glass-border);
+  border-radius: var(--ceskia-radius-xl);
+  box-shadow: var(--ceskia-shadow-lg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA BUTTONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-2) var(--ceskia-space-4);
+  font-family: var(--ceskia-font-sans);
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-medium);
+  line-height: var(--ceskia-leading-none);
+  border-radius: var(--ceskia-radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: all var(--ceskia-transition-fast);
+  white-space: nowrap;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Icon sizing
+  mat-icon, .icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+// Botones de acción: color sólido + sombra sutil. Sin gradiente, sin glow,
+// sin translateY — un solo efecto por interacción (look empresarial).
+.ceskia-btn-primary {
+  @extend .ceskia-btn;
+  background: var(--ceskia-accent-primary);
+  color: white;
+  box-shadow: var(--ceskia-shadow-xs);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-accent-primary-hover);
+    box-shadow: var(--ceskia-shadow-sm);
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: none;
+  }
+}
+
+.ceskia-btn-success {
+  @extend .ceskia-btn;
+  background: var(--ceskia-accent-success);
+  color: white;
+  box-shadow: var(--ceskia-shadow-xs);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-accent-success-hover);
+    box-shadow: var(--ceskia-shadow-sm);
+  }
+}
+
+.ceskia-btn-danger {
+  @extend .ceskia-btn;
+  background: var(--ceskia-accent-danger);
+  color: white;
+  box-shadow: var(--ceskia-shadow-xs);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-accent-danger-hover);
+    box-shadow: var(--ceskia-shadow-sm);
+  }
+}
+
+.ceskia-btn-secondary {
+  @extend .ceskia-btn;
+  background: transparent;
+  color: var(--ceskia-text-secondary);
+  border: 1px solid var(--ceskia-border-default);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-hover);
+    color: var(--ceskia-text-primary);
+    border-color: var(--ceskia-border-strong);
+  }
+}
+
+.ceskia-btn-ghost {
+  @extend .ceskia-btn;
+  background: transparent;
+  color: var(--ceskia-text-secondary);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-hover);
+    color: var(--ceskia-text-primary);
+  }
+}
+
+.ceskia-btn-icon {
+  @extend .ceskia-btn;
+  padding: var(--ceskia-space-2);
+  background: transparent;
+  color: var(--ceskia-text-tertiary);
+  border-radius: var(--ceskia-radius-md);
+
+  &:hover:not(:disabled) {
+    background: var(--ceskia-hover);
+    color: var(--ceskia-text-primary);
+  }
+}
+
+// Sizes
+.ceskia-btn-sm {
+  padding: var(--ceskia-space-1) var(--ceskia-space-3);
+  font-size: var(--ceskia-text-xs);
+}
+
+.ceskia-btn-lg {
+  padding: var(--ceskia-space-3) var(--ceskia-space-6);
+  font-size: var(--ceskia-text-md);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA INPUTS - Precisión con Ring Glow
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-input {
+  width: 100%;
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  font-family: var(--ceskia-font-sans);
+  font-size: var(--ceskia-text-base);
+  color: var(--ceskia-text-primary);
+  background-color: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-lg);
+  outline: none;
+  transition: all var(--ceskia-transition-fast);
+
+  &::placeholder {
+    color: var(--ceskia-text-muted);
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--ceskia-border-strong);
+  }
+
+  &:focus {
+    border-color: var(--ceskia-accent-primary);
+    box-shadow: 0 0 0 3px var(--ceskia-accent-primary-glow);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--ceskia-hover);
+  }
+
+  &.error {
+    border-color: var(--ceskia-accent-danger);
+
+    &:focus {
+      box-shadow: 0 0 0 3px var(--ceskia-accent-danger-glow);
+    }
+  }
+}
+
+.ceskia-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ceskia-space-2);
+}
+
+.ceskia-input-label {
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-medium);
+  color: var(--ceskia-text-secondary);
+}
+
+.ceskia-input-hint {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-muted);
+}
+
+.ceskia-input-error {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-accent-danger);
+}
+
+.ceskia-input-icon {
+  position: absolute;
+  left: var(--ceskia-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ceskia-text-muted);
+  pointer-events: none;
+}
+
+.ceskia-input-with-icon {
+  padding-left: var(--ceskia-space-10);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA TABLE - Alta Densidad
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--ceskia-text-sm);
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  th {
+    padding: var(--ceskia-space-3) var(--ceskia-space-4);
+    text-align: left;
+    font-weight: var(--ceskia-font-medium);
+    font-size: var(--ceskia-text-xs);
+    color: var(--ceskia-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: var(--ceskia-tracking-wider);
+    background-color: var(--ceskia-surface);
+    border-bottom: 1px solid var(--ceskia-border-subtle);
+    white-space: nowrap;
+
+    &:first-child {
+      border-top-left-radius: var(--ceskia-radius-lg);
+    }
+
+    &:last-child {
+      border-top-right-radius: var(--ceskia-radius-lg);
+    }
+  }
+
+  td {
+    padding: var(--ceskia-space-3) var(--ceskia-space-4);
+    color: var(--ceskia-text-primary);
+    border-bottom: 1px solid var(--ceskia-border-subtle);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color var(--ceskia-transition-fast);
+
+    &:hover {
+      background-color: var(--ceskia-hover);
+    }
+
+    &.selected {
+      background-color: var(--ceskia-active);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+
+      &:first-child {
+        border-bottom-left-radius: var(--ceskia-radius-lg);
+      }
+
+      &:last-child {
+        border-bottom-right-radius: var(--ceskia-radius-lg);
+      }
+    }
+  }
+
+  // Datos numéricos con fuente mono
+  .cell-numeric {
+    font-family: var(--ceskia-font-mono);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Acciones
+  .cell-actions {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+// Table wrapper con scroll
+.ceskia-table-wrapper {
+  @extend .ceskia-layer-surface;
+  overflow: hidden;
+}
+
+.ceskia-table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA DROPDOWN / POPOVER - Glassmorphism con bisel
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-dropdown {
+  position: absolute;
+  min-width: 200px;
+  padding: var(--ceskia-space-2);
+  background: var(--ceskia-glass-bg);
+  backdrop-filter: var(--ceskia-glass-blur);
+  -webkit-backdrop-filter: var(--ceskia-glass-blur);
+  border: 1px solid var(--ceskia-glass-border);
+  border-radius: var(--ceskia-radius-xl);
+  box-shadow: var(--ceskia-shadow-xl);
+  z-index: var(--ceskia-z-dropdown);
+  animation: ceskia-dropdown-in var(--ceskia-transition-fast) ease-out;
+
+  // Bisel de cristal (borde superior más claro)
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    border-radius: var(--ceskia-radius-xl) var(--ceskia-radius-xl) 0 0;
+  }
+}
+
+.ceskia-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-2) var(--ceskia-space-3);
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-primary);
+  border-radius: var(--ceskia-radius-md);
+  cursor: pointer;
+  transition: background-color var(--ceskia-transition-fast);
+
+  &:hover {
+    background-color: var(--ceskia-hover);
+  }
+
+  &.active {
+    background-color: var(--ceskia-active);
+    color: var(--ceskia-accent-primary);
+  }
+
+  &.danger {
+    color: var(--ceskia-accent-danger);
+  }
+
+  mat-icon, .icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+.ceskia-dropdown-divider {
+  height: 1px;
+  margin: var(--ceskia-space-2) 0;
+  background-color: var(--ceskia-border-subtle);
+}
+
+@keyframes ceskia-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA TABS - Pill/Segmented Style
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-tabs {
+  display: inline-flex;
+  padding: var(--ceskia-space-1);
+  background-color: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-xl);
+  gap: var(--ceskia-space-1);
+}
+
+.ceskia-tab {
+  position: relative;
+  padding: var(--ceskia-space-2) var(--ceskia-space-4);
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-medium);
+  color: var(--ceskia-text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--ceskia-radius-lg);
+  cursor: pointer;
+  transition: all var(--ceskia-transition-fast);
+  white-space: nowrap;
+
+  &:hover:not(.active) {
+    color: var(--ceskia-text-primary);
+    background-color: var(--ceskia-hover);
+  }
+
+  &.active {
+    color: var(--ceskia-text-primary);
+    background-color: var(--ceskia-elevated);
+    box-shadow: var(--ceskia-shadow-sm);
+  }
+}
+
+// Tabs con línea inferior animada
+.ceskia-tabs-underline {
+  display: flex;
+  border-bottom: 1px solid var(--ceskia-border-subtle);
+  gap: var(--ceskia-space-6);
+}
+
+.ceskia-tab-underline {
+  position: relative;
+  padding: var(--ceskia-space-3) 0;
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-medium);
+  color: var(--ceskia-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--ceskia-transition-fast);
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--ceskia-accent-primary);
+    transform: scaleX(0);
+    transition: transform var(--ceskia-transition-normal);
+  }
+
+  &:hover {
+    color: var(--ceskia-text-primary);
+  }
+
+  &.active {
+    color: var(--ceskia-accent-primary);
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA CARDS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-card {
+  @extend .ceskia-layer-surface;
+  padding: var(--ceskia-space-6);
+}
+
+.ceskia-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ceskia-space-4);
+}
+
+.ceskia-card-title {
+  font-size: var(--ceskia-text-lg);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  letter-spacing: var(--ceskia-tracking-tight);
+}
+
+.ceskia-card-subtitle {
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-secondary);
+  margin-top: var(--ceskia-space-1);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA BADGES & CHIPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ceskia-space-1) var(--ceskia-space-2);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-medium);
+  border-radius: var(--ceskia-radius-full);
+  white-space: nowrap;
+}
+
+.ceskia-badge-primary {
+  @extend .ceskia-badge;
+  background-color: var(--ceskia-accent-primary-glow);
+  color: var(--ceskia-accent-primary);
+}
+
+.ceskia-badge-success {
+  @extend .ceskia-badge;
+  background-color: var(--ceskia-accent-success-glow);
+  color: var(--ceskia-accent-success);
+}
+
+.ceskia-badge-warning {
+  @extend .ceskia-badge;
+  background-color: var(--ceskia-accent-warning-glow);
+  color: var(--ceskia-accent-warning);
+}
+
+.ceskia-badge-danger {
+  @extend .ceskia-badge;
+  background-color: var(--ceskia-accent-danger-glow);
+  color: var(--ceskia-accent-danger);
+}
+
+.ceskia-badge-neutral {
+  @extend .ceskia-badge;
+  background-color: var(--ceskia-hover);
+  color: var(--ceskia-text-secondary);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA MODAL / DIALOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--ceskia-z-modal);
+  animation: ceskia-fade-in var(--ceskia-transition-fast);
+}
+
+.ceskia-modal {
+  @extend .ceskia-layer-elevated;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: ceskia-modal-in var(--ceskia-transition-normal) ease-out;
+}
+
+.ceskia-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ceskia-space-6);
+  border-bottom: 1px solid var(--ceskia-border-subtle);
+}
+
+.ceskia-modal-title {
+  font-size: var(--ceskia-text-xl);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  letter-spacing: var(--ceskia-tracking-tight);
+}
+
+.ceskia-modal-body {
+  padding: var(--ceskia-space-6);
+  overflow-y: auto;
+  max-height: calc(90vh - 200px);
+}
+
+.ceskia-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-4) var(--ceskia-space-6);
+  border-top: 1px solid var(--ceskia-border-subtle);
+  background-color: var(--ceskia-surface);
+}
+
+@keyframes ceskia-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ceskia-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA SIDEBAR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  height: 100vh;
+  background-color: var(--ceskia-surface);
+  border-right: 1px solid var(--ceskia-border-subtle);
+  transition: width var(--ceskia-transition-normal);
+  overflow: hidden;
+
+  &.collapsed {
+    width: 72px;
+  }
+}
+
+.ceskia-sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: var(--ceskia-space-4) var(--ceskia-space-4);
+  border-bottom: 1px solid var(--ceskia-border-subtle);
+}
+
+.ceskia-sidebar-nav {
+  flex: 1;
+  padding: var(--ceskia-space-4);
+  overflow-y: auto;
+}
+
+.ceskia-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-3) var(--ceskia-space-3);
+  color: var(--ceskia-text-secondary);
+  border-radius: var(--ceskia-radius-lg);
+  cursor: pointer;
+  transition: all var(--ceskia-transition-fast);
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--ceskia-hover);
+    color: var(--ceskia-text-primary);
+  }
+
+  &.active {
+    background-color: var(--ceskia-active);
+    color: var(--ceskia-accent-primary);
+
+    mat-icon, .icon {
+      color: var(--ceskia-accent-primary);
+    }
+  }
+
+  mat-icon, .icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    color: var(--ceskia-text-tertiary);
+    flex-shrink: 0;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.ceskia-sidebar-section {
+  margin-top: var(--ceskia-space-4);
+  margin-bottom: var(--ceskia-space-2);
+  padding: 0 var(--ceskia-space-3);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ceskia-tracking-wider);
+}
+
+.ceskia-sidebar-footer {
+  padding: var(--ceskia-space-4);
+  border-top: 1px solid var(--ceskia-border-subtle);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA BREADCRUMBS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  font-size: var(--ceskia-text-sm);
+}
+
+.ceskia-breadcrumb-item {
+  color: var(--ceskia-text-secondary);
+  text-decoration: none;
+  transition: color var(--ceskia-transition-fast);
+
+  &:hover {
+    color: var(--ceskia-text-primary);
+  }
+
+  &.active {
+    color: var(--ceskia-text-primary);
+    font-weight: var(--ceskia-font-medium);
+  }
+}
+
+.ceskia-breadcrumb-separator {
+  color: var(--ceskia-text-muted);
+
+  mat-icon, .icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA EMPTY STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ceskia-space-16) var(--ceskia-space-8);
+  text-align: center;
+
+  mat-icon, .icon {
+    width: 64px;
+    height: 64px;
+    font-size: 64px;
+    color: var(--ceskia-text-muted);
+    margin-bottom: var(--ceskia-space-4);
+  }
+}
+
+.ceskia-empty-title {
+  font-size: var(--ceskia-text-lg);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  margin-bottom: var(--ceskia-space-2);
+}
+
+.ceskia-empty-description {
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-secondary);
+  max-width: 400px;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA LOADING / SKELETON
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Piel Salud: pulso sólido y quieto (el barrido de gradiente era ruido en carga)
+.ceskia-skeleton {
+  background: var(--ceskia-hover);
+  animation: ceskia-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--ceskia-radius-md);
+}
+
+@keyframes ceskia-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CESKIA TOOLTIP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.ceskia-tooltip {
+  position: absolute;
+  padding: var(--ceskia-space-2) var(--ceskia-space-3);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-medium);
+  color: var(--ceskia-text-inverse);
+  background-color: var(--ceskia-text-primary);
+  border-radius: var(--ceskia-radius-md);
+  box-shadow: var(--ceskia-shadow-lg);
+  white-space: nowrap;
+  z-index: var(--ceskia-z-tooltip);
+  animation: ceskia-fade-in var(--ceskia-transition-fast);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MATERIAL OVERRIDES (Para integración con Angular Material)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--ceskia-elevated) !important;
+  --mdc-dialog-container-shape: var(--ceskia-radius-xl) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--ceskia-elevated) !important;
+  --mdc-snackbar-supporting-text-color: var(--ceskia-text-primary) !important;
+}
+
+.mat-mdc-menu-panel {
+  background: var(--ceskia-glass-bg) !important;
+  backdrop-filter: var(--ceskia-glass-blur) !important;
+  border: 1px solid var(--ceskia-glass-border) !important;
+  border-radius: var(--ceskia-radius-xl) !important;
+  box-shadow: var(--ceskia-shadow-xl) !important;
+}
+
+.mat-mdc-menu-item {
+  color: var(--ceskia-text-primary) !important;
+
+  &:hover {
+    background-color: var(--ceskia-hover) !important;
+  }
+}
+
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--ceskia-surface) !important;
+    border-radius: var(--ceskia-radius-lg) !important;
+  }
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--ceskia-border-default) !important;
+  }
+
+  &.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--ceskia-accent-primary) !important;
+    }
+  }
+
+  .mat-mdc-input-element {
+    color: var(--ceskia-text-primary) !important;
+  }
+
+  .mdc-floating-label {
+    color: var(--ceskia-text-secondary) !important;
+  }
+}
+
+.mat-mdc-select-panel {
+  background: var(--ceskia-glass-bg) !important;
+  backdrop-filter: var(--ceskia-glass-blur) !important;
+  border: 1px solid var(--ceskia-glass-border) !important;
+  border-radius: var(--ceskia-radius-lg) !important;
+}
+
+.mat-mdc-option {
+  color: var(--ceskia-text-primary) !important;
+
+  &:hover {
+    background-color: var(--ceskia-hover) !important;
+  }
+
+  &.mat-mdc-option-active {
+    background-color: var(--ceskia-active) !important;
+  }
+}
+
+.mat-mdc-table {
+  background-color: transparent !important;
+
+  .mat-mdc-header-row {
+    background-color: var(--ceskia-surface) !important;
+  }
+
+  .mat-mdc-header-cell {
+    color: var(--ceskia-text-tertiary) !important;
+    border-bottom-color: var(--ceskia-border-subtle) !important;
+  }
+
+  .mat-mdc-row {
+    &:hover {
+      background-color: var(--ceskia-hover) !important;
+    }
+  }
+
+  .mat-mdc-cell {
+    color: var(--ceskia-text-primary) !important;
+    border-bottom-color: var(--ceskia-border-subtle) !important;
+  }
+}
+
+.mat-mdc-paginator {
+  background-color: var(--ceskia-surface) !important;
+  color: var(--ceskia-text-secondary) !important;
+  border-top: 1px solid var(--ceskia-border-subtle) !important;
+}
