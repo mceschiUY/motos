@@ -1,0 +1,56 @@
+﻿<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Categoria' : 'Nuevo Categoria' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Nombre Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('nombre')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Categoría padre (opcional) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>ID categoría padre (opcional)</mat-label>
+          <input matInput type="number" formControlName="categoriaPadreId">
+          <mat-icon matPrefix>account_tree</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Activo -->
+      <div class="form-field-wrapper">
+        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

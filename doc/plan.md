@@ -211,8 +211,8 @@ distribuidora importadora. Falta todo el eje **producto → stock → compra/imp
 - [ ] Extender Cliente (fiscal, crédito, canal) y crear Proveedor.
 
 ### Fase 1 — MVP logístico (lo mínimo para operar)
-- [ ] **Catálogo** con variantes talla/color (SKU) + marcas/categorías.
-- [ ] **Stock** por SKU/depósito con Kardex de movimientos.
+- [x] **Catálogo** con variantes talla/color (SKU) + marcas/categorías. Maestras (Marca, Categoría, Talla, Color) + **Producto** + **Variante/SKU** completos en las 6 capas. Ver `doc/modelo-catalogo.md §8`.
+- [~] **Stock** por SKU/depósito con Kardex de movimientos. Depósito + Movimiento de stock (Kardex) + query de Existencias completos en backend y CRUD en front. Ver `doc/modelo-stock.md`. Pendiente: pantalla de existencias (solo-lectura) en el front.
 - [ ] **Compra + Recepción** básica (PO → recepción → alta de stock).
 - [ ] **Pedido de venta + reserva de stock** y **remito**.
 - [ ] Enganchar el **Envío/tracking actual** al remito (líneas de qué se envía).

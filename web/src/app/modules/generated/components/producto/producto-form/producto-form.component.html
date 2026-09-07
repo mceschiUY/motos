@@ -1,0 +1,187 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Codigo Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Código de estilo</mat-label>
+          <input matInput type="text" formControlName="codigo">
+          <mat-icon matPrefix>qr_code</mat-icon>
+          @if (form.get('codigo')?.touched && form.get('codigo')?.invalid) {
+            <mat-error>{{ getErrorMessage('codigo') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('codigo')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Nombre Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('nombre')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Marca Field (FK) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Marca</mat-label>
+          <mat-select formControlName="marcaId">
+            @for (option of marcas(); track option.id) {
+              <mat-option [value]="option.id">{{ option.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>sell</mat-icon>
+          @if (form.get('marcaId')?.touched && form.get('marcaId')?.invalid) {
+            <mat-error>{{ getErrorMessage('marcaId') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Categoria Field (FK) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Categoría</mat-label>
+          <mat-select formControlName="categoriaId">
+            @for (option of categorias(); track option.id) {
+              <mat-option [value]="option.id">{{ option.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>category</mat-icon>
+          @if (form.get('categoriaId')?.touched && form.get('categoriaId')?.invalid) {
+            <mat-error>{{ getErrorMessage('categoriaId') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Genero Field (enum) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Género</mat-label>
+          <mat-select formControlName="genero">
+            @for (g of generos; track g) {
+              <mat-option [value]="g">{{ g }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>wc</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Descripcion Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="descripcion" rows="2"></textarea>
+          <mat-icon matPrefix>notes</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Temporada Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Temporada</mat-label>
+          <input matInput type="text" formControlName="temporada">
+          <mat-icon matPrefix>ac_unit</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Material Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Material</mat-label>
+          <input matInput type="text" formControlName="material">
+          <mat-icon matPrefix>texture</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- PesoGramos Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Peso (gramos)</mat-label>
+          <input matInput type="number" formControlName="pesoGramos">
+          <mat-icon matPrefix>scale</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- TipoCasco Field (enum, aplica a cascos) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Tipo de casco</mat-label>
+          <mat-select formControlName="tipoCasco">
+            <mat-option [value]="null">—</mat-option>
+            @for (t of tiposCasco; track t) {
+              <mat-option [value]="t">{{ t }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>sports_motorsports</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Homologacion Field (enum, aplica a cascos) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Homologación</mat-label>
+          <mat-select formControlName="homologacion">
+            <mat-option [value]="null">—</mat-option>
+            @for (h of homologaciones; track h) {
+              <mat-option [value]="h">{{ h }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>verified</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- FechaVencHomologacion Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Vencimiento homologación</mat-label>
+          <input matInput [matDatepicker]="pickerVenc" formControlName="fechaVencHomologacion">
+          <mat-datepicker-toggle matIconSuffix [for]="pickerVenc"></mat-datepicker-toggle>
+          <mat-datepicker #pickerVenc></mat-datepicker>
+          <mat-icon matPrefix>event</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- HomologacionVigente -->
+      <div class="form-field-wrapper">
+        <mat-checkbox formControlName="homologacionVigente">Homologación vigente</mat-checkbox>
+      </div>
+
+      <!-- Activo -->
+      <div class="form-field-wrapper">
+        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

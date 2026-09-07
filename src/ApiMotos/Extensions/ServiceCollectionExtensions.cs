@@ -64,6 +64,22 @@ namespace ApiMotos.Extensions
             services.AddDbContext<ApiMotos.Infrastructure.Generated.GeneratedContext>();
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly));
             // <KOSMOS:REPOS>
+            services.AddScoped<ApiMotos.Application.Agregates.Marcas.MarcaHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Marcas.IMarcaRepositorio, ApiMotos.Infrastructure.Agregates.Marcas.Persistence.MarcaRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Categorias.CategoriaHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Categorias.ICategoriaRepositorio, ApiMotos.Infrastructure.Agregates.Categorias.Persistence.CategoriaRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Tallas.TallaHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Tallas.ITallaRepositorio, ApiMotos.Infrastructure.Agregates.Tallas.Persistence.TallaRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Colores.ColorHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Colores.IColorRepositorio, ApiMotos.Infrastructure.Agregates.Colores.Persistence.ColorRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Productos.ProductoHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Productos.IProductoRepositorio, ApiMotos.Infrastructure.Agregates.Productos.Persistence.ProductoRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Variantes.VarianteHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Variantes.IVarianteRepositorio, ApiMotos.Infrastructure.Agregates.Variantes.Persistence.VarianteRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Depositos.DepositoHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Depositos.IDepositoRepositorio, ApiMotos.Infrastructure.Agregates.Depositos.Persistence.DepositoRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.MovimientosStock.MovimientoStockHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.MovimientosStock.IMovimientoStockRepositorio, ApiMotos.Infrastructure.Agregates.MovimientosStock.Persistence.MovimientoStockRepositorio>();
             services.AddScoped<ApiMotos.Application.Agregates.ParametroSLAs.ParametroSLAHooks>();
             services.AddScoped<ApiMotos.Domain.Agregates.ParametroSLAs.IParametroSLARepositorio, ApiMotos.Infrastructure.Agregates.ParametroSLAs.Persistence.ParametroSLARepositorio>();
             services.AddScoped<ApiMotos.Application.Agregates.Observaciones.ObservacionHooks>();

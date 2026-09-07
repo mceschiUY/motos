@@ -16,6 +16,14 @@ export interface GeneratedComponentInfo {
 // Lista de componentes generados
 export const GENERATED_COMPONENTS: GeneratedComponentInfo[] = [
   // Los componentes generados se agregaran aqui automaticamente
+  { name: 'marca', path: 'marca', listComponent: 'MarcaListComponent', formComponent: 'MarcaFormComponent', detailComponent: 'MarcaDetailComponent', icon: 'sell', label: 'Marca' },
+  { name: 'categoria', path: 'categoria', listComponent: 'CategoriaListComponent', formComponent: 'CategoriaFormComponent', detailComponent: 'CategoriaDetailComponent', icon: 'category', label: 'Categoria' },
+  { name: 'talla', path: 'talla', listComponent: 'TallaListComponent', formComponent: 'TallaFormComponent', detailComponent: 'TallaDetailComponent', icon: 'straighten', label: 'Talla' },
+  { name: 'color', path: 'color', listComponent: 'ColorListComponent', formComponent: 'ColorFormComponent', detailComponent: 'ColorDetailComponent', icon: 'palette', label: 'Color' },
+  { name: 'producto', path: 'producto', listComponent: 'ProductoListComponent', formComponent: 'ProductoFormComponent', detailComponent: 'ProductoDetailComponent', icon: 'inventory_2', label: 'Producto' },
+  { name: 'variante', path: 'variante', listComponent: 'VarianteListComponent', formComponent: 'VarianteFormComponent', detailComponent: 'VarianteDetailComponent', icon: 'qr_code_2', label: 'Variante' },
+  { name: 'deposito', path: 'deposito', listComponent: 'DepositoListComponent', formComponent: 'DepositoFormComponent', detailComponent: 'DepositoDetailComponent', icon: 'warehouse', label: 'Deposito' },
+  { name: 'movimientostock', path: 'movimientostock', listComponent: 'MovimientoStockListComponent', formComponent: 'MovimientoStockFormComponent', detailComponent: 'MovimientoStockDetailComponent', icon: 'swap_vert', label: 'Movimiento de stock' },
   {
     name: 'documento',
     path: 'documento',
@@ -84,6 +92,22 @@ export const GENERATED_COMPONENTS: GeneratedComponentInfo[] = [
 // Rutas dinamicas para los componentes generados
 export const GENERATED_ROUTES: Routes = [
   // Las rutas se agregaran automaticamente cuando se generen componentes
+  { path: 'marca', loadComponent: () => import('./components/marca/marca-list/marca-list.component').then(m => m.MarcaListComponent) },
+  { path: 'marca/:id', loadComponent: () => import('./components/marca/marca-ficha/marca-ficha.component').then(m => m.MarcaFichaComponent) },
+  { path: 'categoria', loadComponent: () => import('./components/categoria/categoria-list/categoria-list.component').then(m => m.CategoriaListComponent) },
+  { path: 'categoria/:id', loadComponent: () => import('./components/categoria/categoria-ficha/categoria-ficha.component').then(m => m.CategoriaFichaComponent) },
+  { path: 'talla', loadComponent: () => import('./components/talla/talla-list/talla-list.component').then(m => m.TallaListComponent) },
+  { path: 'talla/:id', loadComponent: () => import('./components/talla/talla-ficha/talla-ficha.component').then(m => m.TallaFichaComponent) },
+  { path: 'color', loadComponent: () => import('./components/color/color-list/color-list.component').then(m => m.ColorListComponent) },
+  { path: 'color/:id', loadComponent: () => import('./components/color/color-ficha/color-ficha.component').then(m => m.ColorFichaComponent) },
+  { path: 'producto', loadComponent: () => import('./components/producto/producto-list/producto-list.component').then(m => m.ProductoListComponent) },
+  { path: 'producto/:id', loadComponent: () => import('./components/producto/producto-ficha/producto-ficha.component').then(m => m.ProductoFichaComponent) },
+  { path: 'variante', loadComponent: () => import('./components/variante/variante-list/variante-list.component').then(m => m.VarianteListComponent) },
+  { path: 'variante/:id', loadComponent: () => import('./components/variante/variante-ficha/variante-ficha.component').then(m => m.VarianteFichaComponent) },
+  { path: 'deposito', loadComponent: () => import('./components/deposito/deposito-list/deposito-list.component').then(m => m.DepositoListComponent) },
+  { path: 'deposito/:id', loadComponent: () => import('./components/deposito/deposito-ficha/deposito-ficha.component').then(m => m.DepositoFichaComponent) },
+  { path: 'movimientostock', loadComponent: () => import('./components/movimientostock/movimientostock-list/movimientostock-list.component').then(m => m.MovimientoStockListComponent) },
+  { path: 'movimientostock/:id', loadComponent: () => import('./components/movimientostock/movimientostock-ficha/movimientostock-ficha.component').then(m => m.MovimientoStockFichaComponent) },
   {
     path: 'documento',
     loadComponent: () => import('./components/documento/documento-list/documento-list.component').then(m => m.DocumentoListComponent)

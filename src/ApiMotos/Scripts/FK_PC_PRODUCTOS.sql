@@ -1,0 +1,13 @@
+-- FOREIGN KEYs de PC_PRODUCTOS — idempotente; lo ejecuta DbBootstrap DESPUÉS de crear todas las tablas.
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_PC_PRODUCTOS_MarcaId')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_PRODUCTOS')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_MARCAS')
+    ALTER TABLE [PC_PRODUCTOS] ADD CONSTRAINT [FK_PC_PRODUCTOS_MarcaId]
+        FOREIGN KEY ([MarcaId]) REFERENCES [PC_MARCAS]([Id]);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_PC_PRODUCTOS_CategoriaId')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_PRODUCTOS')
+    AND EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PC_CATEGORIAS')
+    ALTER TABLE [PC_PRODUCTOS] ADD CONSTRAINT [FK_PC_PRODUCTOS_CategoriaId]
+        FOREIGN KEY ([CategoriaId]) REFERENCES [PC_CATEGORIAS]([Id]);
+GO

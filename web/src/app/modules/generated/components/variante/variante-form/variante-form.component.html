@@ -1,0 +1,124 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Variante' : 'Nueva Variante' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Producto Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('productoId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Producto</mat-label>
+          <mat-select formControlName="productoId">
+            @for (option of productos(); track option.id) {
+              <mat-option [value]="option.id">{{ option.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>inventory_2</mat-icon>
+          @if (form.get('productoId')?.touched && form.get('productoId')?.invalid) {
+            <mat-error>{{ getErrorMessage('productoId') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Talla Field (FK, opcional) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Talla</mat-label>
+          <mat-select formControlName="tallaId">
+            <mat-option [value]="null">— Talla única</mat-option>
+            @for (option of tallas(); track option.id) {
+              <mat-option [value]="option.id">{{ option.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>straighten</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Color Field (FK, opcional) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Color</mat-label>
+          <mat-select formControlName="colorId">
+            <mat-option [value]="null">— Color único</mat-option>
+            @for (option of colores(); track option.id) {
+              <mat-option [value]="option.id">{{ option.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>palette</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Sku Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>SKU</mat-label>
+          <input matInput type="text" formControlName="sku">
+          <mat-icon matPrefix>qr_code_2</mat-icon>
+          @if (form.get('sku')?.touched && form.get('sku')?.invalid) {
+            <mat-error>{{ getErrorMessage('sku') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('sku')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- CodigoBarras Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Código de barras (EAN/UPC)</mat-label>
+          <input matInput type="text" formControlName="codigoBarras">
+          <mat-icon matPrefix>barcode</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- CostoEstandar Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Costo estándar</mat-label>
+          <input matInput type="number" step="0.0001" formControlName="costoEstandar">
+          <mat-icon matPrefix>payments</mat-icon>
+          @if (form.get('costoEstandar')?.touched && form.get('costoEstandar')?.invalid) {
+            <mat-error>{{ getErrorMessage('costoEstandar') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- PrecioLista Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Precio de lista</mat-label>
+          <input matInput type="number" step="0.01" formControlName="precioLista">
+          <mat-icon matPrefix>sell</mat-icon>
+          @if (form.get('precioLista')?.touched && form.get('precioLista')?.invalid) {
+            <mat-error>{{ getErrorMessage('precioLista') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Activo -->
+      <div class="form-field-wrapper">
+        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

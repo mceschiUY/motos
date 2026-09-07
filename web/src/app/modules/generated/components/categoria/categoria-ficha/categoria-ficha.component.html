@@ -1,0 +1,90 @@
+﻿<div class="ficha-view">
+  @if (cargando()) {
+    <div class="ficha-cargando">Cargando…</div>
+  } @else if (!item()) {
+    <div class="ficha-cargando">No se encontró el registro <button mat-button (click)="volver()">← Volver</button></div>
+  } @else {
+
+    <!-- Membrete: solo existe en papel (PDF con marca) -->
+    <app-membrete-impresion [titulo]="titulo()" tipo="Categoria"></app-membrete-impresion>
+
+    <!-- ═══ Encabezado: título, estado, acciones ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo">
+        <h1>{{ titulo() }}</h1>
+      </div>
+      <div class="ficha-acciones">
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir / guardar PDF"><mat-icon>picture_as_pdf</mat-icon></button>
+        <button mat-icon-button (click)="documentos()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
+        <button mat-icon-button (click)="editar()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button class="peligro" (click)="eliminar()" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ Datos ═══ -->
+    <section class="ficha-datos">
+      <h2>Datos</h2>
+      <div class="datos-grid">
+        <div class="dato">
+          <span class="dato-label">Nombre</span>
+          <span class="dato-valor">{{ $any(item()).nombre }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Fotos: los Documentos con imagen del registro; sin fotos, sin sección ═══ -->
+    <app-foto-galeria [relacionId]="id" relacionNombre="Categoria"></app-foto-galeria>
+
+    <!-- ═══ Relacionados ═══ -->
+    <section class="ficha-relacionados">
+      <div class="rel-tabs">
+        @for (r of relaciones; track r.nombre) {
+          <button class="rel-tab" [class.activa]="tabActiva() === r.nombre" (click)="tabActiva.set(r.nombre)">
+            <mat-icon>{{ r.icon }}</mat-icon> {{ r.label }}
+            <span class="rel-count">{{ itemsDe(r.nombre).length }}</span>
+          </button>
+        }
+      </div>
+      @for (r of relaciones; track r.nombre) {
+        @if (tabActiva() === r.nombre) {
+          @if (itemsDe(r.nombre).length === 0) {
+            <div class="rel-vacio">Sin {{ r.label.toLowerCase() }} todavía</div>
+          } @else {
+            <table class="rel-tabla">
+              <thead><tr>
+                @for (col of columnasDe(r.nombre); track col) { <th>{{ col }}</th> }
+                <th></th>
+              </tr></thead>
+              <tbody>
+                @for (row of itemsDe(r.nombre); track row.id) {
+                  <tr (click)="irA(r, row)">
+                    @for (col of columnasDe(r.nombre); track col) { <td>{{ row[col] }}</td> }
+                    <td><mat-icon class="rel-ir">chevron_right</mat-icon></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      }
+    </section>
+
+    <!-- ═══ Historia (auditoría) ═══ -->
+    @if (historia().length > 0) {
+      <section class="ficha-historia">
+        <h2>Historia</h2>
+        <div class="historia-linea">
+          @for (e of historia(); track $index) {
+            <div class="evento" [class.fallo]="!e.ok">
+              <span class="evento-dot"></span>
+              <span class="evento-que">{{ e.que }}</span>
+              <span class="evento-quien">{{ e.quien }}</span>
+              <span class="evento-fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

@@ -1,0 +1,71 @@
+﻿<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Depósito' : 'Nuevo Depósito' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Codigo Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Código</mat-label>
+          <input matInput type="text" formControlName="codigo">
+          <mat-icon matPrefix>tag</mat-icon>
+          @if (form.get('codigo')?.touched && form.get('codigo')?.invalid) {
+            <mat-error>{{ getErrorMessage('codigo') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('codigo')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Nombre Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre">
+          <mat-icon matPrefix>text_fields</mat-icon>
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('nombre')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Direccion Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Dirección</mat-label>
+          <input matInput type="text" formControlName="direccion">
+          <mat-icon matPrefix>location_on</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Activo -->
+      <div class="form-field-wrapper">
+        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

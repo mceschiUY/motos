@@ -21,6 +21,26 @@ export interface GeneratedMenuGroup {
 export const GENERATED_MENU_GROUPS: GeneratedMenuGroup[] = [
   // Los grupos de constelaciones se agregaran aqui automaticamente
   {
+    label: 'Catálogo',
+    icon: 'inventory_2',
+    items: [
+      { path: 'marca', label: 'Marca', icon: 'sell', supportsDetail: true, baseRoute: '/marca' },
+      { path: 'categoria', label: 'Categoría', icon: 'category', supportsDetail: true, baseRoute: '/categoria' },
+      { path: 'talla', label: 'Talla', icon: 'straighten', supportsDetail: true, baseRoute: '/talla' },
+      { path: 'color', label: 'Color', icon: 'palette', supportsDetail: true, baseRoute: '/color' },
+      { path: 'producto', label: 'Producto', icon: 'inventory_2', supportsDetail: true, baseRoute: '/producto' },
+      { path: 'variante', label: 'Variante / SKU', icon: 'qr_code_2', supportsDetail: true, baseRoute: '/variante' },
+    ]
+  },
+  {
+    label: 'Inventario',
+    icon: 'warehouse',
+    items: [
+      { path: 'deposito', label: 'Depósito', icon: 'warehouse', supportsDetail: true, baseRoute: '/deposito' },
+      { path: 'movimientostock', label: 'Movimiento de stock', icon: 'swap_vert', supportsDetail: true, baseRoute: '/movimientostock' },
+    ]
+  },
+  {
     label: 'Gestion de clientes',
     icon: 'folder',
     items: [
