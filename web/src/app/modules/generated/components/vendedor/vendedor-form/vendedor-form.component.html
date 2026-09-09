@@ -1,0 +1,105 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Vendedor' : 'Nuevo Vendedor' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Nombre Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput type="text" formControlName="nombre">
+          <mat-icon matPrefix>badge</mat-icon>
+          @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>{{ getErrorMessage('nombre') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('nombre')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Zona Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Zona</mat-label>
+          <input matInput type="text" formControlName="zona" placeholder="Litoral, Este, Montevideo…">
+          <mat-icon matPrefix>map</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Comisión % Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Comisión %</mat-label>
+          <input matInput type="number" step="0.01" min="0" max="100" formControlName="comisionPorcentaje">
+          <mat-icon matPrefix>percent</mat-icon>
+          <mat-hint>Sobre el total US$ de pedidos entregados</mat-hint>
+          @if (form.get('comisionPorcentaje')?.touched && form.get('comisionPorcentaje')?.invalid) {
+            <mat-error>{{ getErrorMessage('comisionPorcentaje') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('comisionPorcentaje')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Teléfono Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Teléfono</mat-label>
+          <input matInput type="tel" formControlName="telefono">
+          <mat-icon matPrefix>phone</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Email Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email">
+          <mat-icon matPrefix>mail</mat-icon>
+          @if (form.get('email')?.touched && form.get('email')?.invalid) {
+            <mat-error>{{ getErrorMessage('email') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Usuario del sitio Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Usuario del sitio</mat-label>
+          <input matInput type="text" formControlName="usuario" placeholder="login">
+          <mat-icon matPrefix>account_circle</mat-icon>
+          <mat-hint>Para que el vendedor vea "lo mío"</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Activo -->
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="activo" color="primary">
+          Activo
+        </mat-slide-toggle>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

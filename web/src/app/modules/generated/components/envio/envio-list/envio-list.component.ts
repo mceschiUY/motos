@@ -112,7 +112,7 @@ export class EnvioListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
   readonly kanbanColumnas = [
     { id: 'recibido', label: 'Recibido', clase: 'estado-0' },
-    { id: 'facturado', label: 'Facturado', clase: 'estado-1' },
+    { id: 'facturado', label: 'Confirmado', clase: 'estado-1' },
     { id: 'despachado', label: 'Despachado', clase: 'estado-2' },
     { id: 'entregado', label: 'Entregado', clase: 'estado-3' },
     { id: 'anulado', label: 'Anulado', clase: 'estado-4' }
@@ -704,15 +704,15 @@ export class EnvioListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async pasarAFacturado(item: Envio): Promise<void> {
-    if (await (window as any).confirmar('¿Pasar a facturado Envio?\\n\\nEsta acción no se puede deshacer.')) {
+    if (await (window as any).confirmar('¿Confirmar Envio?\\n\\nEsta acción no se puede deshacer.')) {
       this.service.pasarAFacturado(item.id).subscribe({
         next: () => {
           this.loadData();
-          this.showMessage('Pasar a facturado Envio ejecutado', 'success');
+          this.showMessage('Confirmar Envio ejecutado', 'success');
         },
         error: (err: unknown) => {
           console.error('[EnvioList] Error en pasarAFacturado:', err);
-          this.showMessage('Error al ejecutar Pasar a facturado Envio', 'error');
+          this.showMessage('Error al ejecutar Confirmar Envio', 'error');
         }
       });
     }
@@ -794,7 +794,8 @@ export class EnvioListComponent implements OnInit, OnDestroy {
     const status = (item as any).estado;
     if (status === true) return 'Activo';
     if (status === false) return 'Inactivo';
-    return status?.toString() || '';
+    const id = this.normEstado(status);
+    return this.kanbanColumnas.find(c => c.id === id)?.label ?? (status?.toString() || '');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

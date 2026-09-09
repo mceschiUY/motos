@@ -107,7 +107,7 @@ export class ParametroslaListComponent implements OnInit, OnDestroy {
   // KANBAN OPERATIVO — columnas del ciclo de vida real; mover = ejecutar transición
   // ═══════════════════════════════════════════════════════════════════════════
   readonly kanbanColumnas = [
-    { id: 'facturacion', label: 'Facturacion', clase: 'estado-0' },
+    { id: 'facturacion', label: 'Confirmación', clase: 'estado-0' },
     { id: 'despacho', label: 'Despacho', clase: 'estado-1' },
     { id: 'entrega', label: 'Entrega', clase: 'estado-2' }
   ];

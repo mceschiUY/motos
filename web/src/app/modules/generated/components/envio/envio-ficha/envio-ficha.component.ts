@@ -49,7 +49,7 @@ export class EnvioFichaComponent implements OnInit, OnDestroy {
   // ═══ Proceso guiado: el ciclo de vida como camino ═══
   readonly pasos = [
     { id: 'recibido', label: 'Recibido', clase: 'estado-0' },
-    { id: 'facturado', label: 'Facturado', clase: 'estado-1' },
+    { id: 'facturado', label: 'Confirmado', clase: 'estado-1' },
     { id: 'despachado', label: 'Despachado', clase: 'estado-2' },
     { id: 'entregado', label: 'Entregado', clase: 'estado-3' },
     { id: 'anulado', label: 'Anulado', clase: 'estado-4' }
@@ -61,7 +61,7 @@ export class EnvioFichaComponent implements OnInit, OnDestroy {
     'anulado': ['recibido', 'facturado', 'despachado']
   };
   readonly guia: Record<string, { condicion: string; actor: string }> = {
-    'facturado': { condicion: 'Accion Marcar Facturado; el servidor sella la fecha de factura', actor: 'Administrativo' },
+    'facturado': { condicion: 'Acción Confirmar; el servidor sella la fecha de confirmación', actor: 'Administrativo' },
     'despachado': { condicion: 'Accion Despachar; el servidor sella la fecha de envio', actor: 'Deposito' },
     'entregado': { condicion: 'Accion Confirmar Entrega; el servidor sella la fecha de entrega y cierra el ciclo', actor: 'Chofer/Agencia' },
     'anulado': { condicion: 'Motivo de anulacion obligatorio', actor: 'Administrativo' }

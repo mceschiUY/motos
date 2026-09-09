@@ -43,7 +43,7 @@ export class ColorFichaComponent implements OnInit, OnDestroy {
   id: string | number = '';
 
   readonly relaciones: RelacionFicha[] = [
-    { nombre: 'envio', label: 'Envios', icon: 'list_alt', ruta: '/envio', endpoint: '/Envio/by-color/' }
+    { nombre: 'variante', label: 'Variantes', icon: 'qr_code_2', ruta: '/variante', endpoint: '/Variante/by-color/' }
   ];
 
   ngOnInit(): void {

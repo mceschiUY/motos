@@ -101,7 +101,7 @@ export class CategoriaListComponent implements OnInit, OnDestroy {
   // RELACIONES HASMANY - Entidades hijas para navegación
   // ═══════════════════════════════════════════════════════════════════════════
   readonly hasManyRelations: HasManyRelation[] = [
-    { entityName: 'Envio', entityLabel: 'Envio', icon: 'list_alt', route: '/envio', fkParam: 'categoriaId' }
+    { entityName: 'Producto', entityLabel: 'Producto', icon: 'inventory_2', route: '/producto', fkParam: 'categoriaId' }
   ];
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -156,6 +156,8 @@ export class CategoriaListComponent implements OnInit, OnDestroy {
   readonly columnConfigs = signal<ColumnConfig[]>([
     { key: 'select', label: 'Seleccionar', visible: true, sortable: false },
     { key: 'nombre', label: 'Nombre', visible: true, sortable: true },
+    { key: 'categoriaPadreId', label: 'Categoría padre', visible: true, sortable: true },
+    { key: 'activo', label: 'Activo', visible: true, sortable: true },
     { key: 'actions', label: 'Acciones', visible: true, sortable: false }
   ]);
 

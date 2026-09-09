@@ -1,0 +1,578 @@
+﻿<div class="kosmos-page" [class.standalone-mode]="isStandalone" [class.density-compact]="densityMode() === 'compact'">
+
+  <!-- BREADCRUMB -->
+  <app-breadcrumb [items]="breadcrumbItems" subtitle="Gestiona tus registros de pedido"></app-breadcrumb>
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>list_alt</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Pedido</h1>
+          <p class="page-subtitle">{{ totalCount() }} registros</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>inventory</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ totalCount() }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <!-- BULK ACTIONS TOOLBAR -->
+    @if (selection.hasValue()) {
+      <div class="bulk-actions-toolbar">
+        <div class="bulk-info">
+          <mat-checkbox [checked]="isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
+          <span class="bulk-count">{{ selection.selected.length }} seleccionado(s)</span>
+        </div>
+        <div class="bulk-actions">
+          <button mat-button class="bulk-btn export" (click)="exportSelected()"><mat-icon>file_download</mat-icon><span>Exportar</span></button>
+          <button mat-button class="bulk-btn delete" (click)="deleteSelected()"><mat-icon>delete</mat-icon><span>Eliminar</span></button>
+          <button mat-icon-button class="bulk-close" (click)="clearSelection()" matTooltip="Cancelar selección"><mat-icon>close</mat-icon></button>
+        </div>
+      </div>
+    }
+
+    <!-- SMART TOOLBAR -->
+    @if (!selection.hasValue()) {
+      <div class="smart-toolbar">
+        <div class="search-container">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input type="text" class="search-input" placeholder="Buscar..." [value]="searchTerm()" (input)="onSearchChange($event)">
+          @if (searchTerm()) {
+            <button class="search-clear" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+          }
+        </div>
+
+        <!-- VIEW SWITCHER (las artesanales del registry entran como opciones más) -->
+        <div class="view-switcher">
+          <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'table'"
+              (click)="setViewMode('table')"
+              [matTooltip]="getViewLabel('table')">
+        <mat-icon>{{ getViewIcon('table') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'cards'"
+              (click)="setViewMode('cards')"
+              [matTooltip]="getViewLabel('cards')">
+        <mat-icon>{{ getViewIcon('cards') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'master-detail'"
+              (click)="setViewMode('master-detail')"
+              [matTooltip]="getViewLabel('master-detail')">
+        <mat-icon>{{ getViewIcon('master-detail') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'with-relations'"
+              (click)="setViewMode('with-relations')"
+              [matTooltip]="getViewLabel('with-relations')">
+        <mat-icon>{{ getViewIcon('with-relations') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'timeline'"
+              (click)="setViewMode('timeline')"
+              [matTooltip]="getViewLabel('timeline')">
+        <mat-icon>{{ getViewIcon('timeline') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'calendario'"
+              (click)="setViewMode('calendario')"
+              [matTooltip]="getViewLabel('calendario')">
+        <mat-icon>{{ getViewIcon('calendario') }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'kanban'"
+              (click)="setViewMode('kanban')"
+              [matTooltip]="getViewLabel('kanban')">
+        <mat-icon>{{ getViewIcon('kanban') }}</mat-icon>
+      </button>
+          @for (va of artesanales; track va.key) {
+            <button mat-icon-button
+              class="view-btn"
+              [class.active]="viewMode() === 'artesanal:' + va.key"
+              (click)="setViewMode('artesanal:' + va.key)"
+              [matTooltip]="va.label">
+              <mat-icon>{{ va.icon }}</mat-icon>
+            </button>
+          }
+        </div>
+
+        <div class="toolbar-actions">
+          <button mat-icon-button class="toolbar-btn" (click)="toggleDensity()" [matTooltip]="densityMode() === 'comfortable' ? 'Vista compacta' : 'Vista confortable'">
+            <mat-icon>{{ densityMode() === 'comfortable' ? 'density_medium' : 'density_small' }}</mat-icon>
+          </button>
+          <button mat-icon-button class="toolbar-btn" [matMenuTriggerFor]="columnMenu" matTooltip="Columnas"><mat-icon>view_column</mat-icon></button>
+          <mat-menu #columnMenu="matMenu">
+            <div class="column-menu-header">Columnas visibles</div>
+            @for (col of getToggleableColumns(); track col.key) {
+              <button mat-menu-item (click)="toggleColumnVisibility(col.key); $event.stopPropagation()">
+                <mat-checkbox [checked]="col.visible" (click)="$event.stopPropagation()"></mat-checkbox>
+                <span>{{ col.label }}</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- TABLE VIEW — genérica del core (A1.5): las columnas viven en el descriptor -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'table') {
+      <ceskia-entity-table
+        [descriptor]="descriptor"
+        [items]="filteredItems()"
+        [cargando]="isLoading()"
+        [termino]="searchTerm()"
+        [columnasOcultas]="columnasOcultas()"
+        (ver)="verFicha($event)"
+        (editar)="openForm($event)"
+        (borrar)="deleteItem($event)"
+        (crear)="openForm()"
+        (limpiarBusqueda)="searchTerm.set('')"
+        (accion)="ejecutarAccionTabla($event)"
+        (verHija)="verHijaDesdeTabla($event)"
+        (documentos)="openDocuments($event)"
+        (seleccionCambio)="sincronizarSeleccion($event)" />
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- VISTA ARTESANAL (registry en modules/artesanal) — el container sigue    -->
+    <!-- poniendo header/toolbar/FABs; acá se renderiza SOLO el cuerpo.          -->
+    <!-- Artesanal registrada = default de la entidad; tabla es el paracaídas.   -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode().startsWith('artesanal:')) {
+      @if (artesanalComponent(); as comp) {
+        <ng-container [ngComponentOutlet]="comp" />
+      } @else {
+        <div class="relation-loading">
+          <mat-spinner diameter="32"></mat-spinner>
+          <span>Cargando vista...</span>
+        </div>
+      }
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- CARDS VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'cards') {
+      <div class="cards-container">
+        @if (isLoading()) {
+          @for (skeleton of skeletonRows; track $index) {
+            <div class="item-card skeleton-card">
+              <div class="card-header"><div class="skeleton skeleton-title-lg"></div></div>
+              <div class="skeleton skeleton-description"></div>
+            </div>
+          }
+        } @else {
+          @for (item of filteredItems(); track item.id) {
+            <div class="item-card" [class.selected]="selection.isSelected(item)">
+              <div class="card-select">
+                <mat-checkbox (click)="$event.stopPropagation()" (change)="toggleRow(item)" [checked]="selection.isSelected(item)"></mat-checkbox>
+              </div>
+              <div class="card-header">
+                <div class="card-title">
+                  <h3>{{ getItemTitle(item) }}</h3>
+                  <span class="card-status" [class]="getStatusClass(item)">{{ getStatusLabel(item) }}</span>
+                </div>
+                <div class="card-actions">
+                  <button mat-icon-button class="action-btn" (click)="verFicha(item); $event.stopPropagation()" matTooltip="Ver ficha"><mat-icon>visibility</mat-icon></button>
+                  <button mat-icon-button class="action-btn" (click)="openForm(item)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                  <button mat-icon-button class="action-btn delete" (click)="deleteItem(item)" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+                <button mat-icon-button class="action-btn" [matMenuTriggerFor]="accionesFila" (click)="$event.stopPropagation()" matTooltip="Más acciones"><mat-icon>more_horiz</mat-icon></button>
+                <mat-menu #accionesFila="matMenu">
+                  <button mat-menu-item (click)="navigateToChild(hasManyRelations[0], item)">
+                    <mat-icon>list_alt</mat-icon><span>Ver Observacion</span>
+                  </button>
+                  <button mat-menu-item (click)="pasarAConfirmado(item)">
+                    <mat-icon>check_circle</mat-icon><span>Confirmar</span>
+                  </button>
+                  <button mat-menu-item (click)="pasarAPreparado(item)">
+                    <mat-icon>inventory</mat-icon><span>Marcar preparado</span>
+                  </button>
+                  <button mat-menu-item (click)="pasarADespachado(item)">
+                    <mat-icon>local_shipping</mat-icon><span>Despachar</span>
+                  </button>
+                  <button mat-menu-item (click)="pasarAEntregado(item)">
+                    <mat-icon>task_alt</mat-icon><span>Confirmar entrega</span>
+                  </button>
+                  <button mat-menu-item (click)="pasarAAnulado(item)">
+                    <mat-icon>cancel</mat-icon><span>Anular</span>
+                  </button>
+                  <button mat-menu-item (click)="openDocuments(item)">
+                    <mat-icon>folder</mat-icon><span>Documentos</span>
+                  </button>
+                </mat-menu>
+                </div>
+              </div>
+              <div class="card-details">
+                <div class="detail-item">
+                  <span class="detail-label">Cliente:</span>
+                  <span class="detail-value">{{ item.clienteDisplay }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Fecha:</span>
+                  <span class="detail-value">{{ item.fecha | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total:</span>
+                  <span class="detail-value">{{ item.totalUsd | currency:'USD':'symbol-narrow' }}</span>
+                </div>
+
+              </div>
+            </div>
+          }
+
+          @if (filteredItems().length === 0) {
+            <div class="empty-state cards-empty">
+              @if (searchTerm()) {
+                <mat-icon>search_off</mat-icon>
+                <h3>Sin resultados para «{{ searchTerm() }}»</h3>
+                <button mat-stroked-button class="empty-btn" (click)="searchTerm.set('')"><mat-icon>close</mat-icon>Limpiar búsqueda</button>
+              } @else {
+                <mat-icon>inventory_2</mat-icon>
+                <h3>Todavía no hay registros</h3>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- KANBAN VIEW — tablero operativo del ciclo de vida -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'kanban') {
+      <div class="kanban-board-i">
+        @for (col of kanbanColumnas; track col.id) {
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span class="kanban-dot {{ col.clase }}"></span>
+              <span class="kanban-col-title">{{ col.label }}</span>
+              <span class="kanban-col-count">{{ itemsDeEstado(col.id).length }}</span>
+            </div>
+            <div class="kanban-col-list"
+                 cdkDropList
+                 [id]="'kcol-' + col.id"
+                 [cdkDropListData]="itemsDeEstado(col.id)"
+                 [cdkDropListConnectedTo]="kanbanListIds"
+                 [cdkDropListEnterPredicate]="puedeEntrarEn(col.id)"
+                 (cdkDropListDropped)="onKanbanDrop($event, col.id)">
+              @for (item of itemsDeEstado(col.id); track item.id) {
+                <div class="kanban-card" cdkDrag [cdkDragData]="item">
+                  <div class="kanban-card-title" (click)="verFicha(item)">{{ getItemTitle(item) }}</div>
+                  <div class="kanban-card-sub">{{ getItemSubtitle(item) }}</div>
+                  <button mat-icon-button class="kanban-card-edit" (click)="openForm(item); $event.stopPropagation()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                </div>
+              }
+              @if (itemsDeEstado(col.id).length === 0) {
+                <div class="kanban-col-empty">Sin registros</div>
+              }
+            </div>
+          </div>
+        }
+        @if (itemsSinEstado().length > 0) {
+          <div class="kanban-col kanban-col-otros">
+            <div class="kanban-col-header">
+              <span class="kanban-dot estado-off"></span>
+              <span class="kanban-col-title">Sin estado</span>
+              <span class="kanban-col-count">{{ itemsSinEstado().length }}</span>
+            </div>
+            <div class="kanban-col-list">
+              @for (item of itemsSinEstado(); track item.id) {
+                <div class="kanban-card" (click)="openForm(item)">
+                  <div class="kanban-card-title">{{ getItemTitle(item) }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- CALENDARIO VIEW — agenda mensual -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'calendario') {
+      <div class="cal-view">
+        <div class="cal-header">
+          <button mat-icon-button (click)="calMover(-1)"><mat-icon>chevron_left</mat-icon></button>
+          <h3 class="cal-titulo">{{ calTitulo() }}</h3>
+          <button mat-icon-button (click)="calMover(1)"><mat-icon>chevron_right</mat-icon></button>
+        </div>
+        <div class="cal-grid cal-dow">
+          @for (dow of calDow; track dow) { <span>{{ dow }}</span> }
+        </div>
+        @for (semana of calSemanas(); track $index) {
+          <div class="cal-grid">
+            @for (dia of semana; track dia.getTime()) {
+              <div class="cal-celda" [class.fuera]="!esDelMes(dia)" [class.hoy]="esHoy(dia)">
+                <span class="cal-num">{{ dia.getDate() }}</span>
+                @for (item of itemsDeDia(dia); track item.id) {
+                  <div class="cal-chip" [class]="claseDeEstado(item)" (click)="openForm(item)" [matTooltip]="getItemSubtitle(item)">{{ getItemTitle(item) }}</div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- TIMELINE VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'timeline') {
+      <div class="timeline-container">
+        @for (grupo of gruposPorFecha(); track grupo.periodo) {
+          <div class="timeline-group">
+            <div class="timeline-header">
+              <div class="timeline-period">
+                <mat-icon>calendar_month</mat-icon>
+                <span class="period-label">{{ grupo.label }}</span>
+                <span class="period-count">{{ grupo.count }} registros</span>
+              </div>
+            </div>
+
+            <div class="timeline-items">
+              @for (item of grupo.items; track item.id) {
+                <div class="timeline-item">
+                  <div class="timeline-dot" [class]="getStatusClass(item)">
+                    <mat-icon>circle</mat-icon>
+                  </div>
+                  <div class="timeline-connector"></div>
+
+                  <div class="timeline-card">
+                    <div class="tl-card-header">
+                      <div class="tl-card-title">
+                        <span class="tl-card-name">{{ getItemTitle(item) }}</span>
+                        <span class="tl-card-status" [class]="getStatusClass(item)">{{ getStatusLabel(item) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="tl-card-body">
+                        <div class="tl-card-field">
+                          <span class="field-label">Cliente:</span>
+                          <span>{{ item.clienteDisplay }}</span>
+                        </div>
+                        <div class="tl-card-field">
+                          <span class="field-label">Total:</span>
+                          <span>{{ item.totalUsd | currency:'USD':'symbol-narrow' }}</span>
+                        </div>
+
+                    </div>
+
+                    <div class="tl-card-actions">
+                      <button mat-icon-button (click)="openDocuments(item); $event.stopPropagation()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
+                      <button mat-icon-button (click)="openForm(item); $event.stopPropagation()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                      <button mat-icon-button (click)="deleteItem(item); $event.stopPropagation()" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- MASTER-DETAIL VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'master-detail') {
+      <div class="master-detail-container">
+        <div class="master-list">
+          @for (item of filteredItems(); track item.id) {
+            <div class="master-item" [class.selected]="selectedItem()?.id === item.id" (click)="selectItem(item)">
+              <div class="master-item-title">{{ getItemTitle(item) }}</div>
+              <div class="master-item-subtitle">{{ getItemSubtitle(item) }}</div>
+            </div>
+          }
+        </div>
+        <div class="detail-panel">
+          @if (selectedItem()) {
+            <div class="detail-header">
+              <h2>{{ getItemTitle(selectedItem()!) }}</h2>
+              <div class="detail-actions">
+                <button mat-icon-button (click)="openForm(selectedItem()!)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="deleteItem(selectedItem()!)" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+              </div>
+            </div>
+            <div class="detail-content">
+                <div class="detail-item">
+                  <span class="detail-label">Cliente:</span>
+                  <span class="detail-value">{{ selectedItem()!.clienteDisplay }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Vendedor:</span>
+                  <span class="detail-value">{{ selectedItem()!.vendedorDisplay }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Fecha:</span>
+                  <span class="detail-value">{{ selectedItem()!.fecha | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total:</span>
+                  <span class="detail-value">{{ selectedItem()!.totalUsd | currency:'USD':'symbol-narrow' }}</span>
+                </div>
+
+            </div>
+          } @else {
+            <div class="no-selection">
+              <mat-icon>touch_app</mat-icon>
+              <p>Selecciona un elemento de la lista</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- WITH-RELATIONS VIEW -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'with-relations') {
+      <div class="with-relations-container">
+        <div class="wr-list-panel">
+          <div class="wr-list-header">
+            <h3>Registros</h3>
+            <span class="wr-count">{{ filteredItems().length }}</span>
+          </div>
+          <div class="wr-list-items">
+            @for (item of filteredItems(); track item.id) {
+              <div class="wr-list-item" [class.selected]="selectedItem()?.id === item.id" (click)="selectItem(item)">
+                <div class="wr-item-content">
+                  <span class="wr-item-title">{{ getItemTitle(item) }}</span>
+                  <span class="wr-item-subtitle">{{ getItemSubtitle(item) }}</span>
+                </div>
+                <mat-icon class="wr-item-arrow">chevron_right</mat-icon>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="wr-detail-panel">
+          @if (selectedItem()) {
+            <div class="wr-detail-header">
+              <h2>{{ getItemTitle(selectedItem()!) }}</h2>
+              <div class="wr-detail-actions">
+                <button mat-icon-button (click)="openForm(selectedItem()!)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="deleteItem(selectedItem()!)" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+              </div>
+            </div>
+            <div class="wr-detail-info">
+                <div class="detail-item">
+                  <span class="detail-label">Cliente:</span>
+                  <span class="detail-value">{{ selectedItem()!.clienteDisplay }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Vendedor:</span>
+                  <span class="detail-value">{{ selectedItem()!.vendedorDisplay }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Fecha:</span>
+                  <span class="detail-value">{{ selectedItem()!.fecha | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total:</span>
+                  <span class="detail-value">{{ selectedItem()!.totalUsd | currency:'USD':'symbol-narrow' }}</span>
+                </div>
+
+            </div>
+            <div class="wr-relations">
+              <h3><mat-icon>account_tree</mat-icon> Relaciones</h3>
+        <nav mat-tab-nav-bar class="relation-tabs" [tabPanel]="relationTabPanel">
+          <button mat-tab-link [active]="activeRelationTab() === 'pedidolinea'" (click)="setActiveRelationTab('pedidolinea')">
+              <mat-icon>list_alt</mat-icon>
+              Observacions
+            </button>
+        </nav>
+        <mat-tab-nav-panel #relationTabPanel></mat-tab-nav-panel>
+        @if (activeRelationTab() === 'pedidolinea') {
+          <div class="relation-tab-content">
+            <div class="relation-header">
+              <h3>Observacions relacionados</h3>
+              <span class="relation-count">{{ getRelatedItems('pedidolinea').length }}</span>
+              <button mat-flat-button color="primary" (click)="openRelatedForm('pedidolinea')">
+                <mat-icon>add</mat-icon> Nuevo
+              </button>
+            </div>
+            @if (isLoadingRelation()) {
+              <div class="relation-loading">
+                <mat-spinner diameter="32"></mat-spinner>
+                <span>Cargando observacions...</span>
+              </div>
+            } @else {
+              @if (getRelatedItems('pedidolinea').length === 0) {
+                <div class="relation-empty">
+                  <mat-icon>inbox</mat-icon>
+                  <p>No hay observacions relacionados</p>
+                </div>
+              } @else {
+                <div class="relation-table-wrapper">
+                  <table mat-table [dataSource]="getRelatedItems('pedidolinea')" class="relation-table">
+                    @for (col of getRelationColumns('pedidolinea'); track col) {
+                      <ng-container [matColumnDef]="col">
+                        <th mat-header-cell *matHeaderCellDef>{{ col }}</th>
+                        <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
+                      </ng-container>
+                    }
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef></th>
+                      <td mat-cell *matCellDef="let row">
+                        <button mat-icon-button matTooltip="Editar" (click)="editRelatedItem('pedidolinea', row)"><mat-icon>edit</mat-icon></button>
+                        <button mat-icon-button matTooltip="Eliminar" (click)="deleteRelatedItem('pedidolinea', row)"><mat-icon>delete_outline</mat-icon></button>
+                      </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="getRelationColumns('pedidolinea').concat('actions')"></tr>
+                    <tr mat-row *matRowDef="let row; columns: getRelationColumns('pedidolinea').concat('actions')"></tr>
+                  </table>
+                </div>
+              }
+            }
+          </div>
+        }
+            </div>
+          } @else {
+            <div class="wr-no-selection">
+              <mat-icon>touch_app</mat-icon>
+              <p>Selecciona un registro para ver sus relaciones</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- FLOATING ACTION BUTTONS -->
+  <div class="floating-actions" [class.expanded]="fabMenuExpanded">
+    <div class="fab-expandable">
+      <button class="fab-btn fab-primary" (click)="openForm()" matTooltip="Crear Pedido" matTooltipPosition="left"><mat-icon>add</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="exportAll()" matTooltip="Exportar CSV" matTooltipPosition="left"><mat-icon>file_download</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
+    </div>
+    <button class="fab-btn fab-exit" (click)="goBack()" matTooltip="Salir" matTooltipPosition="left"><mat-icon>logout</mat-icon></button>
+    <button class="fab-btn fab-menu" (click)="toggleFabMenu()" matTooltip="Opciones" matTooltipPosition="left"><mat-icon>{{ fabMenuExpanded ? 'close' : 'more_vert' }}</mat-icon></button>
+  </div>
+
+</div>

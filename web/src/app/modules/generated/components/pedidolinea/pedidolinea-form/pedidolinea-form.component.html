@@ -1,0 +1,89 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar línea' : 'Nueva línea' }}</h2>
+  </div>
+
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Pedido Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('pedidoId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Pedido</mat-label>
+          <mat-select formControlName="pedidoId">
+            @for (option of pedidos(); track option.id) {
+              <mat-option [value]="option.id">{{ option.numero }} · {{ option.clienteDisplay }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>receipt_long</mat-icon>
+          <mat-hint>Solo pedidos en borrador o confirmados</mat-hint>
+          @if (form.get('pedidoId')?.touched && form.get('pedidoId')?.invalid) {
+            <mat-error>{{ getErrorMessage('pedidoId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('pedidoId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Variante Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('varianteId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>SKU</mat-label>
+          <mat-select formControlName="varianteId" (selectionChange)="onVarianteChange($event.value)">
+            @for (option of variantes(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaVariante(option) }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>qr_code_2</mat-icon>
+          @if (form.get('varianteId')?.touched && form.get('varianteId')?.invalid) {
+            <mat-error>{{ getErrorMessage('varianteId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('varianteId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Cantidad Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Cantidad</mat-label>
+          <input matInput type="number" step="1" min="0.01" formControlName="cantidad">
+          <mat-icon matPrefix>tag</mat-icon>
+          @if (form.get('cantidad')?.touched && form.get('cantidad')?.invalid) {
+            <mat-error>{{ getErrorMessage('cantidad') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('cantidad')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Precio Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Precio unitario US$</mat-label>
+          <input matInput type="number" step="0.01" min="0" formControlName="precioUnitarioUsd">
+          <mat-icon matPrefix>attach_money</mat-icon>
+          <mat-hint>Vacío = precio de lista del SKU al día de hoy</mat-hint>
+        </mat-form-field>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Agregar' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

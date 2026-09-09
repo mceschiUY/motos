@@ -22,11 +22,23 @@ export class ProductoHomeComponent implements OnInit {
 
   readonly titulo = 'Sistema web para gestionar envios y su trazabilidad reemplazando la planilla Excel: cada e';
   readonly entidades: HomeEntidad[] = [
-    { api: 'agencia', ruta: '/agencia', label: 'Agencia', icon: 'list_alt', modulo: 'Gestion de agencias', conEstado: false, conMes: false },
-    { api: 'cliente', ruta: '/cliente', label: 'Cliente', icon: 'person', modulo: 'Gestion de clientes', conEstado: false, conMes: false },
-    { api: 'envio', ruta: '/envio', label: 'Envio', icon: 'list_alt', modulo: 'Gestion de clientes', conEstado: true, conMes: true },
-    { api: 'observacion', ruta: '/observacion', label: 'Observación', icon: 'list_alt', modulo: 'Operaciones y flujo de estados del envio', conEstado: false, conMes: true },
-    { api: 'parametrosla', ruta: '/parametrosla', label: 'Parametro SLA', icon: 'list_alt', modulo: 'General', conEstado: true, conMes: false }
+    { api: 'marca', ruta: '/marca', label: 'Marca', icon: 'branding_watermark', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'categoria', ruta: '/categoria', label: 'Categoría', icon: 'category', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'talla', ruta: '/talla', label: 'Talla', icon: 'straighten', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'color', ruta: '/color', label: 'Color', icon: 'palette', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'producto', ruta: '/producto', label: 'Producto', icon: 'inventory_2', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'variante', ruta: '/variante', label: 'Variante', icon: 'qr_code_2', modulo: 'Catálogo', conEstado: false, conMes: false },
+    { api: 'deposito', ruta: '/deposito', label: 'Depósito', icon: 'warehouse', modulo: 'Inventario', conEstado: false, conMes: false },
+    { api: 'movimientostock', ruta: '/movimientostock', label: 'Movimiento de stock', icon: 'swap_vert', modulo: 'Inventario', conEstado: false, conMes: true },
+    { api: 'agencia', ruta: '/agencia', label: 'Agencia', icon: 'list_alt', modulo: 'Operaciones', conEstado: false, conMes: false },
+    { api: 'cliente', ruta: '/cliente', label: 'Cliente', icon: 'person', modulo: 'Comercial', conEstado: false, conMes: false },
+    { api: 'vendedor', ruta: '/vendedor', label: 'Vendedor', icon: 'badge', modulo: 'Comercial', conEstado: false, conMes: false },
+    { api: 'actividad', ruta: '/actividad', label: 'Actividad', icon: 'event_note', modulo: 'Comercial', conEstado: true, conMes: true },
+    { api: 'meta', ruta: '/meta', label: 'Meta', icon: 'flag', modulo: 'Comercial', conEstado: false, conMes: true },
+    { api: 'pedido', ruta: '/pedido', label: 'Pedido', icon: 'receipt_long', modulo: 'Comercial', conEstado: true, conMes: true },
+    { api: 'envio', ruta: '/envio', label: 'Envio', icon: 'list_alt', modulo: 'Operaciones', conEstado: true, conMes: true },
+    { api: 'observacion', ruta: '/observacion', label: 'Observación', icon: 'list_alt', modulo: 'Operaciones', conEstado: false, conMes: true },
+    { api: 'parametrosla', ruta: '/parametrosla', label: 'Parametro SLA', icon: 'list_alt', modulo: 'Operaciones', conEstado: true, conMes: false }
   ];
 
   readonly resumenes = signal<Record<string, Resumen | null>>({});

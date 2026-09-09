@@ -91,6 +91,16 @@ namespace ApiMotos.Extensions
             services.AddScoped<ApiMotos.Domain.Common.IUnitOfWork, ApiMotos.Infrastructure.Generated.GeneratedUnitOfWork>();
             services.AddScoped<ApiMotos.Application.Agregates.Clientes.ClienteHooks>();
             services.AddScoped<ApiMotos.Domain.Agregates.Clientes.IClienteRepositorio, ApiMotos.Infrastructure.Agregates.Clientes.Persistence.ClienteRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Vendedores.VendedorHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Vendedores.IVendedorRepositorio, ApiMotos.Infrastructure.Agregates.Vendedores.Persistence.VendedorRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Actividades.ActividadHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Actividades.IActividadRepositorio, ApiMotos.Infrastructure.Agregates.Actividades.Persistence.ActividadRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Metas.MetaHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Metas.IMetaRepositorio, ApiMotos.Infrastructure.Agregates.Metas.Persistence.MetaRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.Pedidos.PedidoHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.Pedidos.IPedidoRepositorio, ApiMotos.Infrastructure.Agregates.Pedidos.Persistence.PedidoRepositorio>();
+            services.AddScoped<ApiMotos.Application.Agregates.PedidoLineas.PedidoLineaHooks>();
+            services.AddScoped<ApiMotos.Domain.Agregates.PedidoLineas.IPedidoLineaRepositorio, ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence.PedidoLineaRepositorio>();
             // </KOSMOS:REPOS>
             return services;
         }

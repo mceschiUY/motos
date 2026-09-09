@@ -10,7 +10,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 
-const GRID_CHARS = '01アイウエオ∑∆Ω∇⟨⟩λμπσ';
+const GRID_CHARS = '═║╬╦╩┼0123456789·';
 
 @Component({
   selector: 'app-login',

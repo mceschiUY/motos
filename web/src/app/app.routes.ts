@@ -49,10 +49,31 @@ export const routes: Routes = [
         path: 'reportes',
         loadChildren: () => import('./modules/reportes/reportes.routes').then(m => m.REPORTES_ROUTES)
       },
-      // Modulo de Evolution Board
+      // Evolution Board: OCULTO (paridad con trenes, 2026-09-07). También está comentado
+      // el ítem del menú en site-layout.component.html. Descomentar ambos para reactivarlo.
+      // {
+      //   path: 'evolution',
+      //   loadChildren: () => import('./modules/evolution-board/evolution-board.routes').then(m => m.EVOLUTION_BOARD_ROUTES)
+      // },
+      // Vistas artesanales (no las toca la regen). Existencias: read model del Kardex.
       {
-        path: 'evolution',
-        loadChildren: () => import('./modules/evolution-board/evolution-board.routes').then(m => m.EVOLUTION_BOARD_ROUTES)
+        path: 'existencias',
+        loadComponent: () => import('./modules/artesanal/existencias/existencias.component').then(m => m.ExistenciasComponent)
+      },
+      // Agenda del vendedor: paradas por día/ciudad, mapa, ruta del día, meta del mes.
+      {
+        path: 'agenda',
+        loadComponent: () => import('./modules/artesanal/agenda/agenda.component').then(m => m.AgendaComponent)
+      },
+      // Armado de pedido: la pantalla que vende (buscador de SKU con stock y precio).
+      {
+        path: 'pedidos/nuevo',
+        loadComponent: () => import('./modules/artesanal/armado-pedido/armado-pedido.component').then(m => m.ArmadoPedidoComponent)
+      },
+      // Liquidación de comisiones: por vendedor y mes, sobre pedidos entregados.
+      {
+        path: 'comisiones',
+        loadComponent: () => import('./modules/artesanal/comisiones/comisiones.component').then(m => m.ComisionesComponent)
       },
       // Rutas generadas dinamicamente
       ...GENERATED_ROUTES

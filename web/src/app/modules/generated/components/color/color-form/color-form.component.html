@@ -22,6 +22,22 @@
         }
       </div>
 
+      <!-- CodigoHex Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Código Hex</mat-label>
+          <input matInput type="text" formControlName="codigoHex" placeholder="#RRGGBB">
+          <mat-icon matPrefix>palette</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Activo Field (Boolean) -->
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="activo" color="primary">
+          Activo
+        </mat-slide-toggle>
+      </div>
+
     </form>
   </mat-dialog-content>
   <!-- Actions -->

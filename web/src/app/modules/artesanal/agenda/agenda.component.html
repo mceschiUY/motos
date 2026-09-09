@@ -1,0 +1,206 @@
+<div class="kosmos-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>event_available</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Agenda</h1>
+          <p class="page-subtitle">{{ nombreVendedor() }} · {{ planificadas() }} planificadas · {{ realizadas() }} realizadas</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>today</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ paradasHoy().length }}</span>
+            <span class="stat-label">Hoy</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>route</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ planificadas() }}</span>
+            <span class="stat-label">Por visitar</span>
+          </div>
+        </div>
+        <div class="stat-item" [class.stat-alerta]="sinVisitar().length > 0">
+          <div class="stat-icon"><mat-icon>person_off</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ sinVisitar().length }}</span>
+            <span class="stat-label">Sin visitar +30d</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- META DEL MES (solo con vendedor elegido) -->
+  @if (avance(); as a) {
+    <section class="meta-card">
+      <div class="meta-head">
+        <div>
+          <span class="meta-titulo">Meta {{ a.periodo }}</span>
+          <span class="meta-sub">{{ formatoUsd(a.vendidoUsd) }} de {{ a.objetivoUsd ? formatoUsd(a.objetivoUsd) : 'sin meta cargada' }}</span>
+        </div>
+        <span class="meta-pct" [class.ok]="porcentajeMeta() >= 100" [class.alerta]="porcentajeMeta() < 50">{{ porcentajeMeta() }}%</span>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="porcentajeMeta()"></mat-progress-bar>
+      <div class="meta-kpis">
+        <span><b>{{ a.actividades }}</b> actividades</span>
+        <span><b>{{ a.visitas }}</b> visitas</span>
+        <span><b>{{ a.conPedido }}</b> con pedido</span>
+        <span><b>{{ (a.tasaCierre * 100) | number:'1.0-0' }}%</b> cierre</span>
+        <span><b>{{ a.clientesAsignados }}</b> clientes</span>
+      </div>
+    </section>
+  }
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <div class="smart-toolbar">
+      <div class="filtros">
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>Vendedor</mat-label>
+          <mat-select [ngModel]="vendedorId()" (ngModelChange)="onVendedorChange($event)">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (v of vendedores(); track v.id) {
+              <mat-option [value]="v.id">{{ v.nombre }}@if (v.zona) { · {{ v.zona }}}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+        @if (esMio()) { <span class="chip-mio"><mat-icon>person_pin</mat-icon> mi agenda</span> }
+      </div>
+
+      <div class="view-switcher">
+        <button mat-button class="rango-btn" [class.active]="rango() === 'hoy'" (click)="setRango('hoy')">Hoy</button>
+        <button mat-button class="rango-btn" [class.active]="rango() === '7d'" (click)="setRango('7d')">7 días</button>
+        <button mat-button class="rango-btn" [class.active]="rango() === '30d'" (click)="setRango('30d')">30 días</button>
+      </div>
+
+      <div class="toolbar-actions">
+        <button mat-icon-button class="toolbar-btn" [class.active]="mostrarRealizadas()" (click)="mostrarRealizadas.set(!mostrarRealizadas())"
+                [matTooltip]="mostrarRealizadas() ? 'Ocultar realizadas' : 'Mostrar realizadas'">
+          <mat-icon>{{ mostrarRealizadas() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        <button mat-stroked-button class="toolbar-btn-texto" (click)="misClientes()" matTooltip="Lista de clientes del vendedor elegido">
+          <mat-icon>groups</mat-icon> {{ vendedorId() != null ? 'Mis clientes' : 'Clientes' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="agenda-body">
+
+      <!-- COLUMNA IZQUIERDA: paradas por día y ciudad -->
+      <div class="agenda-lista">
+        @if (isLoading()) {
+          <div class="relation-loading"><mat-spinner diameter="32"></mat-spinner><span>Armando la agenda...</span></div>
+        } @else if (grupos().length === 0) {
+          <div class="empty-state">
+            <mat-icon>event_busy</mat-icon>
+            <h3>Nada agendado</h3>
+            <p>Las visitas planificadas salen de la "próxima acción" de cada actividad. Registrá una visita y fijá cuándo volver.</p>
+            <button mat-stroked-button class="empty-btn" (click)="registrarVisita()"><mat-icon>add</mat-icon>Registrar actividad</button>
+          </div>
+        } @else {
+          @for (g of grupos(); track g.fecha) {
+            <section class="dia" [class.hoy]="g.esHoy">
+              <header class="dia-head">
+                <h3>{{ g.label }}</h3>
+                <span class="dia-count">{{ g.total }}</span>
+              </header>
+              @for (c of g.ciudades; track c.ciudad) {
+                <div class="ciudad">
+                  <div class="ciudad-nombre"><mat-icon>location_city</mat-icon>{{ c.ciudad }}</div>
+                  @for (p of c.paradas; track p.actividadId + '-' + p.tipo) {
+                    <div class="parada" [class.selected]="seleccionada()?.actividadId === p.actividadId && seleccionada()?.tipo === p.tipo"
+                         [class.realizada]="p.tipo === 'realizada'" (click)="seleccionar(p)">
+                      <mat-icon class="parada-icono">{{ iconoTipo(p.tipoActividad) }}</mat-icon>
+                      <div class="parada-info">
+                        <div class="parada-titulo">
+                          <span class="cliente">{{ p.clienteDisplay }}</span>
+                          <span class="enum-pill" [attr.data-valor]="p.tipo === 'planificada' ? 'reprogramar' : p.resultado">
+                            {{ p.tipo === 'planificada' ? 'Volver' : etiquetaResultado(p.resultado) }}
+                          </span>
+                        </div>
+                        <div class="parada-sub">
+                          <span class="enum-pill" [attr.data-valor]="p.tipoActividad">{{ p.tipoActividad }}</span>
+                          @if (p.vendedorDisplay && vendedorId() == null) { <span>· {{ p.vendedorDisplay }}</span> }
+                          @if (p.notas) { <span class="notas">· {{ p.notas }}</span> }
+                          @if (!p.latitud || !p.longitud) { <span class="sin-ubicacion" matTooltip="El cliente no tiene coordenadas">· sin ubicación</span> }
+                        </div>
+                      </div>
+                      <div class="parada-acciones" (click)="$event.stopPropagation()">
+                        <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(p)"><mat-icon>add_task</mat-icon></button>
+                        <button mat-icon-button class="action-btn edit" matTooltip="Ver cliente" (click)="verCliente(p)"><mat-icon>person</mat-icon></button>
+                        <button mat-icon-button class="action-btn more" matTooltip="Ver actividad" (click)="verActividad(p)"><mat-icon>open_in_new</mat-icon></button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+        }
+      </div>
+
+      <!-- COLUMNA DERECHA: mapa de la parada + ruta del día + alertas -->
+      <aside class="agenda-lateral">
+        @if (seleccionada(); as s) {
+          <div class="lateral-titulo">
+            <mat-icon>{{ iconoTipo(s.tipoActividad) }}</mat-icon>
+            <div>
+              <div class="cliente">{{ s.clienteDisplay }}</div>
+              <div class="sub">{{ s.ciudad || 'Sin ciudad' }} · {{ s.fecha | date:'dd/MM' }}</div>
+            </div>
+          </div>
+          @if (s.latitud && s.longitud) {
+            <app-mini-mapa [lat]="s.latitud" [lng]="s.longitud" [direccion]="s.clienteDisplay"></app-mini-mapa>
+          } @else {
+            <div class="sin-mapa">
+              <mat-icon>location_off</mat-icon>
+              <p>Este cliente no tiene coordenadas.</p>
+              <button mat-stroked-button (click)="usarMiUbicacion(s)"><mat-icon>my_location</mat-icon>Usar mi ubicación actual</button>
+              <small>Guarda la posición del dispositivo como ubicación del cliente. Ideal parado en la puerta de la tienda.</small>
+            </div>
+          }
+        } @else {
+          <div class="sin-mapa"><mat-icon>map</mat-icon><p>Elegí una parada para verla en el mapa.</p></div>
+        }
+
+        @if (rutaHoyUrl(); as url) {
+          <a mat-flat-button color="primary" class="ruta-btn" [href]="url" target="_blank" rel="noopener">
+            <mat-icon>directions</mat-icon> Ruta del día en Google Maps
+          </a>
+        }
+
+        @if (sinVisitar().length > 0) {
+          <section class="alerta-card">
+            <h4><mat-icon>person_off</mat-icon> Sin visitar hace más de 30 días</h4>
+            @for (c of sinVisitar().slice(0, 6); track c.clienteId) {
+              <div class="alerta-item" (click)="verCliente(c)">
+                <span class="cliente">{{ c.clienteDisplay }}</span>
+                <span class="sub">{{ c.ciudad || '—' }} · {{ c.diasSinVisita }} días</span>
+              </div>
+            }
+            @if (sinVisitar().length > 6) { <div class="sub">y {{ sinVisitar().length - 6 }} más</div> }
+          </section>
+        }
+      </aside>
+    </div>
+  </div>
+
+  <!-- FLOATING ACTION BUTTONS -->
+  <div class="floating-actions expanded">
+    <div class="fab-expandable">
+      <button class="fab-btn fab-primary" (click)="registrarVisita()" matTooltip="Registrar actividad" matTooltipPosition="left"><mat-icon>add</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="misClientes()" matTooltip="Clientes" matTooltipPosition="left"><mat-icon>groups</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
+    </div>
+    <button class="fab-btn fab-exit" (click)="goBack()" matTooltip="Salir" matTooltipPosition="left"><mat-icon>logout</mat-icon></button>
+  </div>
+
+</div>

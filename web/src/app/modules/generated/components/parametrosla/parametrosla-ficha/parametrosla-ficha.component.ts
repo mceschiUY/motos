@@ -46,7 +46,7 @@ export class ParametroslaFichaComponent implements OnInit, OnDestroy {
 
   // ═══ Proceso guiado: el ciclo de vida como camino ═══
   readonly pasos = [
-    { id: 'facturacion', label: 'Facturacion', clase: 'estado-0' },
+    { id: 'facturacion', label: 'Confirmación', clase: 'estado-0' },
     { id: 'despacho', label: 'Despacho', clase: 'estado-1' },
     { id: 'entrega', label: 'Entrega', clase: 'estado-2' }
   ];

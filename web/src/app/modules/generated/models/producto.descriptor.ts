@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Producto (catálogo). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const PRODUCTO_DESCRIPTOR: EntityDescriptor = {
   entidad: 'producto',
   label: 'Producto',
@@ -23,6 +23,6 @@ export const PRODUCTO_DESCRIPTOR: EntityDescriptor = {
   vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
   hijas: [
-    { entidad: 'Variante', fk: 'productoId', icon: 'list_alt' },
+    { entidad: 'Variante', fk: 'productoId', icon: 'qr_code_2' },
   ],
 };

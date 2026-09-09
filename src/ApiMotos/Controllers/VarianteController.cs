@@ -8,6 +8,8 @@ using ApiMotos.Application.Agregates.Variantes.Queries.Variantes;
 using ApiMotos.Application.Agregates.Variantes.Queries.Resumen;
 using ApiMotos.Application.Agregates.Variantes.Queries.Buscar;
 using ApiMotos.Application.Agregates.Variantes.Queries.ByProductoId;
+using ApiMotos.Application.Agregates.Variantes.Queries.ByTallaId;
+using ApiMotos.Application.Agregates.Variantes.Queries.ByColorId;
 
 namespace ApiMotos.Controllers
 {
@@ -58,6 +60,20 @@ namespace ApiMotos.Controllers
         public async Task<IActionResult> GetByProductoId([FromRoute] int id)
         {
             var result = await _mediator.Send(new VariantesByProductoIdQuery { ProductoId = id });
+            return Ok(result);
+        }
+
+        [HttpGet("by-talla/{id}")]
+        public async Task<IActionResult> GetByTallaId([FromRoute] int id)
+        {
+            var result = await _mediator.Send(new VariantesByTallaIdQuery { TallaId = id });
+            return Ok(result);
+        }
+
+        [HttpGet("by-color/{id}")]
+        public async Task<IActionResult> GetByColorId([FromRoute] int id)
+        {
+            var result = await _mediator.Send(new VariantesByColorIdQuery { ColorId = id });
             return Ok(result);
         }
 

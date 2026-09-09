@@ -238,7 +238,104 @@ namespace ApiMotos.Infrastructure.Agregates.Clientes.Persistence
             builder.Property(e => e.Telefono).HasColumnName("Telefono").HasMaxLength(255);
             builder.Property(e => e.DireccionEntrega).HasColumnName("DireccionEntrega").HasMaxLength(255);
 
+            // Etapa A (plan §3.2 / §3.8): datos comerciales, todos nullable. En bases existentes
+            // los agrega DbBootstrap (ALTER ADD ... NULL). La FK y el índice de VendedorId van en
+            // FK_PC_CLIENTES.sql (no acá): EF los emitiría antes de que exista la columna.
+            builder.Property(e => e.Tipo).HasColumnName("Tipo").HasMaxLength(20);
+            builder.Property(e => e.Ciudad).HasColumnName("Ciudad").HasMaxLength(80);
+            builder.Property(e => e.Contacto).HasColumnName("Contacto").HasMaxLength(120);
+            builder.Property(e => e.Email).HasColumnName("Email").HasMaxLength(120);
+            builder.Property(e => e.VendedorId).HasColumnName("VendedorId");
+            builder.Property(e => e.Notas).HasColumnName("Notas").HasMaxLength(1000);
+            builder.Property(e => e.Latitud).HasColumnName("Latitud").HasColumnType("decimal(9,6)");
+            builder.Property(e => e.Longitud).HasColumnName("Longitud").HasColumnType("decimal(9,6)");
+
             builder.HasIndex(e => e.Nombre).IsUnique();
+        }
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Vendedores.Persistence
+{
+    using ApiMotos.Domain.Agregates.Vendedores;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class VendedorMap : IEntityTypeConfiguration<Vendedor>
+    {
+        public void Configure(EntityTypeBuilder<Vendedor> builder)
+        {
+            builder.ToTable("PC_VENDEDORES");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Nombre).HasColumnName("Nombre").IsRequired().HasMaxLength(120);
+            builder.Property(e => e.Telefono).HasColumnName("Telefono").HasMaxLength(40);
+            builder.Property(e => e.Email).HasColumnName("Email").HasMaxLength(120);
+            builder.Property(e => e.Zona).HasColumnName("Zona").HasMaxLength(80);
+            builder.Property(e => e.ComisionPorcentaje).HasColumnName("ComisionPorcentaje").HasColumnType("decimal(5,2)");
+            builder.Property(e => e.Usuario).HasColumnName("Usuario").HasMaxLength(80);
+            builder.Property(e => e.Activo).HasColumnName("Activo");
+        }
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Actividades.Persistence
+{
+    using ApiMotos.Domain.Agregates.Actividades;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class ActividadMap : IEntityTypeConfiguration<Actividad>
+    {
+        public void Configure(EntityTypeBuilder<Actividad> builder)
+        {
+            builder.ToTable("PC_ACTIVIDADES");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.VendedorId).HasColumnName("VendedorId").IsRequired();
+            builder.Property(e => e.ClienteId).HasColumnName("ClienteId").IsRequired();
+            builder.Property(e => e.Tipo).HasColumnName("Tipo").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.Fecha).HasColumnName("Fecha").IsRequired().HasColumnType("datetime2");
+            builder.Property(e => e.Resultado).HasColumnName("Resultado").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.Notas).HasColumnName("Notas").HasMaxLength(1000);
+            builder.Property(e => e.ProximaAccion).HasColumnName("ProximaAccion").HasColumnType("date");
+            builder.Property(e => e.PedidoId).HasColumnName("PedidoId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Pedidos.Pedido>().WithMany()
+                .HasForeignKey(e => e.PedidoId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_ACTIVIDADES_PedidoId");
+            builder.HasIndex(e => e.VendedorId);
+            builder.HasIndex(e => e.ClienteId);
+            builder.HasOne<ApiMotos.Domain.Agregates.Vendedores.Vendedor>().WithMany()
+                .HasForeignKey(e => e.VendedorId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_ACTIVIDADES_VendedorId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Clientes.Cliente>().WithMany()
+                .HasForeignKey(e => e.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_ACTIVIDADES_ClienteId");
+        }
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Metas.Persistence
+{
+    using ApiMotos.Domain.Agregates.Metas;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class MetaMap : IEntityTypeConfiguration<Meta>
+    {
+        public void Configure(EntityTypeBuilder<Meta> builder)
+        {
+            builder.ToTable("PC_METAS");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.VendedorId).HasColumnName("VendedorId").IsRequired();
+            builder.Property(e => e.Periodo).HasColumnName("Periodo").IsRequired().HasMaxLength(7);
+            builder.Property(e => e.ObjetivoUsd).HasColumnName("ObjetivoUsd").HasColumnType("decimal(18,2)");
+            builder.HasIndex(e => new { e.VendedorId, e.Periodo }).IsUnique().HasDatabaseName("UX_PC_METAS_VendedorId_Periodo");
+            builder.HasOne<ApiMotos.Domain.Agregates.Vendedores.Vendedor>().WithMany()
+                .HasForeignKey(e => e.VendedorId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_METAS_VendedorId");
         }
     }
 }
@@ -267,6 +364,12 @@ namespace ApiMotos.Infrastructure.Agregates.Envios.Persistence
             builder.Property(e => e.MotivoAnulacion).HasColumnName("MotivoAnulacion").HasMaxLength(255);
             builder.Property(e => e.ClienteId).HasColumnName("ClienteId").IsRequired();
             builder.Property(e => e.AgenciaId).HasColumnName("AgenciaId").IsRequired();
+            // Etapa B (plan §3.6): el envío que nació de un pedido lo referencia.
+            builder.Property(e => e.PedidoId).HasColumnName("PedidoId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Pedidos.Pedido>().WithMany()
+                .HasForeignKey(e => e.PedidoId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_ENVIOS_PedidoId");
 
             builder.HasOne<ApiMotos.Domain.Agregates.Clientes.Cliente>().WithMany()
                 .HasForeignKey(e => e.ClienteId)
@@ -348,6 +451,87 @@ namespace ApiMotos.Infrastructure.Agregates.ParametroSLAs.Persistence
             builder.Property(e => e.Etapa).HasColumnName("Etapa").IsRequired().HasMaxLength(255);
             builder.Property(e => e.RangoAlertaUmbralAdvertenciaDias).HasColumnName("RangoAlertaUmbralAdvertenciaDias").IsRequired();
             builder.Property(e => e.RangoAlertaLimiteDias).HasColumnName("RangoAlertaLimiteDias").IsRequired();
+        }
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Pedidos.Persistence
+{
+    using ApiMotos.Domain.Agregates.Pedidos;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class PedidoMap : IEntityTypeConfiguration<Pedido>
+    {
+        public void Configure(EntityTypeBuilder<Pedido> builder)
+        {
+            builder.ToTable("PC_PEDIDOS");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Numero).HasColumnName("Numero").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.Fecha).HasColumnName("Fecha").IsRequired().HasColumnType("datetime2");
+            builder.Property(e => e.ClienteId).HasColumnName("ClienteId").IsRequired();
+            builder.Property(e => e.VendedorId).HasColumnName("VendedorId").IsRequired();
+            builder.Property(e => e.DepositoId).HasColumnName("DepositoId").IsRequired();
+            builder.Property(e => e.AgenciaId).HasColumnName("AgenciaId");
+            builder.Property(e => e.Estado).HasColumnName("Estado").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.TotalUsd).HasColumnName("TotalUsd").HasColumnType("decimal(18,2)");
+            builder.Property(e => e.ComisionUsd).HasColumnName("ComisionUsd").HasColumnType("decimal(18,2)");
+            builder.Property(e => e.Observaciones).HasColumnName("Observaciones").HasMaxLength(500);
+            builder.Property(e => e.EnvioId).HasColumnName("EnvioId");
+            builder.Property(e => e.MotivoAnulacion).HasColumnName("MotivoAnulacion").HasMaxLength(250);
+            builder.Ignore(e => e.EsEditable);
+            // Filtrado: la fila nace con Numero = '' y PedidoHooks lo sella después de guardar.
+            builder.HasIndex(e => e.Numero).IsUnique()
+                .HasFilter("[Numero] <> ''").HasDatabaseName("UX_PC_PEDIDOS_Numero");
+            builder.HasIndex(e => e.ClienteId);
+            builder.HasIndex(e => e.VendedorId);
+            builder.HasOne<ApiMotos.Domain.Agregates.Clientes.Cliente>().WithMany()
+                .HasForeignKey(e => e.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDOS_ClienteId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Vendedores.Vendedor>().WithMany()
+                .HasForeignKey(e => e.VendedorId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDOS_VendedorId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Depositos.Deposito>().WithMany()
+                .HasForeignKey(e => e.DepositoId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDOS_DepositoId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Agencias.Agencia>().WithMany()
+                .HasForeignKey(e => e.AgenciaId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDOS_AgenciaId");
+        }
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence
+{
+    using ApiMotos.Domain.Agregates.PedidoLineas;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class PedidoLineaMap : IEntityTypeConfiguration<PedidoLinea>
+    {
+        public void Configure(EntityTypeBuilder<PedidoLinea> builder)
+        {
+            builder.ToTable("PC_PEDIDO_LINEAS");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.PedidoId).HasColumnName("PedidoId").IsRequired();
+            builder.Property(e => e.VarianteId).HasColumnName("VarianteId").IsRequired();
+            builder.Property(e => e.Cantidad).HasColumnName("Cantidad").HasColumnType("decimal(18,2)");
+            builder.Property(e => e.PrecioUnitarioUsd).HasColumnName("PrecioUnitarioUsd").HasColumnType("decimal(18,2)");
+            builder.Property(e => e.SubtotalUsd).HasColumnName("SubtotalUsd").HasColumnType("decimal(18,2)");
+            builder.HasIndex(e => e.PedidoId);
+            builder.HasIndex(e => e.VarianteId);
+            builder.HasOne<ApiMotos.Domain.Agregates.Pedidos.Pedido>().WithMany()
+                .HasForeignKey(e => e.PedidoId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDO_LINEAS_PedidoId");
+            builder.HasOne<ApiMotos.Domain.Agregates.Variantes.Variante>().WithMany()
+                .HasForeignKey(e => e.VarianteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PEDIDO_LINEAS_VarianteId");
         }
     }
 }

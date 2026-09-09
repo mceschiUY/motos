@@ -76,8 +76,9 @@
           <mat-label>Cantidad</mat-label>
           <input matInput type="number" step="0.01" formControlName="cantidad">
           <mat-icon matPrefix>pin</mat-icon>
+          <mat-hint>Negativo solo en ajustes (faltante de inventario)</mat-hint>
           @if (form.get('cantidad')?.touched && form.get('cantidad')?.invalid) {
-            <mat-error>{{ getErrorMessage('cantidad') }}</mat-error>
+            <mat-error>{{ form.get('cantidad')?.hasError('distintoDeCero') ? 'La cantidad no puede ser cero' : getErrorMessage('cantidad') }}</mat-error>
           }
         </mat-form-field>
       </div>

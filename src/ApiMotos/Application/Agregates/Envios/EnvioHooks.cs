@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using MediatR;
 using NSpecifications;
 using ApiMotos.Domain.Agregates.Envios;
 using ApiMotos.Application.Common.Generated;
@@ -17,11 +18,13 @@ namespace ApiMotos.Application.Agregates.Envios
     public class EnvioHooks : CrudHooks<Envio, CrearEnvioCommand, ModificarEnvioCommand>
     {
         private readonly IEnvioRepositorio _envioRepositorio;
+        private readonly IMediator _mediator;
 
-        public EnvioHooks(IEnvioRepositorio pEnvioRepositorio, IReglasNegocioEjecutor motor)
+        public EnvioHooks(IEnvioRepositorio pEnvioRepositorio, IMediator mediator, IReglasNegocioEjecutor motor)
             : base(motor, "Envio")
         {
             _envioRepositorio = pEnvioRepositorio;
+            _mediator = mediator;
         }
 
         public override async Task<Result> AntesDeCrear(CrearEnvioCommand comando, CancellationToken ct)
@@ -43,6 +46,20 @@ namespace ApiMotos.Application.Agregates.Envios
             if (repetidos.Count > 0)
                 return Result.Fail("Ya existe un envío con el mismo código de rastreo en esta agencia");
 
+            return Result.Ok();
+        }
+
+        // R-Etapa B (plan §3): la entrega del envío ARRASTRA al pedido. Sincronía en una
+        // sola dirección — el pedido entregado no toca el envío, así no hay ida y vuelta.
+        public override async Task<Result> DespuesDeAccion(string accion, Envio entidad, CancellationToken ct)
+        {
+            if (accion != "PasarAEntregado" || entidad.PedidoId is null or <= 0) return Result.Ok();
+
+            var resultado = await _mediator.Send(
+                new ApiMotos.Application.Agregates.Pedidos.Commands.Transicion.TransicionPedidoCommand(
+                    entidad.PedidoId!.Value, "PasarAEntregado"), ct);
+            // Si el pedido ya estaba entregado (o anulado) el ciclo lo rechaza: no es un
+            // error del envío, que se entregó igual. Se ignora a propósito.
             return Result.Ok();
         }
     }

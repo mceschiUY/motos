@@ -6,7 +6,8 @@ export const ENVIO_DESCRIPTOR: EntityDescriptor = {
   label: 'Envio',
   campos: [
     { nombre: 'codigoRastreo', label: 'Código Rastreo', tipo: 'texto', primario: true },
-    { nombre: 'estado', label: 'Estado', tipo: 'enum', valores: ['recibido', 'facturado', 'despachado', 'entregado', 'anulado'] },
+    // Etapa 0 (2026-09-07): sin facturación en el horizonte, 'facturado' se LEE como "Confirmado". El valor persistido no cambia.
+    { nombre: 'estado', label: 'Estado', tipo: 'enum', valores: ['recibido', 'facturado', 'despachado', 'entregado', 'anulado'], etiquetas: { facturado: 'Confirmado' } },
     { nombre: 'fechaRecibido', label: 'Fecha Recibido', tipo: 'fecha' },
     { nombre: 'fechaFactura', label: 'Fecha Factura', tipo: 'fecha' },
     { nombre: 'fechaEnvio', label: 'Fecha Envio', tipo: 'fecha' },
@@ -19,7 +20,7 @@ export const ENVIO_DESCRIPTOR: EntityDescriptor = {
   vistas: ['table', 'cards', 'master-detail', 'with-relations', 'timeline', 'calendario', 'kanban'],
   vistaDefault: 'table',
   acciones: [
-    { key: 'pasar-a-facturado', label: 'Pasar a facturado Envio', icon: 'play_arrow' },
+    { key: 'pasar-a-facturado', label: 'Confirmar Envio', icon: 'play_arrow' },
     { key: 'pasar-a-despachado', label: 'Pasar a despachado Envio', icon: 'play_arrow' },
     { key: 'pasar-a-entregado', label: 'Pasar a entregado Envio', icon: 'play_arrow' },
     { key: 'pasar-a-anulado', label: 'Pasar a anulado Envio', icon: 'play_arrow' },

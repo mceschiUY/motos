@@ -1,0 +1,126 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Pedido' : 'Nuevo Pedido' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Cliente Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('clienteId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Cliente</mat-label>
+          <mat-select formControlName="clienteId" (selectionChange)="onClienteChange($event.value)">
+            @for (option of clientes(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>person</mat-icon>
+          @if (form.get('clienteId')?.touched && form.get('clienteId')?.invalid) {
+            <mat-error>{{ getErrorMessage('clienteId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('clienteId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Vendedor Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('vendedorId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Vendedor</mat-label>
+          <mat-select formControlName="vendedorId">
+            @for (option of vendedores(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>badge</mat-icon>
+          @if (form.get('vendedorId')?.touched && form.get('vendedorId')?.invalid) {
+            <mat-error>{{ getErrorMessage('vendedorId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('vendedorId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Depósito Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('depositoId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Depósito</mat-label>
+          <mat-select formControlName="depositoId">
+            @for (option of depositos(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>warehouse</mat-icon>
+          <mat-hint>De acá sale el stock cuando se despacha</mat-hint>
+          @if (form.get('depositoId')?.touched && form.get('depositoId')?.invalid) {
+            <mat-error>{{ getErrorMessage('depositoId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('depositoId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Agencia Field (FK, opcional hasta despachar) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('agenciaId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Agencia</mat-label>
+          <mat-select formControlName="agenciaId">
+            <mat-option [value]="null">— Sin definir —</mat-option>
+            @for (option of agencias(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>local_shipping</mat-icon>
+          <mat-hint>Con ella nace el envío al despachar</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Fecha Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha</mat-label>
+          <input matInput [matDatepicker]="pickerFecha" formControlName="fecha">
+          <mat-datepicker-toggle matIconSuffix [for]="pickerFecha"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFecha></mat-datepicker>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          @if (form.get('fecha')?.touched && form.get('fecha')?.invalid) {
+            <mat-error>{{ getErrorMessage('fecha') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('fecha')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Observaciones Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput rows="2" formControlName="observaciones"></textarea>
+          <mat-icon matPrefix>notes</mat-icon>
+        </mat-form-field>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

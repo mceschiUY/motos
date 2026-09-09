@@ -1,0 +1,64 @@
+// Comisiones (artesanal, solo lectura): misma piel que las listas generadas.
+@use 'generated/entity-list' as *;
+
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  flex-wrap: wrap;
+
+  .filtro-field {
+    min-width: 220px;
+    // Compactar el outline de Material a la altura de la toolbar
+    ::ng-deep .mat-mdc-text-field-wrapper { height: 40px; }
+    ::ng-deep .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; min-height: 40px; }
+    ::ng-deep .mat-mdc-floating-label { top: 20px; }
+    ::ng-deep .mdc-notched-outline__notch { max-width: calc(100% - 16px); }
+  }
+}
+
+// La regla del negocio, dicha una vez donde se lee la plata
+.smart-toolbar .nota {
+  margin: 0 0 0 auto;
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+}
+
+.smart-table {
+  th.col-num, td.col-num { text-align: right; }
+  td.tnum { font-variant-numeric: tabular-nums; }
+
+  // La columna que se va a pagar: es la que el usuario viene a mirar
+  td.col-comision {
+    font-weight: var(--ceskia-font-semibold);
+    color: var(--ceskia-text-primary);
+  }
+
+  td .sin-datos { color: var(--ceskia-text-tertiary); }
+
+  .link-pedidos {
+    min-width: 0;
+    padding: 0 var(--ceskia-space-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  tr.fila-link { cursor: pointer; }
+}
+
+.header-stats .stat-item.stat-comision {
+  .stat-icon { color: var(--ceskia-accent-primary); background: var(--ceskia-accent-primary-glow); }
+  .stat-value { color: var(--ceskia-accent-primary); }
+}
+
+.empty-state p {
+  margin: var(--ceskia-space-2) 0 0;
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+  max-width: 420px;
+}
+
+.relation-loading {
+  display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-8);
+  color: var(--ceskia-text-tertiary);
+}

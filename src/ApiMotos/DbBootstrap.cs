@@ -202,6 +202,25 @@ public static class DbBootstrap
                 }
                 if (cfgOk > 0)
                     logger.LogInformation("DbBootstrap: {Count} lotes de seed de configuración aplicados.", cfgOk);
+
+                // 5) SEEDS de DOMINIO (Seed_*.sql): datos de demostración/arranque del negocio.
+                //    Idempotentes (maestras por fila, transaccionales por tabla vacía). Se aplican
+                //    DESPUÉS de las FKs para respetar integridad referencial. Mismo pase que trenes.
+                var seedOk = 0;
+                foreach (var file in System.IO.Directory.GetFiles(scriptsDir, "Seed_*.sql").OrderBy(f => f))
+                {
+                    foreach (var batch in SplitBatches(System.IO.File.ReadAllText(file)))
+                    {
+                        try { contexts[0].Database.ExecuteSqlRaw(batch); seedOk++; }
+                        catch (SqlException ex)
+                        {
+                            logger.LogWarning("DbBootstrap: seed de dominio no aplicado ({File}): {Msg}",
+                                System.IO.Path.GetFileName(file), ex.Message);
+                        }
+                    }
+                }
+                if (seedOk > 0)
+                    logger.LogInformation("DbBootstrap: {Count} lotes de seed de dominio aplicados.", seedOk);
             }
         }
         catch (Exception ex)

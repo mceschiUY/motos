@@ -1,0 +1,169 @@
+<div class="kosmos-page" [class.density-compact]="densityMode() === 'compact'">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>inventory</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Existencias</h1>
+          <p class="page-subtitle">{{ totalCount() }} posiciones SKU × depósito</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>inventory_2</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ formato(totalUnidades()) }}</span>
+            <span class="stat-label">Unidades</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>qr_code_2</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ skusConStock() }}</span>
+            <span class="stat-label">SKU con stock</span>
+          </div>
+        </div>
+        <div class="stat-item" [class.stat-alerta]="negativos() > 0">
+          <div class="stat-icon"><mat-icon>warning</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ negativos() }}</span>
+            <span class="stat-label">En negativo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <!-- SMART TOOLBAR: búsqueda en memoria + filtros server-side -->
+    <div class="smart-toolbar">
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text" class="search-input" placeholder="Buscar SKU, producto o depósito..."
+               [value]="searchTerm()" (input)="onSearchChange($event)">
+        @if (searchTerm()) {
+          <button class="search-clear" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+        }
+      </div>
+
+      <div class="filtros">
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>SKU / Variante</mat-label>
+          <mat-select [ngModel]="varianteId()" (ngModelChange)="varianteId.set($event); onFiltroChange()">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (v of variantes(); track v.id) {
+              <mat-option [value]="v.id">{{ etiquetaVariante(v) }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>qr_code_2</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>Depósito</mat-label>
+          <mat-select [ngModel]="depositoId()" (ngModelChange)="depositoId.set($event); onFiltroChange()">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (d of depositos(); track d.id) {
+              <mat-option [value]="d.id">{{ d.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>warehouse</mat-icon>
+        </mat-form-field>
+
+        @if (hayFiltros()) {
+          <button mat-icon-button class="toolbar-btn" (click)="limpiarFiltros()" matTooltip="Quitar filtros">
+            <mat-icon>filter_alt_off</mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="toolbar-actions">
+        <button mat-icon-button class="toolbar-btn" (click)="toggleDensity()"
+                [matTooltip]="densityMode() === 'comfortable' ? 'Vista compacta' : 'Vista confortable'">
+          <mat-icon>{{ densityMode() === 'comfortable' ? 'density_medium' : 'density_small' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLA (solo lectura) -->
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="pageItems()" matSort (matSortChange)="ordenar($event)"
+             class="smart-table" [trackBy]="trackByClave">
+
+        <ng-container matColumnDef="sku">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+          <td mat-cell *matCellDef="let item" class="col-primary">{{ item.sku ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="productoDisplay">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Producto</th>
+          <td mat-cell *matCellDef="let item">{{ item.productoDisplay ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="depositoDisplay">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Depósito</th>
+          <td mat-cell *matCellDef="let item">{{ item.depositoDisplay ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="disponible">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="col-num">Disponible</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum" [class.negativo]="item.disponible < 0">
+            {{ formato(item.disponible) }}
+            @if (item.disponible < 0) {
+              <mat-icon class="negativo-icon" matTooltip="Saldo negativo: revisar Kardex">warning</mat-icon>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnas;" class="fila-link"
+            (click)="verVariante(row)" matTooltip="Ver ficha del SKU"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          @if (!isLoading()) {
+            <td class="mat-cell empty-state-cell" [attr.colspan]="columnas.length">
+              <div class="empty-state">
+                @if (searchTerm()) {
+                  <mat-icon>search_off</mat-icon>
+                  <h3>Sin resultados para «{{ searchTerm() }}»</h3>
+                  <button mat-stroked-button class="empty-btn" (click)="searchTerm.set('')">
+                    <mat-icon>close</mat-icon>Limpiar búsqueda</button>
+                } @else {
+                  <mat-icon>inventory_2</mat-icon>
+                  <h3>Sin existencias</h3>
+                  <p>Los saldos se calculan desde los movimientos de stock. Registrá una entrada para ver stock acá.</p>
+                }
+              </div>
+            </td>
+          } @else {
+            <td class="mat-cell" [attr.colspan]="columnas.length">
+              <div class="relation-loading">
+                <mat-spinner diameter="32"></mat-spinner>
+                <span>Calculando existencias...</span>
+              </div>
+            </td>
+          }
+        </tr>
+      </table>
+    </div>
+    <mat-paginator [length]="ordenados().length" [pageSizeOptions]="[25, 50, 100]" [pageSize]="tamPagina()"
+                   showFirstLastButtons aria-label="Paginación" (page)="paginar($event)"></mat-paginator>
+
+  </div>
+
+  <!-- FLOATING ACTION BUTTONS (sin crear: el stock no se edita, se mueve) -->
+  <div class="floating-actions" [class.expanded]="fabMenuExpanded">
+    <div class="fab-expandable">
+      <button class="fab-btn fab-primary" (click)="verKardex()" [disabled]="varianteId() == null"
+              matTooltip="Ver Kardex del SKU filtrado" matTooltipPosition="left"><mat-icon>swap_vert</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="exportAll()" matTooltip="Exportar CSV" matTooltipPosition="left"><mat-icon>file_download</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
+    </div>
+    <button class="fab-btn fab-exit" (click)="goBack()" matTooltip="Salir" matTooltipPosition="left"><mat-icon>logout</mat-icon></button>
+    <button class="fab-btn fab-menu" (click)="toggleFabMenu()" matTooltip="Opciones" matTooltipPosition="left"><mat-icon>{{ fabMenuExpanded ? 'close' : 'more_vert' }}</mat-icon></button>
+  </div>
+
+</div>

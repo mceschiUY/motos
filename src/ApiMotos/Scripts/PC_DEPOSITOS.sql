@@ -14,7 +14,4 @@ ELSE
     PRINT 'Tabla PC_DEPOSITOS ya existe';
 GO
 
--- Seed: depósito central por defecto (idempotente).
-IF NOT EXISTS (SELECT 1 FROM PC_DEPOSITOS WHERE Codigo = 'DEP-CENTRAL')
-    INSERT INTO PC_DEPOSITOS (Codigo, Nombre, Direccion, Activo) VALUES ('DEP-CENTRAL', 'Depósito Central', NULL, 1);
-GO
+-- Seeds (depositos): viven en Seed_Dominio_Motos.sql (pase Seed_*.sql de DbBootstrap e init-db.sh).

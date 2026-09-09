@@ -45,6 +45,60 @@
           ]
         }
       ]
+    },
+    {
+      "entidad": "Pedido",
+      "campo": "Estado",
+      "transiciones": [
+        {
+          "accion": "PasarAConfirmado",
+          "ruta": "pasar-a-confirmado",
+          "campo": "Estado",
+          "hacia": "confirmado",
+          "desde": [
+            "borrador"
+          ]
+        },
+        {
+          "accion": "PasarAPreparado",
+          "ruta": "pasar-a-preparado",
+          "campo": "Estado",
+          "hacia": "preparado",
+          "desde": [
+            "confirmado"
+          ]
+        },
+        {
+          "accion": "PasarADespachado",
+          "ruta": "pasar-a-despachado",
+          "campo": "Estado",
+          "hacia": "despachado",
+          "desde": [
+            "preparado"
+          ]
+        },
+        {
+          "accion": "PasarAEntregado",
+          "ruta": "pasar-a-entregado",
+          "campo": "Estado",
+          "hacia": "entregado",
+          "desde": [
+            "despachado"
+          ]
+        },
+        {
+          "accion": "PasarAAnulado",
+          "ruta": "pasar-a-anulado",
+          "campo": "Estado",
+          "hacia": "anulado",
+          "desde": [
+            "borrador",
+            "confirmado",
+            "preparado",
+            "despachado"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -213,6 +213,57 @@ namespace ApiMotos.Infrastructure.Agregates.Observaciones.Persistence
     }
 }
 
+namespace ApiMotos.Infrastructure.Agregates.Vendedores.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.Vendedores;
+    using ApiMotos.Infrastructure.Common;
+
+    public class VendedorRepositorio : GenericRepository<Vendedor>, IVendedorRepositorio
+    {
+        public VendedorRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public List<Vendedor> GetVendedores(Spec<Vendedor> specification) => GetBySpec(specification);
+        public List<Vendedor> GetVendedores(Spec<Vendedor> specification, int skip, int take) => GetBySpec(specification, skip, take);
+        public Task<List<Vendedor>> GetVendedoresAsync(Spec<Vendedor> specification) => GetBySpecAsync(specification);
+        public Task<List<Vendedor>> GetVendedoresAsync(Spec<Vendedor> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Actividades.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.Actividades;
+    using ApiMotos.Infrastructure.Common;
+
+    public class ActividadRepositorio : GenericRepository<Actividad>, IActividadRepositorio
+    {
+        public ActividadRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public List<Actividad> GetActividades(Spec<Actividad> specification) => GetBySpec(specification);
+        public List<Actividad> GetActividades(Spec<Actividad> specification, int skip, int take) => GetBySpec(specification, skip, take);
+        public Task<List<Actividad>> GetActividadesAsync(Spec<Actividad> specification) => GetBySpecAsync(specification);
+        public Task<List<Actividad>> GetActividadesAsync(Spec<Actividad> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Metas.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.Metas;
+    using ApiMotos.Infrastructure.Common;
+
+    public class MetaRepositorio : GenericRepository<Meta>, IMetaRepositorio
+    {
+        public MetaRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public List<Meta> GetMetas(Spec<Meta> specification) => GetBySpec(specification);
+        public List<Meta> GetMetas(Spec<Meta> specification, int skip, int take) => GetBySpec(specification, skip, take);
+        public Task<List<Meta>> GetMetasAsync(Spec<Meta> specification) => GetBySpecAsync(specification);
+        public Task<List<Meta>> GetMetasAsync(Spec<Meta> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
+    }
+}
+
 namespace ApiMotos.Infrastructure.Agregates.ParametroSLAs.Persistence
 {
     using NSpecifications;
@@ -229,5 +280,39 @@ namespace ApiMotos.Infrastructure.Agregates.ParametroSLAs.Persistence
         public List<ParametroSLA> GetParametroSLAs(Spec<ParametroSLA> specification, int skip, int take) => GetBySpec(specification, skip, take);
         public Task<List<ParametroSLA>> GetParametroSLAsAsync(Spec<ParametroSLA> specification) => GetBySpecAsync(specification);
         public Task<List<ParametroSLA>> GetParametroSLAsAsync(Spec<ParametroSLA> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.Pedidos.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.Pedidos;
+    using ApiMotos.Infrastructure.Common;
+
+    public class PedidoRepositorio : GenericRepository<Pedido>, IPedidoRepositorio
+    {
+        public PedidoRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public List<Pedido> GetPedidos(Spec<Pedido> specification) => GetBySpec(specification);
+        public List<Pedido> GetPedidos(Spec<Pedido> specification, int skip, int take) => GetBySpec(specification, skip, take);
+        public Task<List<Pedido>> GetPedidosAsync(Spec<Pedido> specification) => GetBySpecAsync(specification);
+        public Task<List<Pedido>> GetPedidosAsync(Spec<Pedido> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
+    }
+}
+
+namespace ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.PedidoLineas;
+    using ApiMotos.Infrastructure.Common;
+
+    public class PedidoLineaRepositorio : GenericRepository<PedidoLinea>, IPedidoLineaRepositorio
+    {
+        public PedidoLineaRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public List<PedidoLinea> GetPedidoLineas(Spec<PedidoLinea> specification) => GetBySpec(specification);
+        public List<PedidoLinea> GetPedidoLineas(Spec<PedidoLinea> specification, int skip, int take) => GetBySpec(specification, skip, take);
+        public Task<List<PedidoLinea>> GetPedidoLineasAsync(Spec<PedidoLinea> specification) => GetBySpecAsync(specification);
+        public Task<List<PedidoLinea>> GetPedidoLineasAsync(Spec<PedidoLinea> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
     }
 }

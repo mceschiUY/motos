@@ -15,7 +15,7 @@ import { SiteConfigService } from '../core/services/site-config.service';
 import { ActividadService } from '../core/services/actividad.service';
 import { SiteFooterComponent } from './components/site-footer/site-footer.component';
 import { AlchemyLensComponent } from './components/alchemy-lens/alchemy-lens.component';
-import { GlobalSearchComponent } from '../shared/components/global-search/global-search.component';
+import { HeaderSearchComponent } from '../shared/components/global-search/header-search.component';
 import { AsistenteVozComponent } from '../shared/components/asistente-voz/asistente-voz.component';
 import { environment } from '../../environments/environment';
 
@@ -41,7 +41,7 @@ interface SystemMenuItem {
     MatDividerModule,
     SiteFooterComponent,
     AlchemyLensComponent,
-    GlobalSearchComponent,
+    HeaderSearchComponent,
     AsistenteVozComponent
   ],
   templateUrl: './site-layout.component.html',
@@ -56,11 +56,19 @@ export class SiteLayoutComponent {
 
   // Herramientas del motor ZAS (mutación, lens, evolution, modo pantalla):
   // visibles solo fuera de producción — el cliente final no las ve en el build publicado.
-  readonly herramientasZas = !environment.production;
+  // Herramientas del motor (lens de diff, mutación, Evolution Hub, modo pantalla): OCULTAS por
+  // defecto, también en `ng serve` (la demo corre así). Opt-in para desarrollo:
+  // localStorage.setItem('zas.herramientas', '1') y recargar. (Etapa 0 del plan, 2026-09-07.)
+  readonly herramientasZas = !environment.production && (() => {
+    try { return localStorage.getItem('zas.herramientas') === '1'; } catch { return false; }
+  })();
 
   sidebarCollapsed = signal(false);
   currentRoute = signal<string>('');
   currentPageTitle = signal<string>('Inicio');
+  /** Cierre del rastro cuando la URL termina en un id ("Detalle"): el id crudo
+   *  jamás se muestra en el cabezal (pedido Pablo 2026-09-06). */
+  currentPageSufijo = signal<string>('');
   seguridadExpanded = signal(false);
   expandedGroups = signal<Set<string>>(new Set());
 
@@ -81,6 +89,8 @@ export class SiteLayoutComponent {
       ?? this.seguridadMenu.children?.find(c => c.path === ruta);
     const label = item?.label ?? this.currentPageTitle();
     if (!partes.length || partes[partes.length - 1].label !== label) partes.push({ label });
+    const sufijo = this.currentPageSufijo();
+    if (sufijo) partes.push({ label: sufijo });
     return partes;
   });
   hasGroups = GENERATED_MENU_GROUPS.length > 0;
@@ -141,25 +151,41 @@ export class SiteLayoutComponent {
     return user?.perfilNombre || 'Sin perfil';
   }
 
+  /** Iniciales para el avatar del cabezal (máx. 2: primer nombre + apellido). */
+  get userInitials(): string {
+    const partes = this.userName.trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return '?';
+    const primera = partes[0][0] ?? '';
+    const segunda = partes.length > 1 ? partes[partes.length - 1][0] ?? '' : '';
+    return (primera + segunda).toUpperCase();
+  }
+
   private updatePageTitle(url: string): void {
-    const segments = url.split('/').filter(s => s);
+    const segments = url.split('?')[0].split('/').filter(s => s);
     if (segments.length === 0) {
       this.currentPageTitle.set('Inicio');
       this.currentRoute.set('');
+      this.currentPageSufijo.set('');
       return;
     }
 
+    // Ficha de detalle (/envio/1): el id crudo NO es título ni miga — la ruta
+    // lógica es la de la entidad y el rastro cierra con "Detalle".
     const lastSegment = segments[segments.length - 1];
-    const menuItem = this.menuItems.find(item => item.path === lastSegment);
+    const esId = /^\d+$/.test(lastSegment);
+    const base = esId && segments.length > 1 ? segments[segments.length - 2] : lastSegment;
+    this.currentPageSufijo.set(esId ? 'Detalle' : '');
+
+    const menuItem = this.menuItems.find(item => item.path === base);
 
     if (menuItem) {
       this.currentPageTitle.set(menuItem.label);
       this.currentRoute.set(menuItem.path);
     } else {
       this.currentPageTitle.set(
-        lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1)
+        base.charAt(0).toUpperCase() + base.slice(1)
       );
-      this.currentRoute.set(lastSegment);
+      this.currentRoute.set(base);
     }
   }
 

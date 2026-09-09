@@ -165,12 +165,12 @@ $t-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
 // Logo icon
 .login-logo-wrap {
-  width: 64px;
   height: 64px;
+  padding: 8px 14px;
   border-radius: 16px;
   border: 1px solid rgba(90, 184, 232, 0.25);
-  background: $rl-signal-bg;
-  display: flex;
+  background: #ffffff;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }

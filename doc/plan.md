@@ -1,259 +1,318 @@
-# Plan funcional — Sistema logístico para importación y distribución de indumentaria y cascos de moto
+# Plan de producto — Motos: catálogo, fuerza de ventas y control de la operación
 
-> Documento de análisis funcional. Punto de vista: analista funcional experto en el negocio
-> de importación y distribución mayorista de productos para motociclismo (cascos y vestimenta).
-> Objetivo: relevar el estado actual del sistema y proponer qué agregar para convertirlo en
-> una plataforma logística profesional.
+> Documento funcional orientado a **demo**. Reemplaza al plan logístico completo (importación,
+> landed cost, facturación, RMA…) que quedó en el historial de git (`doc/plan.md` en `7329d6f`).
+> Todavía no sabemos hacia dónde va el producto: este plan elige lo que **se puede mostrar en
+> una demo y que sirve a cualquier rumbo**: un catálogo que luzca, vendedores que salen a vender,
+> pedidos, comisiones, contacto con los clientes y un tablero de control.
+>
+> Regla de los .md (heredada de CESKIA): lo escrito tiene que ser REAL y verificable contra el
+> código. Ante la duda, el código manda. Leyenda: `- [ ]` pendiente · `- [~]` en curso · `- [x]` hecho.
 
 ---
 
-## 1. Resumen ejecutivo
+## 1. Qué hay hoy (base sobre la que se construye, no se toca)
 
-El sistema **hoy es un rastreador de envíos con SLA** (última milla): registra envíos con un
-código de rastreo, estados y fechas, asociados a un cliente y a una agencia (transportista),
-con observaciones y umbrales de alerta por etapa. Es sólido como *tracking*, pero **no cubre el
-núcleo de un negocio de importación y distribución**: no hay catálogo de productos, ni stock, ni
-compras/importación, ni facturación, ni precios, ni devoluciones.
+| Bloque | Estado | Qué hace |
+|---|---|---|
+| **Catálogo** | ✅ | Marca, Categoría (jerárquica), Talla, Color, Producto (con atributos de casco y homologación), Variante/SKU = producto × talla × color con costo y precio de lista. `doc/modelo-catalogo.md`. |
+| **Stock** | ✅ | Depósito (multi-depósito), Movimiento de stock (Kardex inmutable), Existencias calculadas y pantalla de solo lectura `/existencias`. `doc/modelo-stock.md`. |
+| **Envíos** | ✅ | Cliente, Agencia (transportista), Envío con estados `recibido → facturado → despachado → entregado | anulado`, Observaciones, Parámetros SLA por etapa. |
+| **Plataforma** | ✅ | Seguridad (usuarios/perfiles/roles), auditoría, reportes programados, configuración del sitio, documentos adjuntos (`PC_DOCUMENTOS`, por entidad e id), tabla genérica con pills de enum, búsqueda global, asistente de voz. |
+| **Datos de demo** | ✅ | `Scripts/Seed_Dominio_Motos.sql`: 6 marcas, 10 productos, 73 SKU, Kardex, 8 clientes, 15 envíos. Idempotente. Limpieza: `Limpiar_Datos_Dominio.sql`. |
 
-Para llegar a un sistema logístico profesional del rubro hay que construir la cadena completa:
+**Reglas de compatibilidad para todo lo nuevo:**
+1. Tablas nuevas `PC_*` con el patrón de 6 capas (`CLAUDE.md`). Las existentes solo reciben **columnas nuevas nullable** (DbBootstrap hace ALTER ADD, nunca DROP).
+2. **Solo dólares.** Todo precio, total y comisión es USD. No hay entidad Moneda ni tipo de cambio. La UI muestra `US$`.
+3. El Envío actual **no cambia de significado**: sigue siendo el tracking. Un Pedido despachado *genera* un Envío y lo referencia. Un envío puede seguir existiendo sin pedido.
+4. El stock **no se edita**: un pedido despachado genera movimientos de `salida` en el Kardex con `DocumentoOrigen = 'PED-000n'`.
+5. Vistas de tablero y liquidaciones van en zona **artesanal** (`web/src/app/modules/artesanal/`, `Application/Artesanal/`), como Existencias. Los CRUD van generados.
+6. Reglas de negocio en `*Hooks.cs`, nunca en los handlers generados.
+
+---
+
+## 2. La historia que cuenta la demo
+
+> *Un vendedor sale a recorrer tiendas de moto en el interior. En cada visita registra qué pasó
+> (compró, no compró, volver la semana que viene). Si hay pedido, lo arma desde el celular con el
+> catálogo con fotos y precios en dólares, eligiendo talla y color. El pedido reserva stock,
+> el depósito lo prepara y lo despacha por una agencia: ahí nace el envío que ya se rastrea hoy.
+> A fin de mes el sistema liquida las comisiones. La gerencia ve todo desde un centro de control:
+> ventas del mes, quién vendió, qué se debe entregar, qué SKU se están acabando y qué envíos
+> están atrasados.*
+
+Cada frase de esa historia es un módulo de la sección 4.
+
+---
+
+## 3. Modelo de datos nuevo (mínimo)
 
 ```
-IMPORTACIÓN  →  RECEPCIÓN/ALMACÉN  →  CATÁLOGO+STOCK  →  VENTA B2B  →  FULFILLMENT  →  POSTVENTA
- (compras       (nacionalización,     (SKU talla/color,   (pedidos,     (picking,        (devoluciones,
-  al exterior,    landed cost,          homologación,       listas de     packing,          cambios de talla,
-  incoterms)      recepción)            lotes/series)       precios)      expedición)       garantías)
+Vendedor 1───N Cliente (VendedorId, nullable)        Producto ─── Documento(s) (imágenes, ya existe)
+   │                                                    │
+   │1                                                   │1
+   └───N Actividad ──N→1 Cliente                        └──N Variante ←──N PedidoLinea N──1 Pedido N──1 Cliente
+                                                                                          │           N──1 Vendedor
+                                                                                          │           N──1 Depósito
+                                                                                          └── 1→0..1 Envío (PedidoId nullable en PC_ENVIOS)
 ```
 
-Este documento propone los módulos, entidades y KPIs para cada eslabón, con foco en las
-particularidades de **cascos** (homologación, series, recall, garantía) e **indumentaria**
-(temporada, curva de tallas, matriz talla/color).
-
----
-
-## 2. Estado actual (inventario funcional real)
-
-| Módulo existente | Entidad | Campos clave | Rol |
-|---|---|---|---|
-| Gestión de clientes | **Cliente** | Nombre, Teléfono, DirecciónEntrega | Destinatario del envío (muy básico) |
-| | **Envío** | CódigoRastreo, Estado, FechaRecibido/Factura/Envío/Entrega, MotivoAnulación, ClienteId, AgenciaId | Tracking de paquete por estados |
-| Gestión de agencias | **Agencia** | Nombre | Transportista / courier |
-| Operaciones y flujo | **Observación** | Texto, FechaHora, Usuario, EnvíoId | Bitácora del envío |
-| General | **ParámetroSLA** | Etapa, UmbralAdvertenciaDías, LímiteDías | Alertas de demora por etapa |
-| Config/soporte | **ConceptoExpensas** | Nombre, Descripción, Tipo, Activo | Catálogo de conceptos de gasto |
-| Transversal | Seguridad (Usuarios/Perfiles/Roles/Capabilities), Auditoría (AuditLog), Reportes (programados + historial), Configuración del sitio | | Base técnica ya disponible |
-
-**Fortalezas a reutilizar:** seguridad con perfiles/roles/capabilities, auditoría, motor de
-reportes programados, configuración por sitio y una tabla genérica con estados/pills. Todo esto
-sirve de cimiento; el trabajo es de **dominio de negocio**, no de plataforma.
-
-**Conclusión del relevamiento:** el alcance actual equivale al ~10-15% de lo que necesita una
-distribuidora importadora. Falta todo el eje **producto → stock → compra/importación → venta**.
-
----
-
-## 3. Diagnóstico de brecha (gap analysis)
-
-| Capacidad de negocio | ¿Existe hoy? | Criticidad |
+### 3.1 `PC_VENDEDORES` — Vendedor
+| Campo | Tipo | Nota |
 |---|---|---|
-| Catálogo de productos con variantes (talla/color) | ❌ | 🔴 Bloqueante |
-| Stock / inventario multi-depósito | ❌ | 🔴 Bloqueante |
-| Compras a proveedores | ❌ | 🔴 Bloqueante |
-| Gestión de importación (embarques, aduana, landed cost) | ❌ | 🔴 Bloqueante |
-| Ventas B2B (pedidos, reservas, backorder) | ❌ | 🔴 Bloqueante |
-| Listas de precios / condiciones comerciales | ❌ | 🔴 Alta |
-| Facturación y cuenta corriente | ❌ | 🔴 Alta |
-| Fulfillment (picking/packing/expedición/remito) | ⚠️ parcial (solo tracking) | 🟠 Alta |
-| Devoluciones / cambios de talla / RMA / garantías | ❌ | 🟠 Alta (rubro) |
-| Homologación / certificación de cascos | ❌ | 🟠 Regulatorio |
-| Trazabilidad por lote / serie | ❌ | 🟠 Media-alta |
-| Reposición / planeamiento de demanda (temporada) | ❌ | 🟠 Media |
-| Multi-moneda y tipo de cambio | ❌ | 🔴 Alta (importa) |
-| KPIs logísticos (rotación, fill rate, OTIF, cobertura) | ❌ | 🟠 Media |
-| Integraciones (e-commerce, courier, fiscal, contable) | ❌ | 🟡 Media |
+| Id | INT IDENTITY PK | |
+| Nombre | NVARCHAR(120) NOT NULL | |
+| Telefono, Email | NVARCHAR | |
+| Zona | NVARCHAR(80) | Texto libre; en el seed: "Litoral", "Norte", "Montevideo y Este" |
+| ComisionPorcentaje | DECIMAL(5,2) NOT NULL default 0 | % sobre el total USD de pedidos **entregados** |
+| Usuario | NVARCHAR(80) NULL | Login del usuario del sitio para que el vendedor vea "lo mío" (`GET /api/Vendedor/mio` compara con el claim `Name` del JWT). Se eligió el login y no un id porque el bypass de desarrollo `pablo` no existe en `Seg_Usuarios`. |
+| Activo | BIT | |
 
----
-
-## 4. Procesos de negocio objetivo (end-to-end)
-
-### 4.1 Abastecimiento e importación
-1. Selección de proveedor (exterior) y negociación (moneda, incoterm, lead time).
-2. **Orden de compra (PO)** con talla/color y curva de tallas.
-3. **Embarque / importación**: contenedor, factura comercial, packing list, BL/AWB, seguro, flete.
-4. **Nacionalización**: despacho aduanero (DUA), aranceles, tributos, gastos de despachante.
-5. **Landed cost**: prorrateo de todos los gastos sobre cada SKU → costo real unitario.
-6. **Recepción** contra PO/packing list → alta de stock por SKU/talla/color/lote.
-
-### 4.2 Almacén e inventario
-7. Ubicación en depósito (zona/rack/estante), stock disponible/comprometido/en tránsito.
-8. Movimientos: entradas, salidas, ajustes, transferencias entre depósitos.
-9. Inventario físico y conteo cíclico; valorización (PPP/FIFO).
-
-### 4.3 Comercial y venta B2B
-10. Alta de cliente mayorista (distribuidor/tienda) con **límite de crédito** y condiciones.
-11. **Lista de precios** por canal/cliente; descuentos por volumen.
-12. **Pedido de venta**: reserva stock, backorder si falta, curva de tallas sugerida.
-13. Aprobación (crédito/stock) → **facturación** → cuenta corriente.
-
-### 4.4 Fulfillment / distribución
-14. **Picking** (por pedido/olas), **packing**, control de calidad.
-15. **Expedición**: remito, asignación de transportista (las Agencias actuales), guía.
-16. **Tracking** hasta entrega + prueba de entrega (POD).  ← *acá encaja lo que ya existe*.
-
-### 4.5 Postventa (crítico en el rubro)
-17. **Devoluciones / cambios de talla** (RMA), reingreso a stock.
-18. **Garantías** (cascos), reclamos, notas de crédito.
-
----
-
-## 5. Módulos propuestos
-
-### 5.1 🔴 Catálogo de productos (núcleo)
-**Propósito:** definir qué se vende con las particularidades del rubro.
-- **Marca** (Bell, Shoei, Alpinestars, LS2, etc.)
-- **Categoría / tipo**: casco (integral, modular, jet, cross, off-road) · indumentaria (campera, guantes, botas, pantalón, protección) · accesorios.
-- **Producto (modelo)**: marca, categoría, descripción, temporada/colección, género, material, homologación (cascos), peso y volumen (para flete), imágenes, ficha técnica.
-- **Variante / SKU** = producto × **talla** × **color** → cada combinación es un SKU con su código, EAN/UPC/barcode, costo, precio. **Matriz talla/color** es el corazón del rubro.
-- **Curva de tallas** (size run) por producto: distribución típica (S/M/L/XL…) para compras y análisis.
-- **Atributos de casco**: norma de homologación (ECE 22.06, DOT, SNELL), certificado y vencimiento, número de serie/lote, año de fabricación (relevante para recall y regulación).
-
-### 5.2 🔴 Inventario / Stock (WMS liviano)
-- **Depósito** (multi-depósito) y **Ubicación** (zona/rack/estante).
-- **Stock por SKU/depósito/ubicación/lote**: disponible, comprometido (reservado), en tránsito.
-- **Movimiento de stock** (Kardex): entrada, salida, ajuste, transferencia — con motivo, documento origen, costo.
-- **Lote / serie**: trazabilidad (cascos por serie → habilita recall y garantía).
-- **Valorización**: PPP o FIFO; costo actualizado por landed cost.
-- **Inventario físico / conteo cíclico** con diferencias y ajuste.
-
-### 5.3 🔴 Compras e importación
-- **Proveedor** (exterior): datos, moneda, incoterm habitual, lead time.
-- **Orden de compra (PO)**: líneas por SKU con curva de tallas, moneda, incoterm.
-- **Embarque / Importación**: contenedor(es), factura comercial, packing list, BL/AWB, ETA/ETD, estado (en origen, en tránsito, en aduana, nacionalizado).
-- **Gastos de importación**: flete internacional, seguro, aranceles, tributos, despachante, almacenaje.
-- **Landed cost / costeo**: prorrateo de gastos (por valor, peso o volumen) sobre cada SKU → **costo real de nacionalización**. Sin esto, el margen es ficticio.
-- **Recepción**: contra PO/packing list, con diferencias (faltantes/sobrantes/dañados).
-
-### 5.4 🔴 Ventas y distribución B2B
-- **Cliente comercial** (extender el Cliente actual): tipo (distribuidor/tienda/e-commerce), RUT/CUIT, condición fiscal, **límite de crédito**, condición de pago, vendedor asignado, canal.
-- **Lista de precios** por canal/cliente/moneda + reglas de descuento por volumen.
-- **Pedido de venta**: líneas por SKU, reserva de stock, backorder, estado (borrador→confirmado→facturado→despachado→entregado).
-- **Vendedor / comisiones** (opcional).
-
-### 5.5 🔴 Facturación y cuentas corrientes
-- **Factura / Nota de crédito / débito** (integrable con e-factura fiscal según país: p. ej. CFE-DGI en Uruguay o AFIP en Argentina).
-- **Cuenta corriente** de clientes: saldos, vencimientos, aging.
-- **Cobranzas** / recibos.
-
-### 5.6 🟠 Fulfillment (evolución de lo actual)
-- **Remito / orden de despacho**, picking (lista de armado), packing, control.
-- Reutilizar **Envío + Agencia + Observación + SLA** como capa de **transporte/tracking**, pero
-  colgada de un **pedido/remito** (hoy el Envío no tiene qué se envía: falta el detalle de líneas).
-- **Prueba de entrega (POD)** y estados de transporte.
-
-### 5.7 🟠 Postventa: devoluciones, cambios y garantías
-- **RMA / Devolución**: motivo (talla incorrecta, falla, arrepentimiento), inspección, reingreso a stock o descarte.
-- **Cambio de talla/color** (flujo express, altísima frecuencia en indumentaria).
-- **Garantía** (cascos): registro por serie, plazo, reclamo, resolución.
-- **Logística inversa**: guía de retorno, estado.
-
-### 5.8 🟡 Planeamiento y reposición
-- **Punto de pedido / stock mín-máx** por SKU y depósito.
-- **Lead time de importación** (meses) → sugerencia de compra anticipada.
-- **Forecast estacional** (indumentaria por temporada) y análisis de curva de tallas.
-- **Alertas de quiebre** y de sobre-stock/obsolescencia.
-
----
-
-## 6. Especificidades del rubro (cascos y vestimenta)
-
-| Tema | Por qué importa | Impacto en el modelo |
+### 3.2 `PC_CLIENTES` — columnas nuevas (todas nullable)
+| Campo | Tipo | Nota |
 |---|---|---|
-| **Matriz talla × color** | Un mismo modelo son decenas de SKU | Variantes de SKU obligatorias, no opcionales |
-| **Curva de tallas** | Se compra/vende por distribución (más M/L que XS/XXL) | Campo en producto + análisis de venta por talla |
-| **Homologación (cascos)** | Requisito legal (ECE 22.06/DOT/SNELL) | Atributos + certificado + vencimiento + bloqueo de venta si vencido |
-| **Serie / lote (cascos)** | Seguridad y **recall** | Trazabilidad por unidad/lote |
-| **Garantía (cascos)** | Postventa frecuente | Módulo de garantías por serie |
-| **Temporada / colección (indumentaria)** | Estacional, se liquida | Campo temporada + análisis de obsolescencia |
-| **Devolución por talla** | Frecuentísima en apparel | RMA/cambio ágil con reingreso a stock |
-| **Peso y volumen** | Cascos ocupan mucho → flete caro | Datos para landed cost y costo de envío |
-| **Homologado por país** | Normativa distinta por mercado | Atributo de mercado/norma |
+| Tipo | NVARCHAR(20) | enum `tienda` \| `distribuidor` \| `online` \| `particular` → pill |
+| Ciudad | NVARCHAR(80) | Para agrupar rutas de visita |
+| Contacto | NVARCHAR(120) | Persona con la que se habla |
+| Email | NVARCHAR(120) | |
+| VendedorId | INT NULL | FK → PC_VENDEDORES. Vendedor asignado |
+| Notas | NVARCHAR(1000) | "Cierra 13 a 15", "paga a 30 días" |
+
+### 3.3 `PC_ACTIVIDADES` — Actividad comercial (el CRM mínimo)
+| Campo | Tipo | Nota |
+|---|---|---|
+| Id | INT IDENTITY PK | |
+| VendedorId, ClienteId | INT NOT NULL | FKs |
+| Tipo | NVARCHAR(20) NOT NULL | enum `visita` \| `llamada` \| `whatsapp` \| `email` → pill |
+| Fecha | DATETIME2 NOT NULL | Cuándo ocurrió (timeline y calendario del generador) |
+| Resultado | NVARCHAR(20) NOT NULL | enum `pedido` \| `sin_pedido` \| `reprogramar` \| `sin_contacto` → pill |
+| Notas | NVARCHAR(1000) | Qué se habló |
+| ProximaAccion | DATE NULL | "Volver el 15" → alimenta la agenda del vendedor |
+| PedidoId | INT NULL | Si la visita terminó en pedido |
+
+### 3.4 `PC_PEDIDOS` — Pedido de venta
+| Campo | Tipo | Nota |
+|---|---|---|
+| Id | INT IDENTITY PK | |
+| Numero | NVARCHAR(20) NOT NULL único | `PED-000n`, lo genera el Hook al crear |
+| Fecha | DATETIME2 NOT NULL | |
+| ClienteId, VendedorId, DepositoId | INT NOT NULL | Depósito desde el que se prepara |
+| Estado | NVARCHAR(20) NOT NULL | enum `borrador` → `confirmado` → `preparado` → `despachado` → `entregado` · `anulado` → pills |
+| TotalUsd | DECIMAL(18,2) NOT NULL | Suma de líneas, lo recalcula el Hook |
+| ComisionUsd | DECIMAL(18,2) NOT NULL default 0 | `TotalUsd × Vendedor.ComisionPorcentaje / 100`, se fija al **entregar** |
+| Observaciones | NVARCHAR(500) | |
+| EnvioId | INT NULL | Se completa al despachar |
+| MotivoAnulacion | NVARCHAR(250) | |
+
+### 3.5 `PC_PEDIDO_LINEAS` — Línea de pedido
+| Campo | Tipo | Nota |
+|---|---|---|
+| Id | INT IDENTITY PK | |
+| PedidoId, VarianteId | INT NOT NULL | |
+| Cantidad | DECIMAL(18,2) NOT NULL > 0 | |
+| PrecioUnitarioUsd | DECIMAL(18,2) NOT NULL | Copia de `Variante.PrecioLista` al momento del pedido |
+| SubtotalUsd | DECIMAL(18,2) NOT NULL | Cantidad × precio |
+
+### 3.6 `PC_ENVIOS` — columna nueva
+| Campo | Tipo | Nota |
+|---|---|---|
+| PedidoId | INT NULL | Enlace al pedido que lo originó. Nullable: los envíos sueltos siguen valiendo |
+
+### 3.7 `PC_PRODUCTOS` — columnas nuevas (catálogo premium)
+| Campo | Tipo | Nota |
+|---|---|---|
+| Destacado | BIT NULL | Aparece primero en el catálogo |
+| Novedad | BIT NULL | Etiqueta "Nuevo" |
+| FichaTecnica | NVARCHAR(MAX) NULL | Markdown simple: peso, materiales, certificaciones, talle recomendado |
+| ImagenPrincipalId | INT NULL | Id en `PC_DOCUMENTOS` (las imágenes ya se adjuntan por Documentos) |
+
+### 3.8 Tablas y columnas de los extras (§4.8)
+| Tabla / columna | Tipo | Nota |
+|---|---|---|
+| `PC_CLIENTES.Latitud`, `.Longitud` | DECIMAL(9,6) NULL | Para la ruta del día en el mapa |
+| `PC_METAS` (Id, VendedorId, Periodo `YYYY-MM`, ObjetivoUsd) | tabla nueva | Única por vendedor y período; CRUD generado, se edita desde la ficha del vendedor |
+| `PC_PRECIO_HISTORIAL` (Id, VarianteId, Campo `precio`\|`costo`, ValorAnterior, ValorNuevo, Fecha, Usuario) | tabla nueva | Solo inserta el Hook de Variante; sin form de alta, se ve como timeline en la ficha |
+| Configuración del sitio: `stock.umbral_bajo` (3), `crm.dias_sin_visita` (30) | claves en `Cfg_ConfiguracionSitio` | Parámetros de las alertas |
+
+**Reglas de dominio (en Hooks):**
+- `Pedido.confirmar`: al menos una línea; verifica **existencias** por SKU en el depósito (consulta `ExistenciasQuery`); si falta stock avisa pero deja confirmar (backorder simple: el aviso queda en Observaciones).
+- `Pedido.despachar`: genera una `salida` en el Kardex por cada línea (`DocumentoOrigen = Numero`), crea el **Envío** (`recibido`, cliente y agencia elegidos, `PedidoId`) y guarda `EnvioId`.
+- `Pedido.entregar`: fija `ComisionUsd`. Si el Envío vinculado pasa a `entregado`, el Hook de Envío entrega el pedido (sincronía en una sola dirección para no complicar).
+- `Pedido.anular`: si ya estaba despachado, genera `entrada` de reversa en el Kardex.
+- `Actividad` con `Resultado = pedido` exige `PedidoId`.
 
 ---
 
-## 7. KPIs e indicadores logísticos (para el módulo de Reportes ya existente)
+## 4. Módulos (qué se construye)
 
-- **Inventario:** rotación, cobertura (días de stock), valorización, aging/obsolescencia, exactitud de inventario.
-- **Servicio:** fill rate, **OTIF** (on-time in-full), lead time de entrega, % backorder, quiebres de stock.
-- **Importación:** costo de nacionalización por embarque, desvío costo estimado vs real, lead time de importación, tipo de cambio realizado.
-- **Comercial:** venta por marca/categoría/talla/color, margen por SKU (con landed cost real), ventas por canal/vendedor, top/bottom sellers.
-- **Postventa:** % devoluciones (por talla vs falla), tiempo de resolución de RMA, garantías por marca.
+### 4.1 Vendedores y clientes
+- **Vendedor** (maestra CRUD generada) con comisión y zona.
+- **Cliente enriquecido**: tipo, ciudad, contacto, vendedor asignado, notas. Ficha con pestañas: actividades, pedidos, envíos (relaciones `by-cliente`).
+- **Filtro "mis clientes"**: si el usuario logueado tiene un Vendedor con su login en `Usuario`, la agenda arranca filtrada por él y la lista de clientes ofrece el botón (`/cliente?vendedorId=N`).
 
----
+### 4.2 Actividad comercial (contacto con el cliente)
+- **Actividad** CRUD generada con vistas `table`, `cards`, `timeline` y `calendario` (el generador las emite al tener `Fecha`).
+- **Agenda del vendedor** (artesanal, `/agenda`): hoy y próximos 7 días por `ProximaAccion` y actividades planificadas, agrupado por ciudad. Botón "Registrar visita" precargado con cliente y vendedor.
+- **Registro rápido desde el celular**: el form de Actividad con 4 campos visibles (cliente, tipo, resultado, notas) y el resto plegado. Es el mismo form generado con `enLista/primario` bien elegidos, no un form aparte.
 
-## 8. Integraciones (fase avanzada)
+### 4.3 Pedidos
+- **Pedido + Líneas** generados, con ficha que muestra líneas, totales USD, estado como pill y acciones de ciclo (`confirmar`, `preparar`, `despachar`, `entregar`, `anular`) usando las acciones custom del descriptor.
+- **Armado de pedido** (artesanal, `/pedidos/nuevo`): buscador de SKU con foto, talla y color, muestra existencias del depósito elegido, precio de lista USD y total en vivo. Es la pantalla "que vende" en la demo.
+- **Vista kanban** de pedidos por estado (el generador ya tiene kanban con matriz de transiciones; se declara en el descriptor).
+- Al despachar, elegir Agencia: nace el Envío y desde ahí sigue el tracking de siempre.
 
-- **E-commerce / marketplaces** (Tienda Nube, Shopify, Mercado Libre): sincronización de stock y pedidos.
-- **Transportistas / couriers**: API de guías y tracking (extiende las Agencias actuales).
-- **Fiscal / e-factura** (DGI-CFE / AFIP según país).
-- **Contable / ERP**: asientos de compras, ventas, inventario.
-- **Código de barras / lectores RF**: recepción, picking y conteo por scanner (EAN/QR).
-- **EDI / catálogos de proveedores** para carga de PO.
+### 4.4 Comisiones
+- **Liquidación de comisiones** (artesanal read-only, `/comisiones`): por vendedor y mes, pedidos entregados, total USD, comisión USD, con export CSV. Query en `Application/Artesanal`. Sin tabla nueva: se calcula desde `PC_PEDIDOS`.
+- **KPI en la ficha del vendedor**: vendido este mes, comisión acumulada, visitas del mes, tasa de cierre (`pedido / actividades`).
 
----
+### 4.5 Catálogo premium
+- **Imágenes**: usar Documentos (`PC_DOCUMENTOS` con `relacionnombre = 'Producto'`) para subir fotos; `ImagenPrincipalId` marca la portada. Miniatura en la lista y en las cards.
+- **Ficha de producto comercial** (artesanal, `/catalogo/:id`): foto grande, marca, ficha técnica en markdown, matriz talla × color con existencias y precio USD, botón "Agregar al pedido".
+- **Catálogo navegable** (artesanal, `/catalogo`): grilla de cards con foto, por marca y categoría, destacados primero, etiqueta "Nuevo", buscador. Pensado para mostrarle al cliente en la tienda.
+- **Impresión**: la ficha se imprime con el membrete existente (`membrete-impresion`) para dejarle una hoja al cliente.
 
-## 9. Roadmap por fases
+### 4.6 Centro de control (home)
+- Reemplazar `ProductoHomeComponent` por una **sala de control artesanal** (`/`), como en trenes:
+  - **Hoy**: pedidos nuevos, pedidos a despachar, visitas planificadas, envíos fuera de SLA.
+  - **Mes**: ventas USD vs mes anterior, pedidos por estado (pipeline), top 5 vendedores, top 5 productos.
+  - **Stock**: SKU con saldo negativo, SKU con menos de N unidades (N configurable en Configuración del sitio), unidades totales por depósito.
+  - **Actividad reciente**: últimas actividades y pedidos (componente `actividad-reciente` ya existe).
+  - Cada tarjeta linkea a la lista filtrada correspondiente.
+- Un endpoint artesanal `GET /api/artesanal/centro-control` devuelve todo en una llamada.
+- El **modo pantalla** (`/pantalla`, para la TV) muestra la misma sala en fullscreen.
 
-> **Leyenda de seguimiento:** `- [ ]` pendiente · `- [x]` hecho · `- [~]` en curso.
-> Marcá cada ítem a medida que se ejecuta.
+### 4.7 Datos de demo
+- Extender `Seed_Dominio_Motos.sql`: ~~3 vendedores (uno vinculado a `pablo`), clientes con
+  tipo/ciudad/vendedor, 25 actividades con próximas acciones~~ (hecho en Etapa A), ~~12 pedidos en
+  distintos estados enlazados a los envíos ya sembrados~~ (hecho en Etapa B), ~~metas del mes~~ y
+  ~~coordenadas de los 8 clientes~~ (Etapa A). **Queda para C/E**: fotos de muestra para 4 productos,
+  2 destacados y 2 novedades, y 2 cambios de precio históricos.
 
-### Fase 0 — Cimientos de dominio (habilitadores)
-- [ ] Multi-moneda + tipo de cambio.
-- [ ] Depósitos y ubicaciones.
-- [ ] Extender Cliente (fiscal, crédito, canal) y crear Proveedor.
-
-### Fase 1 — MVP logístico (lo mínimo para operar)
-- [x] **Catálogo** con variantes talla/color (SKU) + marcas/categorías. Maestras (Marca, Categoría, Talla, Color) + **Producto** + **Variante/SKU** completos en las 6 capas. Ver `doc/modelo-catalogo.md §8`.
-- [~] **Stock** por SKU/depósito con Kardex de movimientos. Depósito + Movimiento de stock (Kardex) + query de Existencias completos en backend y CRUD en front. Ver `doc/modelo-stock.md`. Pendiente: pantalla de existencias (solo-lectura) en el front.
-- [ ] **Compra + Recepción** básica (PO → recepción → alta de stock).
-- [ ] **Pedido de venta + reserva de stock** y **remito**.
-- [ ] Enganchar el **Envío/tracking actual** al remito (líneas de qué se envía).
-
-### Fase 2 — Importación y comercial completo
-- [ ] **Importación + landed cost** (embarques, gastos, prorrateo, costo real).
-- [ ] **Listas de precios** y condiciones comerciales.
-- [ ] **Facturación + cuenta corriente**.
-- [ ] **Devoluciones / cambios de talla / RMA**.
-
-### Fase 3 — Profesionalización
-- [ ] **Garantías (cascos)** + trazabilidad por serie/lote + homologación.
-- [ ] **Planeamiento de reposición** (mín/máx, temporada, forecast).
-- [ ] **KPIs / tablero logístico**.
-- [ ] **Integraciones** (e-commerce, courier, fiscal).
-
----
-
-## 10. Quick wins sobre lo existente (bajo esfuerzo, alto valor)
-
-- [ ] **Detalle del Envío**: hoy un envío no dice *qué* contiene. Agregar líneas (SKU + cantidad) lo conecta con producto/stock.
-- [ ] **Enriquecer Cliente**: documento fiscal, dirección fiscal vs entrega, canal, condición de pago.
-- [ ] **Enriquecer Agencia**: tipo (courier/flota propia), zonas que cubre, costo/tarifa, tiempos.
-- [ ] **Reusar estados + pills de color** (ya en la tabla genérica) para los nuevos flujos (pedido, importación, RMA).
-- [ ] **Aprovechar el motor de Reportes** para los primeros KPIs (stock, ventas) apenas exista el catálogo.
+### 4.8 Extras que suman a la demo (aprobados 2026-09-07)
+- **Ruta del día con mapa** (artesanal, dentro de `/agenda`): las visitas planificadas de hoy ordenadas por ciudad y ubicadas en el componente `mini-mapa` existente. Requiere `Latitud`/`Longitud` en Cliente (se cargan a mano o desde el celular con "usar mi ubicación" al registrar la visita). Muestra al vendedor a dónde ir y a la gerencia dónde está cada uno.
+- **Metas mensuales por vendedor**: tabla `PC_METAS` (vendedor, año-mes, objetivo USD). Barra de avance y semáforo en la ficha del vendedor y en el centro de control (`vendido / objetivo`). Deja preparado el terreno para comisiones escalonadas sin construirlas ahora.
+- **Pedido compartible por WhatsApp**: botón en la ficha del pedido que arma el texto (número, líneas con talla/color, total USD, link a la ficha comercial de cada producto) y abre `https://wa.me/<telefono del cliente>?text=…`. Sin integración ni API: solo un enlace. Es el flujo real del rubro.
+- **Alertas de stock bajo y de clientes sin visitar**: dos consultas artesanales read-only que alimentan (a) tarjetas rojas en el centro de control y (b) reportes programados del motor existente. Reglas: SKU con existencias por debajo del umbral configurado (Configuración del sitio, default 3) y clientes activos con más de N días sin actividad de su vendedor (default 30). Convierte el tablero en algo que avisa, no solo que muestra.
+- **Historial de precios y margen por SKU**: tabla `PC_PRECIO_HISTORIAL` que el Hook de Variante llena en cada cambio de `PrecioLista` o `CostoEstandar` (valor anterior, nuevo, fecha, usuario). La ficha comercial muestra el margen sobre costo en USD y en %, y la ficha de Variante el historial como timeline. Prepara listas de precios por canal sin construirlas.
 
 ---
 
-## 11. Riesgos y consideraciones
+## 5. Roadmap (orden de ejecución)
 
-- **Costeo de importación (landed cost):** si no se implementa bien, el margen y los precios quedan mal calculados — es el punto más sensible del negocio importador.
-- **Fiscal por país:** la facturación electrónica cambia según jurisdicción; conviene aislarla detrás de una interfaz.
-- **Regulatorio (cascos):** homologación obligatoria; el sistema debería impedir vender casco sin homologación vigente.
-- **Multi-moneda:** compras en USD/EUR y ventas en moneda local exigen tipo de cambio por documento y ajustes.
-- **Migración:** el modelo actual (Envío/Cliente/Agencia) se conserva como capa de *transporte*; el nuevo núcleo (producto/stock/compra/venta) se construye alrededor.
+### Etapa 0 — Limpieza de lo existente (media jornada, antes de A)
+Revisión de lo ya desarrollado con el horizonte de demo (2026-09-07). Nada toca el modelo de datos.
+- [x] **Herramientas del generador ocultas** también en `ng serve`: `herramientasZas` ahora exige opt-in `localStorage.setItem('zas.herramientas','1')` (`site-layout.component.ts`). Cubre lens, mutación, Evolution Hub y modo pantalla.
+- [x] **Asistente de voz oculto** (comentado en `site-layout.component.html`) hasta que se configure `Claude.ApiKey`. Reactivar = descomentar una línea.
+- [x] **Código muerto borrado**: `web/src/app/home/`, `global-search.component.ts`, CSS del footer de usuario y `.nav-kbd`.
+- [x] **Menú en 4 grupos**: Catálogo · Inventario · **Comercial** (Cliente, Vendedor, Actividad, Meta y Agenda tras la Etapa A) · **Operaciones** (Envío, Agencia, Observación, Parámetro SLA). `modulo` del home alineado.
+- [x] **`facturado` se lee "Confirmado"** y `facturacion` "Confirmación", sin tocar valores ni ciclo: `CampoDescriptor.etiquetas` (nuevo, opcional) + `entity-table` lo usa para enums; labels de kanban, ficha, acciones y textos alineados. **Bonus**: la tabla genérica formatea `moneda` en **USD** (antes UYU), coherente con "solo dólares".
+- [x] **Ajuste de stock con signo**: `MovimientoStock.Validar` exige cantidad ≠ 0 y solo permite negativo en `ajuste`; form sin `min(0.01)` con hint; seed carga el faltante como `ajuste -1`; `doc/modelo-stock.md` actualizado. Verificado por API: `ajuste -1` → 200, `salida -1` → 400, `0` → 400.
+- [x] **Campos de casco condicionales**: `producto-form` muestra tipo/homologación/vencimiento/vigencia solo si la categoría es Casco o hija (`esCasco()`).
+
+Lo que se revisó y **queda como está**: `CostoEstandar` en Variante y `CostoUnitario` en Kardex (los usan margen e historial de precios); Observaciones del envío junto a Actividades del cliente (bitácora del paquete vs. contacto comercial, no se pisan); el resto de la plataforma (seguridad, auditoría, reportes, documentos, configuración).
+
+### Etapa A — Vendedores, clientes y contacto
+- [x] **Vendedor**: 6 capas (`PC_VENDEDORES`, `VendedorHooks`, `api/Vendedor` con `mio` que compara
+  el claim `Name` del JWT) + alta en los 3 registries del front + seed de 3 vendedores.
+- [x] **Cliente**: 8 columnas nuevas nullable (tipo, ciudad, contacto, email, vendedorId, notas,
+  latitud, longitud), descriptor y form al día, `GET /api/Cliente/by-vendedor/{id}` y pestaña
+  **Actividades** en la ficha. La pestaña *Pedidos* queda para la Etapa B.
+- [x] **Actividad**: 6 capas con vistas table/cards/master-detail/timeline/calendario y pills de
+  `tipo` y `resultado` + seed de 25 actividades. El shell generado venía con el ciclo de Envío
+  (kanban, `pasarA*`, `codigoRastreo`): se sacó — la actividad no tiene ciclo, su "estado" es el
+  resultado. Filtros por `?clienteId=` y `?vendedorId=`.
+- [x] **Agenda del vendedor** (`/agenda`, artesanal) con paradas por día y ciudad, y **filtro
+  "mis clientes"** en la lista de clientes: el botón y el link de la agenda comparten el mismo
+  estado en la URL (`/cliente?vendedorId=N`), que resuelve `by-vendedor` en el servidor.
+- [x] **Ruta del día con mapa**: `Latitud`/`Longitud` en Cliente, `mini-mapa` en la agenda y
+  "usar mi ubicación" al registrar la visita. Los 8 clientes del seed tienen coordenadas reales.
+- [x] **Metas mensuales**: `PC_METAS` (6 capas, única por vendedor y período) + barra de avance
+  con el endpoint artesanal `GET /api/artesanal/vendedor/{id}/avance` (objetivo, actividades,
+  visitas, tasa de cierre, clientes sin visitar). `VendidoUsd` queda en 0 hasta que haya pedidos.
+
+Verificado el 2026-09-08 contra la base local: 3 vendedores (el de "Montevideo y Este" enlazado al
+login `pablo`), 25 actividades (9 con próxima acción en los próximos 7 días), 3 metas del mes,
+8 clientes con vendedor y coordenadas; `Vendedor/mio` devuelve el vendedor de `pablo`, la agenda
+10 paradas y la alerta de clientes sin visitar los 2 esperados. `dotnet build` y
+`ng build --configuration development` en verde.
+
+### Etapa B — Pedidos y comisiones
+- [x] **Pedido + Línea**: 6 capas (`PC_PEDIDOS`, `PC_PEDIDO_LINEAS`, `api/Pedido`, `api/PedidoLinea`).
+  El ciclo es dato (`ciclos-vida.json`) y los efectos viven en `PedidoHooks`: número `PED-000n`
+  al crear, **salida de Kardex** por línea y **Envío** al despachar, **comisión** al entregar y
+  **entrada de reversa** al anular lo ya despachado. Los tres efectos son idempotentes (se miran
+  contra el Kardex). `PedidoLineaHooks` recalcula el total, copia el precio de lista cuando no
+  viene y **congela las líneas** fuera de borrador/confirmado.
+- [x] **`PC_ENVIOS.PedidoId`** + `EnvioHooks.DespuesDeAccion`: entregar el envío **entrega el
+  pedido**. Sincronía en una sola dirección, como decidía el plan.
+- [x] **Armado de pedido** (`/pedidos/nuevo`, artesanal): buscador de SKU que muestra existencias
+  del depósito elegido y precio USD, carrito con total en vivo y aviso cuando se pide más de lo
+  que hay. Crea la cabecera y las líneas, y deja el pedido en borrador.
+- [x] **Kanban de pedidos** con la matriz del ciclo (arrastrar = ejecutar la transición) y las
+  cinco acciones en la tabla y en la ficha, con el proceso guiado paso a paso.
+- [x] **Liquidación de comisiones** (`/comisiones`, artesanal read-only) por vendedor y mes con
+  export CSV, y **KPIs en la ficha del vendedor**: barra de meta, vendido, comisión, visitas y
+  tasa de cierre (`GET /api/artesanal/comisiones` y `.../vendedor/{id}/avance`).
+- [x] **Compartir por WhatsApp** desde la ficha del pedido: arma el texto (número, líneas con
+  talle/color, total USD) y abre `wa.me` con el teléfono del cliente. Sin API, es un enlace.
+- [x] **Adelantado de la Etapa E**: el seed siembra 12 pedidos por todo el ciclo con sus líneas,
+  el stock que salió, el enlace con los envíos ya sembrados y las visitas que terminaron en
+  pedido — sin datos, ni el kanban ni las comisiones muestran nada.
+
+Se activó además la regla que esperaba a esta etapa: `Resultado = 'pedido'` en una Actividad
+**exige** el `PedidoId` (agregado) y que ese pedido exista (`ActividadHooks`), con su FK.
+
+Verificado el 2026-09-08 contra la base local, ciclo completo por API: alta → dos líneas a
+precio de lista (total 707) → confirmar (rechaza sin líneas) → preparar → despachar (2 salidas
+de Kardex + envío `PED-0001`) → agregar línea rechazada por despachado → entregar el envío, que
+entrega el pedido y sella la comisión (707 × 3,5% = 24,75); y un segundo pedido anulado tras
+despachar que devuelve el stock (saldo 3 → 6). Con el seed: 12 pedidos, comisiones del mes
+US$ 70,21 y US$ 57,16 para dos vendedores, 6 envíos enlazados. `dotnet build` y
+`ng build --configuration development` en verde.
+
+**Nota del seed**: las fechas de pedidos y actividades recientes se comprimen dentro del **mes en
+curso** (conservando el orden del relato). Comisión y meta se liquidan por mes: sembrar un día 8
+con offsets de 24 días dejaba los entregados en el mes anterior y la pantalla de comisiones vacía.
+
+### Etapa C — Catálogo premium
+- [ ] Producto: `Destacado`, `Novedad`, `FichaTecnica`, `ImagenPrincipalId` + subida de fotos por Documentos.
+- [ ] Ficha comercial de producto con matriz talla × color, existencias y precio USD.
+- [ ] Catálogo navegable con cards y "Agregar al pedido".
+- [ ] Impresión de ficha con membrete.
+- [ ] Historial de precios: `PC_PRECIO_HISTORIAL` llenada por `VarianteHooks` + timeline en ficha de Variante + margen USD y % en la ficha comercial.
+
+### Etapa D — Centro de control
+- [ ] Endpoint artesanal `centro-control`.
+- [ ] Sala de control como home + modo pantalla.
+- [ ] Umbral de stock bajo y días sin visita en Configuración del sitio.
+- [ ] Alertas de stock bajo y clientes sin visitar: consultas artesanales + tarjetas rojas en la sala + avance de metas por vendedor.
+
+### Etapa E — Pulido de demo
+- [ ] Seed extendido (vendedores, actividades, pedidos, fotos, metas, coordenadas, historial de precios).
+- [ ] Reportes programados "Stock bajo" y "Clientes sin visitar" sobre las mismas consultas de las alertas.
+- [ ] Recorrido de demo documentado en `doc/demo.md` (guion de 10 minutos siguiendo la historia de la sección 2).
+- [ ] Reportes programados de ejemplo: "Ventas del mes por vendedor" y "Stock bajo".
+
+Estimación relativa: A y C son chicas (maestras + pantallas); B es la mediana (Hooks con reglas); D es artesanal pura. Se puede demostrar algo útil al cerrar A + B.
 
 ---
 
-## 12. Próximos pasos sugeridos
+## 6. Fuera de alcance por ahora (estacionado, no descartado)
 
-- [ ] Validar con negocio el **alcance del MVP (Fase 1)** y priorizar.
-- [ ] Definir el **modelo de datos del catálogo** (producto ↔ variante/SKU ↔ talla/color) — es la piedra angular.
-- [ ] Definir la política de **valorización de stock** (PPP vs FIFO) y de **landed cost**.
-- [ ] Relevar requisitos **fiscales y de homologación** del/los mercado(s) objetivo.
+Todo esto estaba en el plan logístico anterior y vuelve cuando el producto tenga rumbo:
+multi-moneda y tipo de cambio · proveedores, órdenes de compra y recepción · importación,
+embarques y landed cost · listas de precios por canal y descuentos por volumen · facturación
+electrónica y cuenta corriente · devoluciones, cambios de talla y RMA · garantías por serie ·
+ubicaciones dentro del depósito · planeamiento de reposición · integraciones (e-commerce,
+couriers, fiscal). El modelo de arriba no los bloquea: Pedido es el punto natural para colgar
+después facturación y precios; Kardex ya tiene `CostoUnitario` para landed cost.
+
+---
+
+## 7. Decisiones tomadas
+- **Solo USD.** Sin Moneda ni tipo de cambio en ninguna tabla.
+- **El Envío se conserva** tal cual; el Pedido lo genera y lo referencia. Nada de lo existente cambia de comportamiento.
+- **Comisión sobre pedidos entregados**, porcentaje fijo por vendedor. Sin escalas ni metas por ahora.
+- **Backorder simple**: se puede confirmar sin stock, con aviso. Sin reserva contable de stock (no hay "comprometido" en existencias).
+- **Fotos por Documentos**, no una tabla de imágenes nueva.
+- **Home artesanal** reemplaza al dashboard genérico; el genérico queda accesible en `/inicio-generico` por si hace falta.

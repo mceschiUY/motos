@@ -72,6 +72,34 @@ else
 fi
 
 echo ""
+
+# 4. Foreign keys entre agregados (FK_*.sql): recién cuando existen todas las tablas.
+#    En producción DbBootstrap NO corre (solo Development), así que se aplican acá.
+echo "=========================================="
+echo "Ejecutando foreign keys..."
+echo "=========================================="
+for script in $(find "${SCRIPTS_DIR}" -maxdepth 1 -name "FK_*.sql" -type f 2>/dev/null | sort); do
+    run_sql_file "$script"
+done
+
+# 5. Configuración del sitio (Cfg_*.sql), idempotente.
+echo "=========================================="
+echo "Ejecutando configuracion del sitio..."
+echo "=========================================="
+for script in $(find "${SCRIPTS_DIR}" -maxdepth 1 -name "Cfg_*.sql" -type f 2>/dev/null | sort); do
+    run_sql_file "$script"
+done
+
+# 6. Seed de dominio (Seed_*.sql): maestras + datos de demostración. Idempotente,
+#    nunca borra. Para vaciar: Limpiar_Datos_Dominio.sql (a mano, a pedido).
+echo "=========================================="
+echo "Ejecutando seed de dominio..."
+echo "=========================================="
+for script in $(find "${SCRIPTS_DIR}" -maxdepth 1 -name "Seed_*.sql" -type f 2>/dev/null | sort); do
+    run_sql_file "$script"
+done
+
+echo ""
 echo "=========================================="
 echo "Inicializacion completada exitosamente!"
 echo "=========================================="

@@ -96,6 +96,19 @@
         </div>
 
         <div class="toolbar-actions">
+          <!-- "Mis clientes": solo si el usuario logueado tiene vendedor. Reusa el look
+               del view-switcher (.view-btn.active) para no inventar estilos nuevos. -->
+          @if (vendedorMio(); as mio) {
+            <div class="view-switcher">
+              <button mat-icon-button
+                      class="view-btn"
+                      [class.active]="soloMios()"
+                      (click)="toggleMisClientes()"
+                      [matTooltip]="soloMios() ? 'Ver todos los clientes' : 'Mis clientes (' + mio.nombre + ')'">
+                <mat-icon>badge</mat-icon>
+              </button>
+            </div>
+          }
           <button mat-icon-button class="toolbar-btn" (click)="toggleDensity()" [matTooltip]="densityMode() === 'comfortable' ? 'Vista compacta' : 'Vista confortable'">
             <mat-icon>{{ densityMode() === 'comfortable' ? 'density_medium' : 'density_small' }}</mat-icon>
           </button>

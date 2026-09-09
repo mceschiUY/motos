@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Marca (catálogo). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const MARCA_DESCRIPTOR: EntityDescriptor = {
   entidad: 'marca',
   label: 'Marca',
@@ -9,7 +9,9 @@ export const MARCA_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'pais', label: 'País', tipo: 'texto' },
     { nombre: 'activo', label: 'Activo', tipo: 'bool' },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
-  hijas: [],
+  hijas: [
+    { entidad: 'Producto', fk: 'marcaId', icon: 'inventory_2' },
+  ],
 };

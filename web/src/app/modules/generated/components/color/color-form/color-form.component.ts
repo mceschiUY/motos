@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { GeneratedFormBase } from '../../../../../core/components/generated-form.base';
 
@@ -28,7 +29,8 @@ import { ColorService } from '../../../services/color.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDatepickerModule
+    MatDatepickerModule,
+    MatSlideToggleModule
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './color-form.component.html',
@@ -43,6 +45,8 @@ export class ColorFormComponent extends GeneratedFormBase<Color> {
   protected construirForm(): FormGroup {
     return this.fb.group({
       nombre: [this.item?.nombre || '', [Validators.required]],
+      codigoHex: [this.item?.codigoHex || ''],
+      activo: [this.item?.activo ?? true],
     });
   }
 }

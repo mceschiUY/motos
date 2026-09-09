@@ -42,8 +42,9 @@ const SECCIONES_CORE: { clave: string; ruta: string; label: string }[] = [
         <button class="av-fab" [class.activo]="estado() !== 'inactivo'"
                 (click)="estado() === 'inactivo' ? iniciar() : cortar()"
                 [matTooltip]="estado() === 'inactivo' ? 'Hablar con el sistema' : 'Cortar'"
-                matTooltipPosition="right">
+                matTooltipPosition="below">
           <mat-icon>{{ estado() === 'inactivo' ? 'mic' : 'mic_off' }}</mat-icon>
+          <span class="av-label">{{ estado() === 'inactivo' ? 'Hablar' : etiquetaEstado() }}</span>
         </button>
         @if (estado() !== 'inactivo') {
           <div class="av-panel">
@@ -64,13 +65,15 @@ const SECCIONES_CORE: { clave: string; ruta: string; label: string }[] = [
     }
   `,
   styles: [`
-    /* Al lado del FAB de ZAS (que vive arriba al centro): hermanos visuales */
-    .av-root { position: fixed; top: 16px; left: calc(50% + 34px); z-index: 1001; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-    .av-fab { width: 52px; height: 52px; border-radius: 16px; border: 2px solid var(--ceskia-accent-primary); background: var(--ceskia-elevated); color: var(--ceskia-accent-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 24px rgba(0,0,0,.4), 0 0 20px var(--ceskia-accent-primary-glow); transition: transform .2s; }
-    .av-fab:hover { transform: scale(1.08); }
-    .av-fab:hover { border-color: var(--ceskia-accent-primary); }
-    .av-fab.activo { background: var(--ceskia-accent-primary); color: #ffffff; box-shadow: 0 0 18px var(--ceskia-accent-primary-glow); }
-    .av-panel { width: 300px; background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-lg); padding: 12px 14px; box-shadow: var(--ceskia-shadow-lg); }
+    /* En el cabezal (pedido Pablo 2026-09-06): botón de chrome, ya no FAB flotante.
+       El panel de estado se despliega debajo, anclado al botón. */
+    .av-root { position: relative; display: flex; align-items: center; }
+    .av-fab { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 8px; border-radius: var(--ceskia-radius-full); border: 1px solid color-mix(in srgb, var(--ceskia-accent-primary) 40%, transparent); background: var(--ceskia-surface); color: var(--ceskia-accent-primary); cursor: pointer; font-family: inherit; font-size: var(--ceskia-text-sm); font-weight: var(--ceskia-font-medium); transition: var(--ceskia-transition-fast); }
+    .av-fab mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .av-fab:hover { background: var(--ceskia-accent-primary-glow); border-color: var(--ceskia-accent-primary); }
+    .av-fab.activo { background: var(--ceskia-accent-primary); border-color: var(--ceskia-accent-primary); color: #ffffff; }
+    .av-panel { position: absolute; top: calc(100% + 10px); left: 0; z-index: 1001; width: 300px; background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-lg); padding: 12px 14px; box-shadow: var(--ceskia-shadow-lg); }
+    @media (max-width: 768px) { .av-label { display: none; } .av-fab { padding: 0 8px; } }
     .av-estado { display: flex; align-items: center; gap: 8px; }
     .av-dot { width: 10px; height: 10px; border-radius: 50%; }
     .av-conectando { background: var(--ceskia-accent-warning); animation: av-pulso 1s infinite; }

@@ -1,0 +1,77 @@
+﻿@use 'generated/entity-ficha' as *;
+
+// ─── El mes del vendedor (Etapa B): meta, ventas y comisión ───────────────
+.ficha-avance {
+  margin-bottom: var(--ceskia-space-6);
+
+  h2 .periodo {
+    margin-left: var(--ceskia-space-2);
+    color: var(--ceskia-text-tertiary);
+    font-size: var(--ceskia-text-sm);
+    font-weight: var(--ceskia-font-normal);
+  }
+
+  .meta-barra {
+    position: relative;
+    height: 28px;
+    border-radius: 14px;
+    background: var(--ceskia-base);
+    border: 1px solid var(--ceskia-border-default);
+    overflow: hidden;
+    margin-bottom: var(--ceskia-space-4);
+
+    .meta-progreso {
+      position: absolute;
+      inset: 0 auto 0 0;
+      transition: width .3s ease;
+    }
+    .meta-texto {
+      position: relative;
+      display: block;
+      line-height: 28px;
+      text-align: center;
+      font-size: var(--ceskia-text-sm);
+      font-weight: var(--ceskia-font-semibold);
+      color: var(--ceskia-text-primary);
+    }
+    &.meta-baja .meta-progreso { background: var(--ceskia-accent-danger-glow); }
+    &.meta-media .meta-progreso { background: var(--ceskia-accent-warning-glow, var(--ceskia-surface-2)); }
+    &.meta-ok .meta-progreso { background: var(--ceskia-accent-primary-glow); }
+  }
+
+  .meta-sin {
+    margin: 0 0 var(--ceskia-space-4);
+    color: var(--ceskia-text-tertiary);
+    font-size: var(--ceskia-text-sm);
+  }
+
+  .kpis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--ceskia-space-3);
+  }
+
+  .kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--ceskia-space-3);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: var(--ceskia-radius-md, 8px);
+    background: var(--ceskia-surface-1, var(--ceskia-base));
+
+    .kpi-valor {
+      font-size: var(--ceskia-text-lg);
+      font-weight: var(--ceskia-font-semibold);
+      font-variant-numeric: tabular-nums;
+    }
+    .kpi-label {
+      font-size: var(--ceskia-text-xs);
+      color: var(--ceskia-text-tertiary);
+    }
+
+    &.kpi-link { cursor: pointer; }
+    &.kpi-destacado .kpi-valor { color: var(--ceskia-accent-primary); }
+    &.kpi-alerta .kpi-valor { color: var(--ceskia-accent-danger); }
+  }
+}

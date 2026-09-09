@@ -43,11 +43,6 @@ $transition-speed: 0.3s;
       justify-content: center;
       padding: var(--ceskia-space-2);
     }
-
-    .user-card {
-      justify-content: center;
-      padding: var(--ceskia-space-2);
-    }
   }
 }
 
@@ -83,12 +78,17 @@ $transition-speed: 0.3s;
   }
 }
 
-// Logo del cliente (sitioLogoUrl configurado)
+// Logo del cliente (sitioLogoUrl configurado). El PNG del cliente viene con fondo
+// blanco sólido, así que va sobre placa blanca — correcto además por manual de
+// marca (los logos corporativos no se apoyan "pelados" sobre fondo oscuro).
 .logo-img {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  max-height: 44px;
   object-fit: contain;
+  background: #ffffff;
+  padding: 5px 12px;
   border-radius: var(--ceskia-radius-md);
 }
 
@@ -282,15 +282,6 @@ $transition-speed: 0.3s;
   flex: 1;
 }
 
-// Tecla de atajo del buscador global
-.nav-kbd {
-  font-size: 0.65rem;
-  color: var(--ceskia-text-muted);
-  border: 1px solid var(--ceskia-border-default);
-  border-radius: var(--ceskia-radius-sm);
-  padding: 1px 5px;
-}
-
 // Campanita del pulso del negocio
 .campanita {
   position: relative;
@@ -380,78 +371,6 @@ $transition-speed: 0.3s;
     font-size: 0.875rem;
     margin: 0;
   }
-}
-
-// Footer
-.sidebar-footer {
-  padding: var(--ceskia-space-3);
-  border-top: 1px solid var(--ceskia-border-default);
-}
-
-.user-card {
-  display: flex;
-  align-items: center;
-  gap: var(--ceskia-space-3);
-  padding: var(--ceskia-space-2) var(--ceskia-space-3);
-  border-radius: var(--ceskia-radius-xl);
-  cursor: pointer;
-  transition: background var(--ceskia-transition-normal);
-
-  &:hover {
-    background: var(--ceskia-hover);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--ceskia-accent-primary);
-    outline-offset: 2px;
-  }
-}
-
-// CESKIA 2.0: avatar tonal (acento suave), no bloque sólido
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  background: var(--ceskia-accent-primary-glow);
-  border-radius: var(--ceskia-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ceskia-accent-primary);
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.user-info {
-  flex: 1;
-  overflow: hidden;
-}
-
-.user-name {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--ceskia-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-role {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--ceskia-text-secondary);
-}
-
-.user-menu-icon {
-  color: var(--ceskia-text-secondary);
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
 }
 
 // Main Wrapper
@@ -566,6 +485,86 @@ $transition-speed: 0.3s;
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+// Buscador global en el cabezal (2026-09-06): barra ancha estilo Amazon que ocupa
+// el centro. Ahora es un INPUT real con resultados desplegados (app-header-search);
+// acá solo vive el encaje en el header — la pill y el panel van en el componente.
+.header-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 720px;
+  margin: 0 var(--ceskia-space-6);
+
+  @media (max-width: 768px) {
+    margin: 0 var(--ceskia-space-2);
+  }
+}
+
+// Usuario logueado en el cabezal (2026-09-06): chip con avatar de iniciales.
+// Antes vivía al pie del sidebar y el cerrar sesión quedaba escondido.
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  margin-left: var(--ceskia-space-2);
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--ceskia-border-default);
+  border-radius: var(--ceskia-radius-full);
+  background: var(--ceskia-surface);
+  cursor: pointer;
+  transition: var(--ceskia-transition-fast);
+
+  &:hover {
+    background: var(--ceskia-hover);
+    border-color: var(--ceskia-border-strong);
+  }
+}
+
+.hu-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ceskia-accent-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  flex-shrink: 0;
+}
+
+.hu-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.hu-nombre {
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-medium);
+  color: var(--ceskia-text-primary);
+  white-space: nowrap;
+}
+
+.hu-rol {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-tertiary);
+  white-space: nowrap;
+}
+
+.hu-caret {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--ceskia-text-tertiary);
+}
+
+@media (max-width: 900px) {
+  .hu-info, .hu-caret { display: none; }
+  .header-user { padding: 4px; }
 }
 
 .tool-btn {

@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { GeneratedFormBase } from '../../../../../core/components/generated-form.base';
 
@@ -36,7 +36,7 @@ import { ColorService } from '../../../services/color.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatDatepickerModule,
-    MatCheckboxModule
+    MatSlideToggleModule
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './variante-form.component.html',

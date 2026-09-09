@@ -4,15 +4,18 @@
     <!-- Logo -->
     <div class="sidebar-logo" (click)="navigateTo('')" (keydown.enter)="navigateTo('')" role="button" tabindex="0" aria-label="Ir al inicio" style="cursor: pointer;">
       <div class="logo-container">
-        <!-- Logo del cliente si está configurado; si no, marca por defecto -->
-        @if (siteConfig.sitioLogoUrl()) {
+        <!-- Logo del cliente si está configurado; si no, marca por defecto.
+             El logo del cliente es APAISADO y con fondo blanco: expandido va en placa
+             blanca a lo ancho (sin texto al lado — el logo ya dice la marca);
+             colapsado no entra, cae al ícono. -->
+        @if (siteConfig.sitioLogoUrl() && !sidebarCollapsed()) {
           <img class="logo-img" [src]="siteConfig.sitioLogoUrl()" [alt]="siteConfig.sitioNombre()" />
         } @else {
           <div class="logo-icon">
             <mat-icon>hub</mat-icon>
           </div>
         }
-        <div class="logo-text" *ngIf="!sidebarCollapsed()">
+        <div class="logo-text" *ngIf="!sidebarCollapsed() && !siteConfig.sitioLogoUrl()">
           <span class="logo-title">{{ siteConfig.sitioNombre() }}</span>
           <span class="logo-subtitle">{{ siteConfig.sitioSubtitulo() }}</span>
         </div>
@@ -31,27 +34,6 @@
 
     <!-- Navigation -->
     <nav class="sidebar-nav">
-      <!-- Búsqueda global (Ctrl+K) -->
-      <div class="nav-section">
-        <a
-          class="nav-item"
-          role="button"
-          tabindex="0"
-          aria-label="Buscar"
-          (click)="buscador.abrir()"
-          (keydown.enter)="buscador.abrir()"
-          [matTooltip]="sidebarCollapsed() ? 'Buscar (Ctrl+K)' : ''"
-          matTooltipPosition="right"
-          matRipple
-          [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
-        >
-          <div class="nav-item-icon">
-            <mat-icon>search</mat-icon>
-          </div>
-          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Buscar&nbsp;&nbsp;<span class="nav-kbd">Ctrl K</span></span>
-        </a>
-      </div>
-
       <!-- Inicio -->
       <div class="nav-section">
         <a
@@ -191,7 +173,8 @@
           </div>
         }
 
-        <!-- Evolution Board (herramienta del motor: solo fuera de producción) -->
+        <!-- Evolution Board: OCULTO a pedido de Pablo 2026-09-06 (también se comentó
+             la ruta 'evolution' en app.routes.ts). Descomentar ambos para reactivarlo.
         @if (herramientasZas) {
           <a
             class="nav-item"
@@ -208,6 +191,8 @@
             <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Evolution Board</span>
           </a>
         }
+        -->
+
 
         <!-- Configuracion -->
         <a
@@ -259,29 +244,7 @@
       </div>
     </nav>
 
-    <!-- Footer -->
-    <div class="sidebar-footer">
-      <div class="user-card" [matMenuTriggerFor]="userMenu" [matTooltip]="sidebarCollapsed() ? 'Mi cuenta' : ''" matTooltipPosition="right">
-        <div class="user-avatar">
-          <mat-icon>person</mat-icon>
-        </div>
-        <div class="user-info" *ngIf="!sidebarCollapsed()">
-          <span class="user-name">{{ userName }}</span>
-          <span class="user-role">{{ userProfile }}</span>
-        </div>
-        <mat-icon class="user-menu-icon" *ngIf="!sidebarCollapsed()">expand_more</mat-icon>
-      </div>
-      <mat-menu #userMenu="matMenu">
-        <button mat-menu-item disabled>
-          <mat-icon>person</mat-icon>
-          <span>Mi Perfil</span>
-        </button>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>Cerrar Sesion</span>
-        </button>
-      </mat-menu>
-    </div>
+    <!-- El usuario logueado ya no vive acá: pasó al cabezal (2026-09-06) -->
   </aside>
 
   <!-- Main Wrapper -->
@@ -292,6 +255,12 @@
         <button class="mobile-menu-btn" (click)="toggleSidebar()" aria-label="Abrir menú lateral">
           <mat-icon>menu</mat-icon>
         </button>
+        <!-- Asistente de voz en el cabezal (pedido Pablo 2026-09-06): antes era un
+             FAB flotante arriba al centro; ahora es un botón más del chrome. -->
+        <!-- OCULTO (Etapa 0, 2026-09-07): `Claude.ApiKey` está vacío en appsettings y el botón
+             "Hablar" falla sin clave. Descomentar cuando se configure la clave y se ensaye el flujo.
+        <app-asistente-voz></app-asistente-voz>
+        -->
         <!-- Rastro de navegación (pedido Pablo 2026-08-23): la casita vive acá, en el
              cabezal principal — las vistas ya no gastan una fila en su breadcrumb. -->
         <nav class="header-breadcrumb" aria-label="Ruta de navegación">
@@ -306,9 +275,12 @@
         </nav>
       </div>
 
+      <!-- Búsqueda global ancha estilo Amazon (pedido Pablo 2026-09-06): input REAL
+           en el cabezal — se tipea directo y los resultados caen debajo, sin modal.
+           Ctrl+K enfoca la barra. -->
+      <app-header-search class="header-search"></app-header-search>
+
       <div class="header-right">
-        <!-- La búsqueda vive en el sidebar (Ctrl+K) y el usuario en el footer del
-             sidebar: el header no los duplica. Una sola campana, con datos reales. -->
 
         <!-- Novedades (pulso del negocio) -->
         <button mat-icon-button [matTooltip]="actividad.hayNovedades() ? 'Hay novedades' : 'Actividad del negocio'" class="tool-btn campanita" (click)="navigateTo('')">
@@ -343,6 +315,32 @@
             }
           }
         </button>
+
+        <!-- Usuario logueado (pedido Pablo 2026-09-06): antes al pie del menú
+             izquierdo, con el cerrar sesión escondido. Ahora chip en el cabezal
+             con menú y salida a la vista. -->
+        <div class="header-user" [matMenuTriggerFor]="userMenu" matTooltip="Mi cuenta">
+          <div class="hu-avatar">{{ userInitials }}</div>
+          <div class="hu-info">
+            <span class="hu-nombre">{{ userName }}</span>
+            <span class="hu-rol">{{ userProfile }}</span>
+          </div>
+          <mat-icon class="hu-caret">expand_more</mat-icon>
+        </div>
+        <mat-menu #userMenu="matMenu" xPosition="before">
+          <div class="hu-menu-head">
+            <span class="hu-menu-nombre">{{ userName }}</span>
+            <span class="hu-menu-rol">{{ userProfile }}</span>
+          </div>
+          <button mat-menu-item disabled>
+            <mat-icon>person</mat-icon>
+            <span>Mi Perfil</span>
+          </button>
+          <button mat-menu-item class="hu-salir" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Cerrar sesión</span>
+          </button>
+        </mat-menu>
       </div>
     </header>
 
@@ -362,9 +360,4 @@
     <app-alchemy-lens></app-alchemy-lens>
   }
 
-  <!-- Búsqueda global (overlay Ctrl+K) -->
-  <app-global-search #buscador></app-global-search>
-
-  <!-- Asistente de voz (capa opcional: aparece solo si el producto tiene key) -->
-  <app-asistente-voz></app-asistente-voz>
 </div>

@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Categoría (catálogo). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const CATEGORIA_DESCRIPTOR: EntityDescriptor = {
   entidad: 'categoria',
   label: 'Categoría',
@@ -8,7 +8,9 @@ export const CATEGORIA_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'nombre', label: 'Nombre', tipo: 'texto', primario: true },
     { nombre: 'activo', label: 'Activo', tipo: 'bool' },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
-  hijas: [],
+  hijas: [
+    { entidad: 'Producto', fk: 'categoriaId', icon: 'inventory_2' },
+  ],
 };

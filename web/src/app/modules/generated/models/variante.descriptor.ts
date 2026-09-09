@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Variante / SKU (catálogo). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const VARIANTE_DESCRIPTOR: EntityDescriptor = {
   entidad: 'variante',
   label: 'Variante',
@@ -14,7 +14,9 @@ export const VARIANTE_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'precioLista', label: 'Precio', tipo: 'moneda' },
     { nombre: 'activo', label: 'Activo', tipo: 'bool' },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
-  hijas: [],
+  hijas: [
+    { entidad: 'MovimientoStock', fk: 'varianteId', icon: 'swap_vert' },
+  ],
 };

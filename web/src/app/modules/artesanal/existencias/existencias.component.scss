@@ -1,0 +1,56 @@
+// Existencias (artesanal, solo lectura): misma piel que las listas generadas.
+@use 'generated/entity-list' as *;
+
+// Filtros server-side en la toolbar, entre la búsqueda y las acciones.
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  flex-wrap: wrap;
+
+  .filtro-field {
+    min-width: 220px;
+    // Compactar el outline de Material a la altura de la toolbar
+    ::ng-deep .mat-mdc-text-field-wrapper { height: 40px; }
+    ::ng-deep .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; min-height: 40px; }
+    ::ng-deep .mat-mdc-floating-label { top: 20px; }
+    ::ng-deep .mdc-notched-outline__notch { max-width: calc(100% - 16px); }
+  }
+}
+
+// Columnas numéricas alineadas a la derecha
+.smart-table {
+  th.col-num, td.col-num { text-align: right; }
+  td.tnum { font-variant-numeric: tabular-nums; }
+
+  // Saldo negativo: rojo del sistema + ícono de aviso
+  td.negativo {
+    color: var(--ceskia-accent-danger);
+    font-weight: var(--ceskia-font-semibold);
+    .negativo-icon {
+      font-size: 16px; width: 16px; height: 16px;
+      vertical-align: -3px; margin-left: 4px;
+    }
+  }
+
+  tr.fila-link { cursor: pointer; }
+}
+
+// KPI de "en negativo" se enciende cuando hay alguno
+.header-stats .stat-item.stat-alerta {
+  .stat-icon { color: var(--ceskia-accent-danger); background: var(--ceskia-accent-danger-glow); }
+  .stat-value { color: var(--ceskia-accent-danger); }
+}
+
+.empty-state p {
+  margin: var(--ceskia-space-2) 0 0;
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+  max-width: 420px;
+}
+
+.relation-loading {
+  display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-8);
+  color: var(--ceskia-text-tertiary);
+}

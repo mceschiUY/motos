@@ -43,7 +43,7 @@ export class ProductoFichaComponent implements OnInit, OnDestroy {
   id: string | number = '';
 
   readonly relaciones: RelacionFicha[] = [
-    { nombre: 'variante', label: 'Variantes', icon: 'list_alt', ruta: '/variante', endpoint: '/Variante/by-producto/' }
+    { nombre: 'variante', label: 'Variantes', icon: 'qr_code_2', ruta: '/variante', endpoint: '/Variante/by-producto/' }
   ];
 
   ngOnInit(): void {

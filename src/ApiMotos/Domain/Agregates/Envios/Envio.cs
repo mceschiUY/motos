@@ -18,8 +18,9 @@ namespace ApiMotos.Domain.Agregates.Envios
             AgenciaId = 0;
         }
 
-        private Envio(string pCodigoRastreo, string pEstado, DateTime pFechaRecibido, DateTime pFechaFactura, DateTime pFechaEnvio, DateTime pFechaEntrega, string pMotivoAnulacion, int pClienteId, int pAgenciaId)
+        private Envio(string pCodigoRastreo, string pEstado, DateTime pFechaRecibido, DateTime pFechaFactura, DateTime pFechaEnvio, DateTime pFechaEntrega, string pMotivoAnulacion, int pClienteId, int pAgenciaId, int? pPedidoId)
         {
+            PedidoId = pPedidoId;
             CodigoRastreo = pCodigoRastreo;
             Estado = pEstado;
             FechaRecibido = pFechaRecibido;
@@ -40,12 +41,14 @@ namespace ApiMotos.Domain.Agregates.Envios
         public string MotivoAnulacion { get; private set; }
         public int ClienteId { get; private set; }
         public int AgenciaId { get; private set; }
+        /// <summary>Pedido que originó el envío (Etapa B, plan §3.6). Nulo en los envíos sueltos.</summary>
+        public int? PedidoId { get; private set; }
 
-        public static Result<Envio> Crear(string codigoRastreo, string estado, DateTime fechaRecibido, DateTime fechaFactura, DateTime fechaEnvio, DateTime fechaEntrega, string motivoAnulacion, int clienteId, int agenciaId)
+        public static Result<Envio> Crear(string codigoRastreo, string estado, DateTime fechaRecibido, DateTime fechaFactura, DateTime fechaEnvio, DateTime fechaEntrega, string motivoAnulacion, int clienteId, int agenciaId, int? pedidoId = null)
         {
             if (string.IsNullOrWhiteSpace(codigoRastreo)) return Result.Fail<Envio>("CodigoRastreo es requerido");
             if (string.IsNullOrWhiteSpace(estado)) return Result.Fail<Envio>("Estado es requerido");
-            return new Envio(codigoRastreo, estado, fechaRecibido, fechaFactura, fechaEnvio, fechaEntrega, motivoAnulacion, clienteId, agenciaId);
+            return new Envio(codigoRastreo, estado, fechaRecibido, fechaFactura, fechaEnvio, fechaEntrega, motivoAnulacion, clienteId, agenciaId, pedidoId is > 0 ? pedidoId : null);
         }
 
         public Result<Envio> Modificar(string pCodigoRastreo, string pEstado, DateTime pFechaRecibido, DateTime pFechaFactura, DateTime pFechaEnvio, DateTime pFechaEntrega, string pMotivoAnulacion, int pClienteId, int pAgenciaId)
@@ -63,6 +66,9 @@ namespace ApiMotos.Domain.Agregates.Envios
             AgenciaId = pAgenciaId;
             return this;
         }
+
+        /// <summary>Enlaza el envío con el pedido que lo originó (lo llama PedidoHooks al despachar).</summary>
+        public void AsignarPedido(int pedidoId) => PedidoId = pedidoId > 0 ? pedidoId : null;
 
         // ═══════════════════════════════════════════════════════════════════════════════
         // SISTEMA DE VALIDACIÓN UNIVERSAL - Métodos de validación de capabilities

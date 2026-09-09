@@ -67,20 +67,34 @@ Existencias (VISTA calculada)  =  Σ movimientos firmados  agrupados por (Varian
 
 ## 4. Reglas de dominio (en `MovimientoStock.Crear/Modificar`)
 
-- `Cantidad > 0` (el Tipo define el signo; nunca cantidades negativas).
+- `Cantidad ≠ 0`. En `entrada`, `salida` y `transferencia` debe ser positiva (el Tipo define el signo). En `ajuste` lleva **signo**: positivo = sobrante, negativo = faltante de inventario (Etapa 0, 2026-09-07).
 - `Tipo ∈ {entrada, salida, ajuste, transferencia}`.
 - `transferencia` ⇒ `DepositoDestinoId` requerido y **distinto** de `DepositoId`.
 - `entrada|salida|ajuste` ⇒ `DepositoDestinoId` debe ser null.
 - (Futuro, cuando exista saldo consolidado) bloquear `salida` que deje stock negativo — se deja
   anotado; hoy el saldo se calcula al vuelo, no se valida contra un balance persistido.
 
+### Quién escribe el Kardex además del alta manual (Etapa B)
+
+`PedidoHooks` es el otro autor de movimientos, y siempre por el mismo camino público
+(`MovimientoStock.Crear`), nunca tocando filas existentes:
+
+| Momento | Qué escribe | `DocumentoOrigen` |
+|---|---|---|
+| Pedido → `despachado` | una `salida` por línea, en el depósito del pedido | `PED-000n` |
+| Pedido → `anulado` (si ya había salido) | una `entrada` de reversa por cada salida | `PED-000n` |
+
+Las dos son **idempotentes**: se miran contra el propio Kardex (¿ya hay salidas de este
+pedido? ¿ya se revirtió?), así repetir la transición no duplica movimientos. El Kardex no se
+edita ni se borra: se **compensa**.
+
 ---
 
 ## 5. Existencias (read model — SUM firmado del Kardex)
 
 Signo por tipo para el depósito de la fila:
-`entrada → +Cantidad`, `salida → −Cantidad`, `ajuste → +Cantidad` (cargar negativo ajustando
-con un `salida`), `transferencia → −Cantidad` (sale del origen). La transferencia además **suma**
+`entrada → +Cantidad`, `salida → −Cantidad`, `ajuste → +Cantidad` (la cantidad ya viene con
+signo: un faltante es un ajuste de `−1`), `transferencia → −Cantidad` (sale del origen). La transferencia además **suma**
 `+Cantidad` en `DepositoDestinoId` (segunda mitad del UNION).
 
 ```sql
@@ -122,4 +136,4 @@ Endpoints de lectura en `MovimientoStockController`:
 - [x] 1. **Deposito** (maestra) — backend (Domain + CQRS + Controller + EF + DI + `PC_DEPOSITOS.sql` con seed `DEP-CENTRAL`) + front (list/form/ficha, registries). Compila API + build Angular OK.
 - [x] 2. **MovimientoStock** (Kardex) — backend con reglas de dominio (`Cantidad>0`, `Tipo` válido, consistencia de transferencia) + Controller con `by-variante`/`by-deposito` + EF Map con 3 FKs + `PC_MOVIMIENTOS_STOCK.sql` + `FK_PC_MOVIMIENTOS_STOCK.sql` + front (form con selects de Variante/Depósito y destino condicional a transferencia).
 - [x] 3. **Existencias** — `ExistenciasQuery/Handler` (SUM firmado del Kardex, transferencia origen−/destino+) + endpoint `GET /api/MovimientoStock/existencias?varianteId&depositoId`.
-- [ ] 4. Vista de existencias en el front (incremento siguiente): pantalla de solo-lectura que consuma `/existencias`. El endpoint ya está listo.
+- [x] 4. **Vista de existencias en el front** — pantalla artesanal de solo lectura en `web/src/app/modules/artesanal/existencias/` (ruta `/existencias`, menú Inventario). Consume `/existencias` vía `ExistenciasService` (HttpClient directo, sin tocar shells generados). Filtros server-side por SKU y depósito, búsqueda en memoria, sort/paginación, saldo negativo en rojo, export CSV, click → ficha de Variante, FAB → Kardex del SKU filtrado (`/movimientostock/by-variante/:id`).

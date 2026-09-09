@@ -76,6 +76,12 @@ export class CeskiaColumnaDirective {
               @if (plantillaDe(col.nombre); as tpl) {
                 <ng-container [ngTemplateOutlet]="tpl"
                               [ngTemplateOutletContext]="{ $implicit: item, campo: col }" />
+              } @else if (col.tipo === 'enum') {
+                @if (slugEnum(item, col); as slug) {
+                  <span class="enum-pill" [attr.data-valor]="slug">{{ valor(item, col) }}</span>
+                } @else {
+                  —
+                }
               } @else {
                 {{ valor(item, col) }}
               }
@@ -93,7 +99,7 @@ export class CeskiaColumnaDirective {
                       (click)="editar.emit(item)"><mat-icon>edit</mat-icon></button>
               <button mat-icon-button class="action-btn delete" matTooltip="Eliminar"
                       (click)="borrar.emit(item)"><mat-icon>delete_outline</mat-icon></button>
-              <button mat-icon-button class="action-btn" [matMenuTriggerFor]="menuFila"
+              <button mat-icon-button class="action-btn more" [matMenuTriggerFor]="menuFila"
                       matTooltip="Más acciones"><mat-icon>more_horiz</mat-icon></button>
               <mat-menu #menuFila="matMenu">
                 @for (h of descriptor.hijas ?? []; track h.entidad) {
@@ -228,6 +234,13 @@ export class EntityTableComponent {
     return col.tipo === 'numero' || col.tipo === 'moneda';
   }
 
+  /** enum: valor normalizado en minúsculas — el mapeo a color vive en styles.scss
+   *  (.enum-pill[data-valor=…], mismo lenguaje de acentos que el cuadrante). */
+  slugEnum(item: any, col: CampoDescriptor): string | null {
+    const v = this.crudo(item, col);
+    return v == null || v === '' ? null : String(v).toLowerCase();
+  }
+
   /** Valor CRUDO para ordenar (fk ordena por display). */
   private crudo(item: any, col: CampoDescriptor): any {
     if (col.tipo === 'fk' && col.display) return item[col.display] ?? item[col.nombre];
@@ -240,7 +253,11 @@ export class EntityTableComponent {
     if (v == null || v === '') return '—';
     switch (col.tipo) {
       case 'moneda':
-        return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU', currencyDisplay: 'narrowSymbol' }).format(Number(v));
+        // Decisión de producto (doc/plan.md §7): SOLO dólares. Sin Moneda ni tipo de cambio.
+        return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol' }).format(Number(v));
+      case 'enum':
+        // Etiqueta visible del descriptor (ej. facturado → "Confirmado"); el valor no cambia.
+        return col.etiquetas?.[String(v)] ?? String(v);
       case 'numero':
         return new Intl.NumberFormat('es-UY').format(Number(v));
       case 'fecha': {

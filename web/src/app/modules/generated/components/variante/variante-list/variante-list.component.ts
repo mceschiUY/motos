@@ -100,7 +100,9 @@ export class VarianteListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
   // RELACIONES HASMANY - Entidades hijas para navegación
   // ═══════════════════════════════════════════════════════════════════════════
-  readonly hasManyRelations: HasManyRelation[] = [];
+  readonly hasManyRelations: HasManyRelation[] = [
+    { entityName: 'MovimientoStock', entityLabel: 'Movimiento de stock', icon: 'swap_vert', route: '/movimientostock', fkParam: 'varianteId' }
+  ];
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SIGNALS - Estado Reactivo
@@ -153,7 +155,10 @@ export class VarianteListComponent implements OnInit, OnDestroy {
   // Columnas configurables
   readonly columnConfigs = signal<ColumnConfig[]>([
     { key: 'select', label: 'Seleccionar', visible: true, sortable: false },
-    { key: 'nombre', label: 'Nombre', visible: true, sortable: true },
+    { key: 'sku', label: 'SKU', visible: true, sortable: true },
+    { key: 'productoDisplay', label: 'Producto', visible: true, sortable: true },
+    { key: 'tallaDisplay', label: 'Talla', visible: true, sortable: true },
+    { key: 'colorDisplay', label: 'Color', visible: true, sortable: true },
     { key: 'actions', label: 'Acciones', visible: true, sortable: false }
   ]);
 
@@ -221,7 +226,9 @@ export class VarianteListComponent implements OnInit, OnDestroy {
   ];
 
   // Parámetros de navegación entre entidades
-  
+  filterByProductoId: number | null = null;
+  filterByTallaId: number | null = null;
+  filterByColorId: number | null = null;
   filterContext: string = '';
 
   // Paginator/Sort por setter: la tabla vive dentro de un @if (viewMode), así que
@@ -263,7 +270,36 @@ export class VarianteListComponent implements OnInit, OnDestroy {
 
     // Leer queryParams para filtrado por entidad padre
     this.route.queryParams.subscribe((params: any) => {
-
+      if (params['productoId']) {
+        this.filterByProductoId = +params['productoId'];
+        this.filterContext = `Producto #${this.filterByProductoId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Producto', route: '/producto', icon: 'inventory_2' },
+          { label: `Variante de Producto #${this.filterByProductoId}`, icon: 'list_alt' }
+        ];
+      }
+      if (params['tallaId']) {
+        this.filterByTallaId = +params['tallaId'];
+        this.filterContext = `Talla #${this.filterByTallaId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Talla', route: '/talla', icon: 'straighten' },
+          { label: `Variante de Talla #${this.filterByTallaId}`, icon: 'list_alt' }
+        ];
+      }
+      if (params['colorId']) {
+        this.filterByColorId = +params['colorId'];
+        this.filterContext = `Color #${this.filterByColorId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Color', route: '/color', icon: 'palette' },
+          { label: `Variante de Color #${this.filterByColorId}`, icon: 'list_alt' }
+        ];
+      }
       this.loadData();
     });
 
@@ -359,7 +395,15 @@ export class VarianteListComponent implements OnInit, OnDestroy {
       next: (data: Variante[]) => {
         // Filtrar por FKs si están definidos
         let filteredData = data;
-
+        if (this.filterByProductoId) {
+          filteredData = filteredData.filter((item: any) => item.productoId === this.filterByProductoId);
+        }
+        if (this.filterByTallaId) {
+          filteredData = filteredData.filter((item: any) => item.tallaId === this.filterByTallaId);
+        }
+        if (this.filterByColorId) {
+          filteredData = filteredData.filter((item: any) => item.colorId === this.filterByColorId);
+        }
         this.items.set(filteredData);
         this.isLoading.set(false);
       },
@@ -435,7 +479,7 @@ export class VarianteListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
   openForm(item?: Variante): void {
     // Al crear desde una lista filtrada por un padre, el FK del padre ya viene dado por contexto.
-    const contextoFk = null;
+    const contextoFk = this.filterByProductoId ? { campo: 'productoId', valor: this.filterByProductoId } : this.filterByTallaId ? { campo: 'tallaId', valor: this.filterByTallaId } : this.filterByColorId ? { campo: 'colorId', valor: this.filterByColorId } : null;
     const dialogRef = this.dialog.open(VarianteFormComponent, {
       width: '600px',
       maxWidth: '95vw',

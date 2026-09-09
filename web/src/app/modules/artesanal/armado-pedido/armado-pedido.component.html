@@ -1,0 +1,200 @@
+<div class="kosmos-page armado">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>add_shopping_cart</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Armar pedido</h1>
+          <p class="page-subtitle">{{ nombreCliente() || 'Elegí el cliente para empezar' }}</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>inventory_2</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ unidades() }}</span>
+            <span class="stat-label">Unidades</span>
+          </div>
+        </div>
+        <div class="stat-item stat-total">
+          <div class="stat-icon"><mat-icon>payments</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ usd(total()) }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CABECERA DEL PEDIDO -->
+  <div class="content-card">
+    <div class="cabecera">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Cliente</mat-label>
+        <mat-select [ngModel]="clienteId()" (ngModelChange)="onClienteChange($event)">
+          @for (c of clientes(); track c.id) {
+            <mat-option [value]="c.id">{{ c.nombre }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Vendedor</mat-label>
+        <mat-select [ngModel]="vendedorId()" (ngModelChange)="vendedorId.set($event)">
+          @for (v of vendedores(); track v.id) {
+            <mat-option [value]="v.id">{{ v.nombre }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>badge</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Depósito</mat-label>
+        <mat-select [ngModel]="depositoId()" (ngModelChange)="onDepositoChange($event)">
+          @for (d of depositos(); track d.id) {
+            <mat-option [value]="d.id">{{ d.nombre }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>warehouse</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Agencia (opcional)</mat-label>
+        <mat-select [ngModel]="agenciaId()" (ngModelChange)="agenciaId.set($event)">
+          <mat-option [value]="null">— Definir después —</mat-option>
+          @for (a of agencias(); track a.id) {
+            <mat-option [value]="a.id">{{ a.nombre }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>local_shipping</mat-icon>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- BUSCADOR DE SKU -->
+  <div class="content-card">
+    <div class="smart-toolbar">
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text" class="search-input" placeholder="Buscar SKU, producto, talle o color…"
+               [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)">
+        @if (busqueda()) {
+          <button class="search-clear" (click)="busqueda.set('')"><mat-icon>close</mat-icon></button>
+        }
+      </div>
+    </div>
+
+    @if (busqueda().trim().length >= 2) {
+      <div class="resultados">
+        @for (r of resultados(); track r.variante.id) {
+          <button class="resultado" (click)="agregar(r.variante, r.disponible)">
+            <div class="res-info">
+              <span class="res-sku">{{ r.variante.sku }}</span>
+              <span class="res-producto">{{ r.variante.productoDisplay }}</span>
+              <span class="res-detalle">{{ r.variante.tallaDisplay }}{{ r.variante.colorDisplay ? ' / ' + r.variante.colorDisplay : '' }}</span>
+            </div>
+            <div class="res-numeros">
+              <span class="res-stock" [class.sin-stock]="r.disponible <= 0">{{ r.disponible }} en depósito</span>
+              <span class="res-precio">{{ usd(r.variante.precioLista) }}</span>
+            </div>
+            <mat-icon class="res-add">add_circle</mat-icon>
+          </button>
+        } @empty {
+          <div class="resultados-vacio">
+            <mat-icon>search_off</mat-icon>
+            <span>Ningún SKU coincide con «{{ busqueda() }}»</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- CARRITO -->
+  <div class="content-card">
+    @if (lineas().length === 0) {
+      <div class="empty-state">
+        <mat-icon>shopping_cart</mat-icon>
+        <h3>El pedido está vacío</h3>
+        <p>Buscá un SKU arriba y agregalo. El total se arma solo.</p>
+      </div>
+    } @else {
+      <table class="carrito">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Producto</th>
+            <th class="col-num">Cantidad</th>
+            <th class="col-num">Precio US$</th>
+            <th class="col-num">Subtotal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of lineas(); track l.varianteId) {
+            <tr [class.faltante]="l.cantidad > l.disponible">
+              <td class="col-primary">{{ l.sku }}</td>
+              <td>
+                {{ l.producto }}
+                @if (l.detalle) { <span class="detalle">· {{ l.detalle }}</span> }
+                @if (l.cantidad > l.disponible) {
+                  <span class="aviso" matTooltip="Se puede pedir igual: queda avisado al confirmar">
+                    <mat-icon>warning</mat-icon> hay {{ l.disponible }}
+                  </span>
+                }
+              </td>
+              <td class="col-num">
+                <input type="number" min="1" step="1" class="celda-num"
+                       [value]="l.cantidad" (change)="cambiarCantidad(l, $any($event.target).value)">
+              </td>
+              <td class="col-num">
+                <input type="number" min="0" step="0.01" class="celda-num"
+                       [value]="l.precioUnitarioUsd" (change)="cambiarPrecio(l, $any($event.target).value)">
+              </td>
+              <td class="col-num tnum">{{ usd(l.cantidad * l.precioUnitarioUsd) }}</td>
+              <td class="col-accion">
+                <button mat-icon-button (click)="quitar(l)" matTooltip="Quitar"><mat-icon>delete_outline</mat-icon></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="col-num total-label">Total</td>
+            <td class="col-num tnum total-valor">{{ usd(total()) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="observaciones">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="obs-field">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)"></textarea>
+        </mat-form-field>
+      </div>
+
+      @if (hayFaltantes()) {
+        <p class="nota-faltante">
+          <mat-icon>info</mat-icon>
+          Hay líneas por encima del stock del depósito. El pedido se puede crear igual: al confirmarlo queda el aviso en observaciones.
+        </p>
+      }
+
+      <div class="acciones">
+        <button mat-button (click)="cancelar()" [disabled]="guardando()">Cancelar</button>
+        <button mat-flat-button class="save-btn" (click)="guardar()" [disabled]="!puedeGuardar()">
+          @if (guardando()) {
+            <mat-spinner diameter="20"></mat-spinner><span>Creando…</span>
+          } @else {
+            <mat-icon>check</mat-icon><span>Crear pedido · {{ usd(total()) }}</span>
+          }
+        </button>
+      </div>
+    }
+  </div>
+
+</div>

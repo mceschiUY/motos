@@ -1,0 +1,135 @@
+<div class="kosmos-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>payments</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Comisiones</h1>
+          <p class="page-subtitle">{{ etiquetaPeriodo(periodo()) }} · {{ conVentas().length }} de {{ items().length }} vendedores con ventas</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>receipt_long</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ totalPedidos() }}</span>
+            <span class="stat-label">Pedidos entregados</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>trending_up</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ usd(totalVendido()) }}</span>
+            <span class="stat-label">Vendido</span>
+          </div>
+        </div>
+        <div class="stat-item stat-comision">
+          <div class="stat-icon"><mat-icon>payments</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ usd(totalComision()) }}</span>
+            <span class="stat-label">A liquidar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <div class="smart-toolbar">
+      <div class="filtros">
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>Período</mat-label>
+          <mat-select [ngModel]="periodo()" (ngModelChange)="onPeriodoChange($event)">
+            @for (p of periodos(); track p) {
+              <mat-option [value]="p">{{ etiquetaPeriodo(p) }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>calendar_month</mat-icon>
+        </mat-form-field>
+      </div>
+      <p class="nota">La comisión se devenga con la <strong>entrega</strong>: se cuenta lo que cada pedido selló al entregarse.</p>
+    </div>
+
+    <!-- TABLA (solo lectura) -->
+    <div class="table-wrapper">
+      <table mat-table [dataSource]="items()" class="smart-table">
+
+        <ng-container matColumnDef="vendedorDisplay">
+          <th mat-header-cell *matHeaderCellDef>Vendedor</th>
+          <td mat-cell *matCellDef="let item" class="col-primary">{{ item.vendedorDisplay ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="zona">
+          <th mat-header-cell *matHeaderCellDef>Zona</th>
+          <td mat-cell *matCellDef="let item">{{ item.zona ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="pedidos">
+          <th mat-header-cell *matHeaderCellDef class="col-num">Pedidos</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum">
+            @if (item.pedidos > 0) {
+              <button mat-button class="link-pedidos" (click)="verPedidos(item, $event)"
+                      matTooltip="Ver los pedidos del vendedor">{{ item.pedidos }}</button>
+            } @else {
+              <span class="sin-datos">0</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="totalUsd">
+          <th mat-header-cell *matHeaderCellDef class="col-num">Vendido</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum">{{ usd(item.totalUsd) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="comisionPorcentaje">
+          <th mat-header-cell *matHeaderCellDef class="col-num">%</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum">{{ item.comisionPorcentaje }}%</td>
+        </ng-container>
+
+        <ng-container matColumnDef="comisionUsd">
+          <th mat-header-cell *matHeaderCellDef class="col-num">Comisión</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum col-comision">{{ usd(item.comisionUsd) }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnas;" class="fila-link"
+            (click)="verVendedor(row)" matTooltip="Ver ficha del vendedor"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          @if (!isLoading()) {
+            <td class="mat-cell empty-state-cell" [attr.colspan]="columnas.length">
+              <div class="empty-state">
+                <mat-icon>payments</mat-icon>
+                <h3>Sin liquidación en {{ etiquetaPeriodo(periodo()) }}</h3>
+                <p>La comisión aparece cuando un pedido llega a <strong>entregado</strong>. Probá con otro mes.</p>
+              </div>
+            </td>
+          } @else {
+            <td class="mat-cell" [attr.colspan]="columnas.length">
+              <div class="relation-loading">
+                <mat-spinner diameter="32"></mat-spinner>
+                <span>Calculando la liquidación...</span>
+              </div>
+            </td>
+          }
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- FLOATING ACTION BUTTONS (read-only: no se crea nada desde acá) -->
+  <div class="floating-actions" [class.expanded]="fabMenuExpanded">
+    <div class="fab-expandable">
+      <button class="fab-btn fab-secondary" (click)="exportAll()" matTooltip="Exportar CSV" matTooltipPosition="left"><mat-icon>file_download</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
+    </div>
+    <button class="fab-btn fab-exit" (click)="goBack()" matTooltip="Salir" matTooltipPosition="left"><mat-icon>logout</mat-icon></button>
+    <button class="fab-btn fab-menu" (click)="toggleFabMenu()" matTooltip="Opciones" matTooltipPosition="left"><mat-icon>{{ fabMenuExpanded ? 'close' : 'more_vert' }}</mat-icon></button>
+  </div>
+
+</div>

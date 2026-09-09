@@ -23,6 +23,11 @@
         public DbSet<ApiMotos.Domain.Agregates.Agencias.Agencia> Agencias { get; set; }
         public DbSet<ApiMotos.Domain.Agregates.Envios.Envio> Envios { get; set; }
         public DbSet<ApiMotos.Domain.Agregates.Clientes.Cliente> Clientes { get; set; }
+        public DbSet<ApiMotos.Domain.Agregates.Vendedores.Vendedor> Vendedores { get; set; }
+        public DbSet<ApiMotos.Domain.Agregates.Actividades.Actividad> Actividades { get; set; }
+        public DbSet<ApiMotos.Domain.Agregates.Metas.Meta> Metas { get; set; }
+        public DbSet<ApiMotos.Domain.Agregates.Pedidos.Pedido> Pedidos { get; set; }
+        public DbSet<ApiMotos.Domain.Agregates.PedidoLineas.PedidoLinea> PedidoLineas { get; set; }
         // </KOSMOS:DBSETS>
 
         public GeneratedContext(IConfiguration configuration, DbContextOptions<GeneratedContext> options) : base(configuration, options)
@@ -55,6 +60,11 @@
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Agencias.Persistence.AgenciaMap());
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Envios.Persistence.EnvioMap());
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Clientes.Persistence.ClienteMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Vendedores.Persistence.VendedorMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Actividades.Persistence.ActividadMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Metas.Persistence.MetaMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Pedidos.Persistence.PedidoMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence.PedidoLineaMap());
             // </KOSMOS:CONFIGS>
         }
     }

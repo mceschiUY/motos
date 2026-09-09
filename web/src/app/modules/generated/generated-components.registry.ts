@@ -35,15 +35,6 @@ export const GENERATED_COMPONENTS: GeneratedComponentInfo[] = [
   },
 
   {
-    name: 'conceptoexpensa',
-    path: 'conceptoexpensa',
-    listComponent: 'ConceptoexpensaListComponent',
-    formComponent: 'ConceptoexpensaFormComponent',
-    detailComponent: 'ConceptoexpensaDetailComponent',
-    icon: 'list_alt',
-    label: 'ConceptoExpensa'
-  },
-  {
     name: 'cliente',
     path: 'cliente',
     listComponent: 'ClienteListComponent',
@@ -51,6 +42,51 @@ export const GENERATED_COMPONENTS: GeneratedComponentInfo[] = [
     detailComponent: 'ClienteDetailComponent',
     icon: 'person',
     label: 'Cliente'
+  },
+  {
+    name: 'vendedor',
+    path: 'vendedor',
+    listComponent: 'VendedorListComponent',
+    formComponent: 'VendedorFormComponent',
+    detailComponent: 'VendedorDetailComponent',
+    icon: 'badge',
+    label: 'Vendedor'
+  },
+  {
+    name: 'actividad',
+    path: 'actividad',
+    listComponent: 'ActividadListComponent',
+    formComponent: 'ActividadFormComponent',
+    detailComponent: 'ActividadDetailComponent',
+    icon: 'event_note',
+    label: 'Actividad'
+  },
+  {
+    name: 'meta',
+    path: 'meta',
+    listComponent: 'MetaListComponent',
+    formComponent: 'MetaFormComponent',
+    detailComponent: 'MetaDetailComponent',
+    icon: 'flag',
+    label: 'Meta'
+  },
+  {
+    name: 'pedido',
+    path: 'pedido',
+    listComponent: 'PedidoListComponent',
+    formComponent: 'PedidoFormComponent',
+    detailComponent: 'PedidoDetailComponent',
+    icon: 'receipt_long',
+    label: 'Pedido'
+  },
+  {
+    name: 'pedidolinea',
+    path: 'pedidolinea',
+    listComponent: 'PedidoLineaListComponent',
+    formComponent: 'PedidoLineaFormComponent',
+    detailComponent: 'PedidoLineaDetailComponent',
+    icon: 'list',
+    label: 'Línea de pedido'
   },
   {
     name: 'envio',
@@ -114,16 +150,87 @@ export const GENERATED_ROUTES: Routes = [
   },
 
   {
-    path: 'conceptoexpensa',
-    loadComponent: () => import('./components/conceptoexpensa/conceptoexpensa-list/conceptoexpensa-list.component').then(m => m.ConceptoexpensaListComponent)
-  },
-  {
     path: 'cliente',
     loadComponent: () => import('./components/cliente/cliente-list/cliente-list.component').then(m => m.ClienteListComponent)
   },
   {
     path: 'cliente/:id',
     loadComponent: () => import('./components/cliente/cliente-ficha/cliente-ficha.component').then(m => m.ClienteFichaComponent)
+  },
+  // Ruta de navegación: Cliente filtrado por Vendedor
+  {
+    path: 'cliente/by-vendedor/:vendedorId',
+    loadComponent: () => import('./components/cliente/cliente-list/cliente-list.component').then(m => m.ClienteListComponent)
+  },
+  {
+    path: 'vendedor',
+    loadComponent: () => import('./components/vendedor/vendedor-list/vendedor-list.component').then(m => m.VendedorListComponent)
+  },
+  {
+    path: 'vendedor/:id',
+    loadComponent: () => import('./components/vendedor/vendedor-ficha/vendedor-ficha.component').then(m => m.VendedorFichaComponent)
+  },
+  {
+    path: 'actividad',
+    loadComponent: () => import('./components/actividad/actividad-list/actividad-list.component').then(m => m.ActividadListComponent)
+  },
+  {
+    path: 'actividad/:id',
+    loadComponent: () => import('./components/actividad/actividad-ficha/actividad-ficha.component').then(m => m.ActividadFichaComponent)
+  },
+  // Ruta de navegación: Actividad filtrada por Cliente
+  {
+    path: 'actividad/by-cliente/:clienteId',
+    loadComponent: () => import('./components/actividad/actividad-list/actividad-list.component').then(m => m.ActividadListComponent)
+  },
+  // Ruta de navegación: Actividad filtrada por Vendedor
+  {
+    path: 'actividad/by-vendedor/:vendedorId',
+    loadComponent: () => import('./components/actividad/actividad-list/actividad-list.component').then(m => m.ActividadListComponent)
+  },
+  {
+    path: 'meta',
+    loadComponent: () => import('./components/meta/meta-list/meta-list.component').then(m => m.MetaListComponent)
+  },
+  {
+    path: 'meta/:id',
+    loadComponent: () => import('./components/meta/meta-ficha/meta-ficha.component').then(m => m.MetaFichaComponent)
+  },
+  // Ruta de navegación: Meta filtrada por Vendedor
+  {
+    path: 'meta/by-vendedor/:vendedorId',
+    loadComponent: () => import('./components/meta/meta-list/meta-list.component').then(m => m.MetaListComponent)
+  },
+  {
+    path: 'pedido',
+    loadComponent: () => import('./components/pedido/pedido-list/pedido-list.component').then(m => m.PedidoListComponent)
+  },
+  {
+    path: 'pedido/:id',
+    loadComponent: () => import('./components/pedido/pedido-ficha/pedido-ficha.component').then(m => m.PedidoFichaComponent)
+  },
+  // Ruta de navegación: Pedido filtrado por Cliente
+  {
+    path: 'pedido/by-cliente/:clienteId',
+    loadComponent: () => import('./components/pedido/pedido-list/pedido-list.component').then(m => m.PedidoListComponent)
+  },
+  // Ruta de navegación: Pedido filtrado por Vendedor
+  {
+    path: 'pedido/by-vendedor/:vendedorId',
+    loadComponent: () => import('./components/pedido/pedido-list/pedido-list.component').then(m => m.PedidoListComponent)
+  },
+  {
+    path: 'pedidolinea',
+    loadComponent: () => import('./components/pedidolinea/pedidolinea-list/pedidolinea-list.component').then(m => m.PedidoLineaListComponent)
+  },
+  {
+    path: 'pedidolinea/:id',
+    loadComponent: () => import('./components/pedidolinea/pedidolinea-ficha/pedidolinea-ficha.component').then(m => m.PedidoLineaFichaComponent)
+  },
+  // Ruta de navegación: Línea filtrada por Pedido
+  {
+    path: 'pedidolinea/by-pedido/:pedidoId',
+    loadComponent: () => import('./components/pedidolinea/pedidolinea-list/pedidolinea-list.component').then(m => m.PedidoLineaListComponent)
   },
   {
     path: 'envio',
@@ -163,6 +270,41 @@ export const GENERATED_ROUTES: Routes = [
   {
     path: 'observacion/by-envio/:envioId',
     loadComponent: () => import('./components/observacion/observacion-list/observacion-list.component').then(m => m.ObservacionListComponent)
+  },
+  // Ruta de navegación: Producto filtrado por Marca
+  {
+    path: 'producto/by-marca/:marcaId',
+    loadComponent: () => import('./components/producto/producto-list/producto-list.component').then(m => m.ProductoListComponent)
+  },
+  // Ruta de navegación: Producto filtrado por Categoria
+  {
+    path: 'producto/by-categoria/:categoriaId',
+    loadComponent: () => import('./components/producto/producto-list/producto-list.component').then(m => m.ProductoListComponent)
+  },
+  // Ruta de navegación: Variante filtrado por Producto
+  {
+    path: 'variante/by-producto/:productoId',
+    loadComponent: () => import('./components/variante/variante-list/variante-list.component').then(m => m.VarianteListComponent)
+  },
+  // Ruta de navegación: Variante filtrado por Talla
+  {
+    path: 'variante/by-talla/:tallaId',
+    loadComponent: () => import('./components/variante/variante-list/variante-list.component').then(m => m.VarianteListComponent)
+  },
+  // Ruta de navegación: Variante filtrado por Color
+  {
+    path: 'variante/by-color/:colorId',
+    loadComponent: () => import('./components/variante/variante-list/variante-list.component').then(m => m.VarianteListComponent)
+  },
+  // Ruta de navegación: MovimientoStock filtrado por Deposito
+  {
+    path: 'movimientostock/by-deposito/:depositoId',
+    loadComponent: () => import('./components/movimientostock/movimientostock-list/movimientostock-list.component').then(m => m.MovimientoStockListComponent)
+  },
+  // Ruta de navegación: MovimientoStock filtrado por Variante
+  {
+    path: 'movimientostock/by-variante/:varianteId',
+    loadComponent: () => import('./components/movimientostock/movimientostock-list/movimientostock-list.component').then(m => m.MovimientoStockListComponent)
   },
   {
     path: 'parametrosla',

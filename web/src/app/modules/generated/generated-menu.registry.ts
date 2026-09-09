@@ -38,36 +38,33 @@ export const GENERATED_MENU_GROUPS: GeneratedMenuGroup[] = [
     items: [
       { path: 'deposito', label: 'Depósito', icon: 'warehouse', supportsDetail: true, baseRoute: '/deposito' },
       { path: 'movimientostock', label: 'Movimiento de stock', icon: 'swap_vert', supportsDetail: true, baseRoute: '/movimientostock' },
+      { path: 'existencias', label: 'Existencias', icon: 'inventory', supportsDetail: false, baseRoute: '/existencias' },
     ]
   },
   {
-    label: 'Gestion de clientes',
-    icon: 'folder',
+    // Comercial: fuerza de ventas (Etapa A). Agenda es artesanal, como Existencias.
+    label: 'Comercial',
+    icon: 'storefront',
     items: [
-        { path: 'cliente', label: 'Cliente', icon: 'person', supportsDetail: true, baseRoute: '/cliente' },
-      { path: 'envio', label: 'Envio', icon: 'list_alt', supportsDetail: true, baseRoute: '/envio' },
-  ]
+      { path: 'cliente', label: 'Cliente', icon: 'person', supportsDetail: true, baseRoute: '/cliente' },
+      { path: 'vendedor', label: 'Vendedor', icon: 'badge', supportsDetail: true, baseRoute: '/vendedor' },
+      { path: 'actividad', label: 'Actividad', icon: 'event_note', supportsDetail: true, baseRoute: '/actividad' },
+      { path: 'pedido', label: 'Pedido', icon: 'receipt_long', supportsDetail: true, baseRoute: '/pedido' },
+      { path: 'meta', label: 'Meta', icon: 'flag', supportsDetail: true, baseRoute: '/meta' },
+      { path: 'agenda', label: 'Agenda', icon: 'event', supportsDetail: false, baseRoute: '/agenda' },
+      { path: 'comisiones', label: 'Comisiones', icon: 'payments', supportsDetail: false, baseRoute: '/comisiones' },
+    ]
   },
   {
-    label: 'Gestion de agencias',
-    icon: 'folder',
+    // Operaciones: todo el ciclo del envío (Etapa 0 fundió "Gestión de agencias" y "General").
+    label: 'Operaciones',
+    icon: 'route',
     items: [
-        { path: 'agencia', label: 'Agencia', icon: 'list_alt', supportsDetail: true, baseRoute: '/agencia' },
-  ]
-  },
-  {
-    label: 'Operaciones y flujo de estados del envio',
-    icon: 'folder',
-    items: [
-        { path: 'observacion', label: 'Observación', icon: 'list_alt', supportsDetail: true, baseRoute: '/observacion' },
-  ]
-  },
-  {
-    label: 'General',
-    icon: 'folder',
-    items: [
-        { path: 'parametrosla', label: 'Parametro SLA', icon: 'list_alt', supportsDetail: true, baseRoute: '/parametrosla' },
-  ]
+      { path: 'envio', label: 'Envío', icon: 'local_shipping', supportsDetail: true, baseRoute: '/envio' },
+      { path: 'agencia', label: 'Agencia', icon: 'business', supportsDetail: true, baseRoute: '/agencia' },
+      { path: 'observacion', label: 'Observación', icon: 'comment', supportsDetail: true, baseRoute: '/observacion' },
+      { path: 'parametrosla', label: 'Parámetro SLA', icon: 'timer', supportsDetail: true, baseRoute: '/parametrosla' },
+    ]
   },
 ];
 

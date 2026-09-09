@@ -7,6 +7,7 @@ using ApiMotos.Application.Agregates.Clientes.Commands.Eliminar;
 using ApiMotos.Application.Agregates.Clientes.Queries.Clientes;
 using ApiMotos.Application.Agregates.Clientes.Queries.Resumen;
 using ApiMotos.Application.Agregates.Clientes.Queries.Buscar;
+using ApiMotos.Application.Agregates.Clientes.Queries.ByVendedorId;
 
 namespace ApiMotos.Controllers
 {
@@ -55,6 +56,14 @@ namespace ApiMotos.Controllers
         public async Task<IActionResult> Buscar([FromQuery] string q)
         {
             var result = await _mediator.Send(new ClientesBuscarQuery(q ?? ""));
+            return Ok(result);
+        }
+
+        /// <summary>Clientes asignados a un vendedor (Etapa A: filtro "mis clientes", ficha del vendedor).</summary>
+        [HttpGet("by-vendedor/{vendedorId}")]
+        public async Task<IActionResult> GetByVendedorId([FromRoute] int vendedorId)
+        {
+            var result = await _mediator.Send(new ClientesByVendedorIdQuery { VendedorId = vendedorId });
             return Ok(result);
         }
 

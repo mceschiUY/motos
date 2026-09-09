@@ -118,6 +118,8 @@
         </mat-form-field>
       </div>
 
+      <!-- Atributos de casco: solo si la categoría es Casco o una hija (Etapa 0, 2026-09-07) -->
+      @if (esCasco()) {
       <!-- TipoCasco Field (enum, aplica a cascos) -->
       <div class="form-field-wrapper">
         <mat-form-field appearance="outline" class="form-field">
@@ -158,13 +160,18 @@
       </div>
 
       <!-- HomologacionVigente -->
-      <div class="form-field-wrapper">
-        <mat-checkbox formControlName="homologacionVigente">Homologación vigente</mat-checkbox>
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="homologacionVigente" color="primary">
+          Homologación vigente
+        </mat-slide-toggle>
       </div>
+      }
 
       <!-- Activo -->
-      <div class="form-field-wrapper">
-        <mat-checkbox formControlName="activo">Activo</mat-checkbox>
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="activo" color="primary">
+          Activo
+        </mat-slide-toggle>
       </div>
 
     </form>

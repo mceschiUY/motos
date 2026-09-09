@@ -27,6 +27,14 @@ cd src/ApiMotos && dotnet run
 cd web && npm install && npm start   # http://localhost:4210
 ```
 
+Al arrancar en Development, `DbBootstrap` crea la base, aplica FKs, configuración y el
+**seed de demo** (`src/ApiMotos/Scripts/Seed_Dominio_Motos.sql`: catálogo, stock, clientes y
+envíos). Para vaciar el dominio y volver a sembrar:
+
+```bash
+sqlcmd -S "localhost\SQLEXPRESS" -E -d Motos -C -i src/ApiMotos/Scripts/Limpiar_Datos_Dominio.sql
+```
+
 ### Con docker (stack completo)
 Requiere un `.env` (copiar de `.env.example` y cambiar la contraseña):
 

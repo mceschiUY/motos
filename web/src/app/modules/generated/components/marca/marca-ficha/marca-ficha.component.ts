@@ -43,7 +43,7 @@ export class MarcaFichaComponent implements OnInit, OnDestroy {
   id: string | number = '';
 
   readonly relaciones: RelacionFicha[] = [
-    { nombre: 'envio', label: 'Envios', icon: 'list_alt', ruta: '/envio', endpoint: '/Envio/by-marca/' }
+    { nombre: 'producto', label: 'Productos', icon: 'inventory_2', ruta: '/producto', endpoint: '/Producto/by-marca/' }
   ];
 
   ngOnInit(): void {

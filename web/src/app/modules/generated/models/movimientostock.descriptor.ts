@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Movimiento de stock / Kardex. */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const MOVIMIENTOSTOCK_DESCRIPTOR: EntityDescriptor = {
   entidad: 'movimientostock',
   label: 'Movimiento de stock',
@@ -16,7 +16,7 @@ export const MOVIMIENTOSTOCK_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'motivo', label: 'Motivo', tipo: 'texto', enLista: false },
     { nombre: 'usuario', label: 'Usuario', tipo: 'texto', enLista: false },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'timeline', 'calendario'],
   vistaDefault: 'table',
   hijas: [],
 };

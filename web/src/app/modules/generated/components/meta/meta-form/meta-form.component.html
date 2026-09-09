@@ -1,0 +1,77 @@
+<div class="dialog-container">
+  <!-- Header en una línea (pedido Pablo 2026-08-29): título solo, sin subtítulo -->
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditing ? 'Editar Meta' : 'Nueva Meta' }}</h2>
+  </div>
+
+  <!-- Content: un solo formulario -->
+  <mat-dialog-content>
+    <form [formGroup]="form" class="entity-form">
+      <!-- Vendedor Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('vendedorId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Vendedor</mat-label>
+          <mat-select formControlName="vendedorId">
+            @for (option of vendedores(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>badge</mat-icon>
+          @if (form.get('vendedorId')?.touched && form.get('vendedorId')?.invalid) {
+            <mat-error>{{ getErrorMessage('vendedorId') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('vendedorId')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Período Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Período</mat-label>
+          <input matInput type="text" formControlName="periodo" placeholder="2026-09" maxlength="7">
+          <mat-icon matPrefix>calendar_month</mat-icon>
+          <mat-hint>Año-mes (AAAA-MM)</mat-hint>
+          @if (form.get('periodo')?.touched && form.get('periodo')?.invalid) {
+            <mat-error>{{ errorPeriodo() }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('periodo')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Objetivo US$ Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Objetivo US$</mat-label>
+          <input matInput type="number" min="1" step="1" formControlName="objetivoUsd">
+          <mat-icon matPrefix>attach_money</mat-icon>
+          @if (form.get('objetivoUsd')?.touched && form.get('objetivoUsd')?.invalid) {
+            <mat-error>{{ getErrorMessage('objetivoUsd') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('objetivoUsd')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button class="cancel-btn" (click)="onCancel()" [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button mat-flat-button class="save-btn" (click)="onSave()" [disabled]="isSaving || form.invalid">
+      @if (isSaving) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Guardando...</span>
+      } @else {
+        <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
+        <span>{{ isEditing ? 'Guardar' : 'Crear' }}</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

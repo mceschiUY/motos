@@ -101,7 +101,7 @@ export class ProductoListComponent implements OnInit, OnDestroy {
   // RELACIONES HASMANY - Entidades hijas para navegación
   // ═══════════════════════════════════════════════════════════════════════════
   readonly hasManyRelations: HasManyRelation[] = [
-    { entityName: 'Variante', entityLabel: 'Variante', icon: 'list_alt', route: '/variante', fkParam: 'productoId' }
+    { entityName: 'Variante', entityLabel: 'Variante', icon: 'qr_code_2', route: '/variante', fkParam: 'productoId' }
   ];
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -155,7 +155,10 @@ export class ProductoListComponent implements OnInit, OnDestroy {
   // Columnas configurables
   readonly columnConfigs = signal<ColumnConfig[]>([
     { key: 'select', label: 'Seleccionar', visible: true, sortable: false },
+    { key: 'codigo', label: 'Código', visible: true, sortable: true },
     { key: 'nombre', label: 'Nombre', visible: true, sortable: true },
+    { key: 'marcaDisplay', label: 'Marca', visible: true, sortable: true },
+    { key: 'categoriaDisplay', label: 'Categoría', visible: true, sortable: true },
     { key: 'actions', label: 'Acciones', visible: true, sortable: false }
   ]);
 
@@ -223,7 +226,8 @@ export class ProductoListComponent implements OnInit, OnDestroy {
   ];
 
   // Parámetros de navegación entre entidades
-  
+  filterByMarcaId: number | null = null;
+  filterByCategoriaId: number | null = null;
   filterContext: string = '';
 
   // Paginator/Sort por setter: la tabla vive dentro de un @if (viewMode), así que
@@ -265,7 +269,26 @@ export class ProductoListComponent implements OnInit, OnDestroy {
 
     // Leer queryParams para filtrado por entidad padre
     this.route.queryParams.subscribe((params: any) => {
-
+      if (params['marcaId']) {
+        this.filterByMarcaId = +params['marcaId'];
+        this.filterContext = `Marca #${this.filterByMarcaId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Marca', route: '/marca', icon: 'sell' },
+          { label: `Producto de Marca #${this.filterByMarcaId}`, icon: 'list_alt' }
+        ];
+      }
+      if (params['categoriaId']) {
+        this.filterByCategoriaId = +params['categoriaId'];
+        this.filterContext = `Categoria #${this.filterByCategoriaId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Categoria', route: '/categoria', icon: 'category' },
+          { label: `Producto de Categoria #${this.filterByCategoriaId}`, icon: 'list_alt' }
+        ];
+      }
       this.loadData();
     });
 
@@ -361,7 +384,12 @@ export class ProductoListComponent implements OnInit, OnDestroy {
       next: (data: Producto[]) => {
         // Filtrar por FKs si están definidos
         let filteredData = data;
-
+        if (this.filterByMarcaId) {
+          filteredData = filteredData.filter((item: any) => item.marcaId === this.filterByMarcaId);
+        }
+        if (this.filterByCategoriaId) {
+          filteredData = filteredData.filter((item: any) => item.categoriaId === this.filterByCategoriaId);
+        }
         this.items.set(filteredData);
         this.isLoading.set(false);
       },
@@ -437,7 +465,7 @@ export class ProductoListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
   openForm(item?: Producto): void {
     // Al crear desde una lista filtrada por un padre, el FK del padre ya viene dado por contexto.
-    const contextoFk = null;
+    const contextoFk = this.filterByMarcaId ? { campo: 'marcaId', valor: this.filterByMarcaId } : this.filterByCategoriaId ? { campo: 'categoriaId', valor: this.filterByCategoriaId } : null;
     const dialogRef = this.dialog.open(ProductoFormComponent, {
       width: '600px',
       maxWidth: '95vw',

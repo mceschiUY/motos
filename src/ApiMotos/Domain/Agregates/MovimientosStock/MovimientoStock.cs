@@ -46,7 +46,10 @@ namespace ApiMotos.Domain.Agregates.MovimientosStock
             if (depositoId <= 0) return Result.Fail("Deposito es requerido");
             if (string.IsNullOrWhiteSpace(tipo) || Array.IndexOf(TiposValidos, tipo) < 0)
                 return Result.Fail("Tipo inválido (entrada, salida, ajuste o transferencia)");
-            if (cantidad <= 0) return Result.Fail("La cantidad debe ser mayor a cero");
+            // Etapa 0 (2026-09-07): el ajuste lleva SIGNO (faltante de inventario = ajuste negativo).
+            // entrada/salida/transferencia siguen siendo positivas: el signo lo da el Tipo.
+            if (cantidad == 0) return Result.Fail("La cantidad no puede ser cero");
+            if (tipo != "ajuste" && cantidad < 0) return Result.Fail("Solo el ajuste admite cantidad negativa");
             if (tipo == "transferencia")
             {
                 if (!depositoDestinoId.HasValue) return Result.Fail("La transferencia requiere un depósito destino");

@@ -43,7 +43,10 @@ export class ClienteFichaComponent implements OnInit, OnDestroy {
   readonly tabActiva = signal<string>('');
   id: string | number = '';
 
+  // Etapa A: la actividad comercial va primero — es lo que el vendedor mira al abrir el cliente.
+  // (La pestaña de Pedidos llega con la Etapa B.)
   readonly relaciones: RelacionFicha[] = [
+    { nombre: 'actividad', label: 'Actividades', icon: 'event_note', ruta: '/actividad', endpoint: '/Actividad/by-cliente/' },
     { nombre: 'envio', label: 'Envios', icon: 'list_alt', ruta: '/envio', endpoint: '/Envio/by-cliente/' }
   ];
 

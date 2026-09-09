@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { GeneratedFormBase } from '../../../../../core/components/generated-form.base';
 
@@ -34,7 +34,7 @@ import { CategoriaService } from '../../../services/categoria.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatDatepickerModule,
-    MatCheckboxModule
+    MatSlideToggleModule
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './producto-form.component.html',
@@ -71,6 +71,23 @@ export class ProductoFormComponent extends GeneratedFormBase<Producto> {
       fechaVencHomologacion: [this.item?.fechaVencHomologacion ?? null],
       activo: [this.item?.activo ?? true],
     });
+  }
+
+  /**
+   * Etapa 0 (2026-09-07): los atributos de casco (tipo, homologación, vencimiento, vigencia)
+   * solo se muestran si la categoría elegida es "Casco" o una hija directa (Integral, Modular…).
+   * Comparación sin tildes ni mayúsculas. Al ocultar no se limpian los valores ya cargados.
+   */
+  esCasco(): boolean {
+    const id = Number(this.form?.get('categoriaId')?.value);
+    if (!id) return false;
+    const cats = this.categorias();
+    const cat = cats.find(c => c.id === id);
+    if (!cat) return false;
+    const norm = (s: string | null | undefined) => (s ?? '').normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+    if (norm(cat.nombre) === 'casco') return true;
+    const padre = cat.categoriaPadreId ? cats.find(c => c.id === cat.categoriaPadreId) : undefined;
+    return norm(padre?.nombre) === 'casco';
   }
 
   protected override cargarOpciones(): void {

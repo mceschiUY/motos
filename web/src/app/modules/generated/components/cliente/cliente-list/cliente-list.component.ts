@@ -25,6 +25,8 @@ import { AsistenteFormBridgeService } from '../../../../../core/services/asisten
 import { Cliente } from '../../../models/cliente.model';
 import { CLIENTE_DESCRIPTOR } from '../../../models/cliente.descriptor';
 import { ClienteService } from '../../../services/cliente.service';
+import { Vendedor } from '../../../models/vendedor.model';
+import { VendedorService } from '../../../services/vendedor.service';
 import { ClienteFormComponent } from '../cliente-form/cliente-form.component';
 import { BreadcrumbComponent, BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
 import { EntityTableComponent } from '../../../../../core/components/entity-table/entity-table.component';
@@ -90,6 +92,7 @@ interface HasManyRelation {
 })
 export class ClienteListComponent implements OnInit, OnDestroy {
   private readonly service = inject(ClienteService);
+  private readonly vendedorService = inject(VendedorService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly route = inject(ActivatedRoute);
@@ -225,8 +228,16 @@ export class ClienteListComponent implements OnInit, OnDestroy {
   ];
 
   // Parámetros de navegación entre entidades
-  
+  filterByVendedorId: number | null = null;
   filterContext: string = '';
+
+  // "Mis clientes" (Etapa A): el vendedor del usuario logueado, si lo hay. La agenda
+  // ya linkea acá con ?vendedorId=N; el botón hace lo mismo sin salir de la lista.
+  readonly vendedorMio = signal<Vendedor | null>(null);
+  readonly soloMios = computed(() => {
+    const mio = this.vendedorMio();
+    return mio != null && this.filterByVendedorId === mio.id;
+  });
 
   // Paginator/Sort por setter: la tabla vive dentro de un @if (viewMode), así que
   // estos ViewChild aparecen y desaparecen — el setter re-cablea en cada render.
@@ -265,9 +276,29 @@ export class ClienteListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.isStandalone = this.route.snapshot.data['standalone'] === true;
 
+    // Vendedor del usuario logueado: habilita el botón "Mis clientes" (404 = no tiene).
+    this.vendedorService.mio().subscribe({
+      next: (v: Vendedor | null) => this.vendedorMio.set(v ?? null),
+      error: () => this.vendedorMio.set(null)
+    });
+
     // Leer queryParams para filtrado por entidad padre
     this.route.queryParams.subscribe((params: any) => {
-
+      this.filterByVendedorId = params['vendedorId'] ? +params['vendedorId'] : null;
+      if (this.filterByVendedorId) {
+        this.filterContext = `Vendedor #${this.filterByVendedorId}`;
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Vendedor', route: '/vendedor', icon: 'badge' },
+          { label: `Clientes de Vendedor #${this.filterByVendedorId}`, icon: 'person' }
+        ];
+      } else {
+        this.filterContext = '';
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Cliente', icon: 'list_alt' }
+        ];
+      }
       this.loadData();
     });
 
@@ -359,12 +390,14 @@ export class ClienteListComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.selection.clear();
 
-    this.service.getAll().subscribe({
-      next: (data: Cliente[]) => {
-        // Filtrar por FKs si están definidos
-        let filteredData = data;
+    // Con vendedor en el queryParam se pide la cartera al servidor (by-vendedor).
+    const origen = this.filterByVendedorId != null
+      ? this.service.getByVendedorId(this.filterByVendedorId)
+      : this.service.getAll();
 
-        this.items.set(filteredData);
+    origen.subscribe({
+      next: (data: Cliente[]) => {
+        this.items.set(data);
         this.isLoading.set(false);
       },
       error: (err: unknown) => {
@@ -372,6 +405,17 @@ export class ClienteListComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         this.showMessage('Error al cargar datos', 'error');
       }
+    });
+  }
+
+  /** Alterna la cartera del vendedor logueado. El filtro vive en la URL (?vendedorId=N),
+   *  así el botón y el link de la agenda terminan en el mismo estado compartible. */
+  toggleMisClientes(): void {
+    const mio = this.vendedorMio();
+    if (!mio) { return; }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: this.soloMios() ? {} : { vendedorId: mio.id }
     });
   }
 

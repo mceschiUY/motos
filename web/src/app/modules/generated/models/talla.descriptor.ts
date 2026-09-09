@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Talla (catálogo). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const TALLA_DESCRIPTOR: EntityDescriptor = {
   entidad: 'talla',
   label: 'Talla',
@@ -10,7 +10,9 @@ export const TALLA_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'orden', label: 'Orden', tipo: 'numero' },
     { nombre: 'activo', label: 'Activo', tipo: 'bool' },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
-  hijas: [],
+  hijas: [
+    { entidad: 'Variante', fk: 'tallaId', icon: 'qr_code_2' },
+  ],
 };

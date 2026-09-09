@@ -103,6 +103,50 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   readonly hasManyRelations: HasManyRelation[] = [];
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // CALENDARIO — agenda mensual por fecha
+  // ═══════════════════════════════════════════════════════════════════════════
+  readonly calMes = signal<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  readonly calDow = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  calTitulo(): string {
+    const t = this.calMes().toLocaleDateString('es-UY', { month: 'long', year: 'numeric' });
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  calMover(delta: number): void {
+    const m = this.calMes();
+    this.calMes.set(new Date(m.getFullYear(), m.getMonth() + delta, 1));
+  }
+
+  calSemanas(): Date[][] {
+    const primero = this.calMes();
+    const inicio = new Date(primero);
+    inicio.setDate(1 - ((primero.getDay() + 6) % 7)); // arranca en lunes
+    const semanas: Date[][] = [];
+    const d = new Date(inicio);
+    for (let s = 0; s < 6; s++) {
+      const fila: Date[] = [];
+      for (let i = 0; i < 7; i++) { fila.push(new Date(d)); d.setDate(d.getDate() + 1); }
+      semanas.push(fila);
+    }
+    return semanas;
+  }
+
+  esDelMes(d: Date): boolean { return d.getMonth() === this.calMes().getMonth(); }
+  esHoy(d: Date): boolean { return d.toDateString() === new Date().toDateString(); }
+
+  itemsDeDia(d: Date): MovimientoStock[] {
+    return this.filteredItems().filter(i => {
+      const f = (i as any).fecha;
+      if (!f) { return false; }
+      const fd = new Date(f);
+      return fd.getFullYear() === d.getFullYear() && fd.getMonth() === d.getMonth() && fd.getDate() === d.getDate();
+    });
+  }
+
+  claseDeEstado(_item: any): string { return 'estado-0'; }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // SIGNALS - Estado Reactivo
   // ═══════════════════════════════════════════════════════════════════════════
   readonly isLoading = signal<boolean>(false);
@@ -118,7 +162,7 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   readonly relationError = signal<string>('');
 
   // Vistas disponibles para esta entidad
-  readonly availableViews = ['table', 'cards', 'master-detail', 'with-relations'];
+  readonly availableViews = ['table', 'cards', 'master-detail', 'timeline', 'calendario'];
 
   // ── VISTAS ARTESANALES (modules/artesanal — zona NO generada) ──
   // artesanal registrada = default de la entidad; tabla es el paracaídas.
@@ -153,7 +197,10 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   // Columnas configurables
   readonly columnConfigs = signal<ColumnConfig[]>([
     { key: 'select', label: 'Seleccionar', visible: true, sortable: false },
-    { key: 'nombre', label: 'Nombre', visible: true, sortable: true },
+    { key: 'fecha', label: 'Fecha', visible: true, sortable: true },
+    { key: 'tipo', label: 'Tipo', visible: true, sortable: true },
+    { key: 'varianteDisplay', label: 'SKU', visible: true, sortable: true },
+    { key: 'cantidad', label: 'Cantidad', visible: true, sortable: true },
     { key: 'actions', label: 'Acciones', visible: true, sortable: false }
   ]);
 
@@ -179,7 +226,7 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
     const grupos = new Map<string, MovimientoStock[]>();
 
     items.forEach((item: MovimientoStock) => {
-      const fecha = (item as any).fechaCreacion ? new Date((item as any).fechaCreacion) : new Date();
+      const fecha = (item as any).fecha ? new Date((item as any).fecha) : new Date();
       const periodo = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
       if (!grupos.has(periodo)) {
         grupos.set(periodo, []);
@@ -197,8 +244,8 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
           periodo,
           label: `${monthNames[parseInt(month) - 1]} ${year}`,
           items: items.sort((a, b) => {
-            const dateA = (a as any).fechaCreacion ? new Date((a as any).fechaCreacion).getTime() : 0;
-            const dateB = (b as any).fechaCreacion ? new Date((b as any).fechaCreacion).getTime() : 0;
+            const dateA = (a as any).fecha ? new Date((a as any).fecha).getTime() : 0;
+            const dateB = (b as any).fecha ? new Date((b as any).fecha).getTime() : 0;
             return dateB - dateA;
           }),
           count: items.length
@@ -221,7 +268,8 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   ];
 
   // Parámetros de navegación entre entidades
-  
+  filterByDepositoId: number | null = null;
+  filterByVarianteId: number | null = null;
   filterContext: string = '';
 
   // Paginator/Sort por setter: la tabla vive dentro de un @if (viewMode), así que
@@ -263,7 +311,26 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
 
     // Leer queryParams para filtrado por entidad padre
     this.route.queryParams.subscribe((params: any) => {
-
+      if (params['depositoId']) {
+        this.filterByDepositoId = +params['depositoId'];
+        this.filterContext = `Deposito #${this.filterByDepositoId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Deposito', route: '/deposito', icon: 'warehouse' },
+          { label: `MovimientoStock de Deposito #${this.filterByDepositoId}`, icon: 'list_alt' }
+        ];
+      }
+      if (params['varianteId']) {
+        this.filterByVarianteId = +params['varianteId'];
+        this.filterContext = `Variante #${this.filterByVarianteId}`;
+        // Actualizar breadcrumb para mostrar contexto
+        this.breadcrumbItems = [
+          { label: 'Inicio', route: '/', icon: 'home' },
+          { label: 'Variante', route: '/variante', icon: 'qr_code_2' },
+          { label: `MovimientoStock de Variante #${this.filterByVarianteId}`, icon: 'list_alt' }
+        ];
+      }
       this.loadData();
     });
 
@@ -281,7 +348,7 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   private loadViewMode(): ViewMode {
     // clave versionada: un default nuevo del generador no queda tapado por uno guardado viejo
     const artesanales = vistasArtesanalesDe('movimientostock');
-    const validas: string[] = ['table', 'cards', 'master-detail', 'with-relations', ...artesanales.map(v => 'artesanal:' + v.key)];
+    const validas: string[] = ['table', 'cards', 'master-detail', 'timeline', 'calendario', ...artesanales.map(v => 'artesanal:' + v.key)];
     const saved = localStorage.getItem('movimientostock-view-mode-v2');
     if (saved && validas.includes(saved)) {
       return saved as ViewMode;
@@ -359,7 +426,12 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
       next: (data: MovimientoStock[]) => {
         // Filtrar por FKs si están definidos
         let filteredData = data;
-
+        if (this.filterByDepositoId) {
+          filteredData = filteredData.filter((item: any) => item.depositoId === this.filterByDepositoId);
+        }
+        if (this.filterByVarianteId) {
+          filteredData = filteredData.filter((item: any) => item.varianteId === this.filterByVarianteId);
+        }
         this.items.set(filteredData);
         this.isLoading.set(false);
       },
@@ -435,7 +507,7 @@ export class MovimientoStockListComponent implements OnInit, OnDestroy {
   // ═══════════════════════════════════════════════════════════════════════════
   openForm(item?: MovimientoStock): void {
     // Al crear desde una lista filtrada por un padre, el FK del padre ya viene dado por contexto.
-    const contextoFk = null;
+    const contextoFk = this.filterByDepositoId ? { campo: 'depositoId', valor: this.filterByDepositoId } : this.filterByVarianteId ? { campo: 'varianteId', valor: this.filterByVarianteId } : null;
     const dialogRef = this.dialog.open(MovimientoStockFormComponent, {
       width: '600px',
       maxWidth: '95vw',

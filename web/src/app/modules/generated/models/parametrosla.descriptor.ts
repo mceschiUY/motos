@@ -5,7 +5,7 @@ export const PARAMETROSLA_DESCRIPTOR: EntityDescriptor = {
   entidad: 'parametrosla',
   label: 'Parametro SLA',
   campos: [
-    { nombre: 'etapa', label: 'Etapa', tipo: 'enum', valores: ['facturacion', 'despacho', 'entrega'], primario: true },
+    { nombre: 'etapa', label: 'Etapa', tipo: 'enum', valores: ['facturacion', 'despacho', 'entrega'], etiquetas: { facturacion: 'Confirmación' }, primario: true },
     { nombre: 'rangoAlertaUmbralAdvertenciaDias', label: 'Rango Alerta Umbral Advertencia Dias', tipo: 'numero' },
     { nombre: 'rangoAlertaLimiteDias', label: 'Rango Alerta Limite Dias', tipo: 'numero' },
   ],

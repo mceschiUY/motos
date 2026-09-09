@@ -14,7 +14,8 @@ BEGIN
         [FechaEntrega] DATETIME2 NULL,
         [MotivoAnulacion] NVARCHAR(255) NULL,
         [ClienteId] INT NOT NULL,
-        [AgenciaId] INT NOT NULL
+        [AgenciaId] INT NOT NULL,
+        [PedidoId] INT NULL          -- Etapa B (plan §3.6): pedido que originó el envío
     );
     PRINT 'Tabla PC_ENVIOS creada exitosamente';
 END
@@ -65,5 +66,11 @@ BEGIN
     BEGIN
         ALTER TABLE [PC_ENVIOS] ADD [AgenciaId] INT NOT NULL CONSTRAINT [DF_PC_ENVIOS_AgenciaId] DEFAULT 0;
         PRINT 'Columna PC_ENVIOS.AgenciaId agregada';
+    END
+    -- Etapa B (plan §3.6): enlace al pedido. Nullable — los envíos sueltos siguen valiendo.
+    IF COL_LENGTH('PC_ENVIOS', 'PedidoId') IS NULL
+    BEGIN
+        ALTER TABLE [PC_ENVIOS] ADD [PedidoId] INT NULL;
+        PRINT 'Columna PC_ENVIOS.PedidoId agregada';
     END
 END

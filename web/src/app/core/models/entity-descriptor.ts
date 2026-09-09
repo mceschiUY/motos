@@ -25,6 +25,8 @@ export interface CampoDescriptor {
   display?: string;
   /** enum: valores posibles (para chips/filtros futuros). */
   valores?: string[];
+  /** enum: etiqueta visible por valor (ej. { facturado: 'Confirmado' }). El valor persistido no cambia. */
+  etiquetas?: Record<string, string>;
   /** Columna con jerarquía visual (col-primary). Default: el primer campo. */
   primario?: boolean;
   /** Aparece como columna de la tabla (el resto queda para ficha/form). */

@@ -16,6 +16,9 @@ namespace ApiMotos.Application.Agregates.Envios.Queries.Envios
         public string? ClienteDisplay { get; set; }
         public int AgenciaId { get; set; }
         public string? AgenciaDisplay { get; set; }
+        /// <summary>Etapa B (plan §3.6): pedido que originó el envío. Nulo en los sueltos.</summary>
+        public int? PedidoId { get; set; }
+        public string? PedidoDisplay { get; set; }
 
         // R-009 [calculo]: Días de demora de facturación = fechaFactura - fechaRecibido.
         // Para envíos sin facturar aún (fechaFactura no posterior a fechaRecibido) se mide

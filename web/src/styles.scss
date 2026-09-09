@@ -996,3 +996,140 @@ h1, h2, h3 {
 
   .header-stats .stat-item { padding: var(--ceskia-space-1) var(--ceskia-space-3); }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 16. PILLS DE ENUM EN LA TABLA GENÉRICA (paridad con trenes, 2026-09-07)
+// ceskia-entity-table (core) renderiza todo campo enum como
+// <span class="enum-pill" data-valor="...">. El mapeo valor→acento vive ACÁ
+// (styles.scss sobrevive la regen). Lenguaje de color:
+// azul = en curso · ámbar = atención · verde = ok/cerrado · rojo = anulado/salida.
+// Valor no mapeado = pill neutra (fondo hover, gris).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.enum-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--ceskia-radius-full);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  text-transform: capitalize;
+  white-space: nowrap;
+  background: var(--ceskia-hover);
+  color: var(--ceskia-text-secondary);
+}
+
+// Ciclo de vida de Envío (recibido → facturado → despachado → entregado | anulado)
+.enum-pill[data-valor='recibido']   { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='facturado']  { background: var(--ceskia-accent-warning-glow); color: var(--ceskia-accent-warning); }
+.enum-pill[data-valor='despachado'] { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='entregado']  { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+.enum-pill[data-valor='anulado']    { background: var(--ceskia-accent-danger-glow);  color: var(--ceskia-accent-danger); }
+
+// Tipo de movimiento de stock (Kardex)
+.enum-pill[data-valor='entrada']       { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+.enum-pill[data-valor='salida']        { background: var(--ceskia-accent-danger-glow);  color: var(--ceskia-accent-danger); }
+.enum-pill[data-valor='ajuste']        { background: var(--ceskia-accent-warning-glow); color: var(--ceskia-accent-warning); }
+.enum-pill[data-valor='transferencia'] { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+
+// Producto: tipo de casco (azul) y homologación (verde). 'na' y Género quedan neutras.
+.enum-pill[data-valor='integral'] { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='modular']  { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='jet']      { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='cross']    { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.enum-pill[data-valor='ece2206']  { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+.enum-pill[data-valor='dot']      { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+.enum-pill[data-valor='snell']    { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+
+// Botones de acción de las tablas con el trío de acentos:
+// ver=azul · editar=ámbar · eliminar=rojo · más=neutro.
+// El SCSS del generador (_entity-list.scss) pinta .edit con accent-info, que en
+// dark ES el mismo azul del primario → todo se veía monocromo. !important porque
+// ese SCSS viaja scoped por componente y gana especificidad.
+.smart-table .action-buttons .action-btn {
+  color: var(--ceskia-accent-primary) !important;
+  &:hover { background: var(--ceskia-accent-primary-glow) !important; }
+
+  &.edit {
+    color: var(--ceskia-accent-warning) !important;
+    &:hover { background: var(--ceskia-accent-warning-glow) !important; }
+  }
+  &.delete {
+    color: var(--ceskia-accent-danger) !important;
+    &:hover { background: var(--ceskia-accent-danger-glow) !important; }
+  }
+  &.more {
+    color: var(--ceskia-text-tertiary) !important;
+    &:hover { background: var(--ceskia-hover) !important; color: var(--ceskia-text-primary) !important; }
+  }
+}
+
+// Menú flotante con los mismos acentos, conservando la decisión 2026-08-29: el "+"
+// sigue siendo el ÚNICO botón relleno de azul. Los dos secundarios comparten clase →
+// se distinguen por posición dentro de .fab-expandable (estructura uniforme de los
+// shells: + / exportar / actualizar). El "Actualizar" suelto de los módulos de
+// seguridad no matchea y queda sobrio, a propósito.
+.floating-actions {
+  .fab-btn.fab-menu {
+    color: var(--ceskia-accent-primary) !important;
+    &:hover { background: var(--ceskia-accent-primary-glow) !important; }
+  }
+
+  .fab-btn.fab-exit {
+    background: var(--ceskia-accent-danger-glow) !important;
+    &:hover { background: var(--ceskia-accent-danger) !important; color: #ffffff !important; }
+  }
+
+  // Exportar CSV → verde (sacar datos = éxito)
+  .fab-expandable .fab-btn.fab-secondary:nth-child(2) {
+    color: var(--ceskia-accent-success) !important;
+    border-color: color-mix(in srgb, var(--ceskia-accent-success) 35%, transparent) !important;
+    &:hover { background: var(--ceskia-accent-success-glow) !important; }
+  }
+
+  // Actualizar → azul del sitio
+  .fab-expandable .fab-btn.fab-secondary:nth-child(3) {
+    color: var(--ceskia-accent-primary) !important;
+    border-color: color-mix(in srgb, var(--ceskia-accent-primary) 35%, transparent) !important;
+    &:hover { background: var(--ceskia-accent-primary-glow) !important; }
+  }
+}
+
+// Menú del usuario del cabezal: se renderiza en el overlay de Material (fuera del
+// componente layout), por eso estos estilos son globales y no del layout.scss.
+.hu-menu-head {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ceskia-border-subtle);
+  margin-bottom: 4px;
+
+  .hu-menu-nombre {
+    font-size: var(--ceskia-text-sm);
+    font-weight: var(--ceskia-font-semibold);
+    color: var(--ceskia-text-primary);
+  }
+  .hu-menu-rol {
+    font-size: var(--ceskia-text-xs);
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+.mat-mdc-menu-item.hu-salir {
+  color: var(--ceskia-accent-danger);
+  .mat-icon { color: var(--ceskia-accent-danger); }
+  &:hover { background: var(--ceskia-accent-danger-glow); }
+}
+
+// Forms generados (alta/edición): el ícono de prefijo "text_fields" de los inputs de
+// TEXTO se lee como una comilla suelta a la izquierda del dato. Se oculta por CSS
+// global — así no se editan los shells regenerables y el fix sobrevive a la
+// regeneración. Solo afecta a inputs de texto: fechas (calendar_today), números
+// (numbers) y selects conservan su ícono. Al ocultar el prefijo hay que devolverle al
+// campo el padding y la posición del label que el ícono aportaba (MDC los pone en
+// 0/36px con leading icon). Fix definitivo: quitar el prefijo en la plantilla del
+// generador (agenteszas).
+.entity-form .mat-mdc-form-field:has(input[type="text"]) {
+  .mat-mdc-form-field-icon-prefix { display: none; }
+  .mdc-text-field--with-leading-icon { padding-left: 16px; }
+  .mdc-text-field--with-leading-icon .mdc-floating-label { left: 4px; }
+}

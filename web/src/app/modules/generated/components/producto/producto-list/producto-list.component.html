@@ -180,7 +180,7 @@
                 <button mat-icon-button class="action-btn" [matMenuTriggerFor]="accionesFila" (click)="$event.stopPropagation()" matTooltip="Más acciones"><mat-icon>more_horiz</mat-icon></button>
                 <mat-menu #accionesFila="matMenu">
                   <button mat-menu-item (click)="navigateToChild(hasManyRelations[0], item)">
-                    <mat-icon>list_alt</mat-icon><span>Ver Variante</span>
+                    <mat-icon>qr_code_2</mat-icon><span>Ver Variantes</span>
                   </button>
                   <button mat-menu-item (click)="openDocuments(item)">
                     <mat-icon>folder</mat-icon><span>Documentos</span>
@@ -299,7 +299,7 @@
               <h3><mat-icon>account_tree</mat-icon> Relaciones</h3>
         <nav mat-tab-nav-bar class="relation-tabs" [tabPanel]="relationTabPanel">
           <button mat-tab-link [active]="activeRelationTab() === 'variante'" (click)="setActiveRelationTab('variante')">
-              <mat-icon>list_alt</mat-icon>
+              <mat-icon>qr_code_2</mat-icon>
               Variantes
             </button>
         </nav>

@@ -1,6 +1,6 @@
 import { EntityDescriptor } from '../../../core/models/entity-descriptor';
 
-/** Metadata de la entidad Depósito (stock). */
+/** GENERADO por Forja — metadata de la entidad. No editar: se regenera. */
 export const DEPOSITO_DESCRIPTOR: EntityDescriptor = {
   entidad: 'deposito',
   label: 'Depósito',
@@ -10,7 +10,9 @@ export const DEPOSITO_DESCRIPTOR: EntityDescriptor = {
     { nombre: 'direccion', label: 'Dirección', tipo: 'texto', enLista: false },
     { nombre: 'activo', label: 'Activo', tipo: 'bool' },
   ],
-  vistas: ['table', 'cards'],
+  vistas: ['table', 'cards', 'master-detail', 'with-relations'],
   vistaDefault: 'table',
-  hijas: [],
+  hijas: [
+    { entidad: 'MovimientoStock', fk: 'depositoId', icon: 'swap_vert' },
+  ],
 };

@@ -30,6 +30,14 @@
           <span class="dato-label">Nombre</span>
           <span class="dato-valor">{{ $any(item()).nombre }}</span>
         </div>
+        <div class="dato">
+          <span class="dato-label">Código Hex</span>
+          <span class="dato-valor">{{ $any(item()).codigoHex }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Activo</span>
+          <span class="dato-valor">{{ $any(item()).activo ? 'Sí' : 'No' }}</span>
+        </div>
       </div>
     </section>
 

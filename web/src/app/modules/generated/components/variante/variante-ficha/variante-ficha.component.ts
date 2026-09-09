@@ -42,7 +42,9 @@ export class VarianteFichaComponent implements OnInit, OnDestroy {
   readonly tabActiva = signal<string>('');
   id: string | number = '';
 
-  readonly relaciones: RelacionFicha[] = [];
+  readonly relaciones: RelacionFicha[] = [
+    { nombre: 'movimientostock', label: 'Movimientos de stock', icon: 'swap_vert', ruta: '/movimientostock', endpoint: '/MovimientoStock/by-variante/' }
+  ];
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(pm => {

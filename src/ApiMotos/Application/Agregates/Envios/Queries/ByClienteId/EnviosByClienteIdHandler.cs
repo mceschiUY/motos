@@ -10,9 +10,11 @@ namespace ApiMotos.Application.Agregates.Envios.Queries.ByClienteId
 SELECT e.*
     , cliente.Nombre AS ClienteDisplay
     , agencia.Nombre AS AgenciaDisplay
+    , pedido.Numero AS PedidoDisplay
 FROM PC_ENVIOS e
 LEFT JOIN PC_CLIENTES cliente ON e.ClienteId = cliente.Id
 LEFT JOIN PC_AGENCIAS agencia ON e.AgenciaId = agencia.Id
+LEFT JOIN PC_PEDIDOS pedido ON e.PedidoId = pedido.Id
 WHERE e.ClienteId = @ClienteId";
 
         public EnviosByClienteIdHandler(IQueryService consultas)

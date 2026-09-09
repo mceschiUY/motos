@@ -1,0 +1,152 @@
+﻿<div class="ficha-view">
+  @if (cargando()) {
+    <div class="ficha-cargando">Cargando…</div>
+  } @else if (!item()) {
+    <div class="ficha-cargando">No se encontró el registro <button mat-button (click)="volver()">← Volver</button></div>
+  } @else {
+
+    <!-- Membrete: solo existe en papel (PDF con marca) -->
+    <app-membrete-impresion [titulo]="titulo()" tipo="Vendedor"></app-membrete-impresion>
+
+    <!-- ═══ Encabezado: título, estado, acciones ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo">
+        <h1>{{ titulo() }}</h1>
+        <span class="ficha-estado" [class.estado-3]="$any(item()).activo" [class.estado-5]="!$any(item()).activo">{{ $any(item()).activo ? 'Activo' : 'Inactivo' }}</span>
+      </div>
+      <div class="ficha-acciones">
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir / guardar PDF"><mat-icon>picture_as_pdf</mat-icon></button>
+        <button mat-icon-button (click)="documentos()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
+        <button mat-icon-button (click)="editar()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button class="peligro" (click)="eliminar()" matTooltip="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ El mes del vendedor: meta, ventas y comisión (plan §4.4) ═══ -->
+    @if (avance(); as a) {
+      <section class="ficha-avance">
+        <h2>Este mes <span class="periodo">{{ a.periodo }}</span></h2>
+        @if (a.objetivoUsd > 0) {
+          <div class="meta-barra" [class]="claseMeta()">
+            <div class="meta-progreso" [style.width.%]="porcentajeMeta()"></div>
+            <span class="meta-texto">{{ usd(a.vendidoUsd) }} de {{ usd(a.objetivoUsd) }} · {{ porcentajeMeta() }}%</span>
+          </div>
+        } @else {
+          <p class="meta-sin">Sin meta cargada para el período. Agregala desde la pestaña Metas.</p>
+        }
+        <div class="kpis-grid">
+          <div class="kpi kpi-link" (click)="verPedidos()" matTooltip="Ver los pedidos del vendedor">
+            <span class="kpi-valor">{{ usd(a.vendidoUsd) }}</span>
+            <span class="kpi-label">Vendido (entregado)</span>
+          </div>
+          <div class="kpi kpi-destacado">
+            <span class="kpi-valor">{{ usd(a.comisionUsd) }}</span>
+            <span class="kpi-label">Comisión</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-valor">{{ a.visitas }}</span>
+            <span class="kpi-label">Visitas del mes</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-valor">{{ (a.tasaCierre * 100) | number:'1.0-0' }}%</span>
+            <span class="kpi-label">Tasa de cierre</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-valor">{{ a.clientesAsignados }}</span>
+            <span class="kpi-label">Clientes</span>
+          </div>
+          <div class="kpi" [class.kpi-alerta]="a.clientesSinVisitar30d > 0">
+            <span class="kpi-valor">{{ a.clientesSinVisitar30d }}</span>
+            <span class="kpi-label">Sin visitar +30d</span>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ═══ Datos ═══ -->
+    <section class="ficha-datos">
+      <h2>Datos</h2>
+      <div class="datos-grid">
+        <div class="dato">
+          <span class="dato-label">Nombre</span>
+          <span class="dato-valor">{{ $any(item()).nombre }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Zona</span>
+          <span class="dato-valor">{{ $any(item()).zona || '—' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Comisión %</span>
+          <span class="dato-valor">{{ $any(item()).comisionPorcentaje | number:'1.0-2' }} %</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Teléfono</span>
+          <span class="dato-valor">{{ $any(item()).telefono || '—' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Email</span>
+          <span class="dato-valor">{{ $any(item()).email || '—' }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato-label">Usuario del sitio</span>
+          <span class="dato-valor">{{ $any(item()).usuario || '—' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Fotos: los Documentos con imagen del registro; sin fotos, sin sección ═══ -->
+    <app-foto-galeria [relacionId]="id" relacionNombre="Vendedor"></app-foto-galeria>
+
+    <!-- ═══ Relacionados ═══ -->
+    <section class="ficha-relacionados">
+      <div class="rel-tabs">
+        @for (r of relaciones; track r.nombre) {
+          <button class="rel-tab" [class.activa]="tabActiva() === r.nombre" (click)="tabActiva.set(r.nombre)">
+            <mat-icon>{{ r.icon }}</mat-icon> {{ r.label }}
+            <span class="rel-count">{{ itemsDe(r.nombre).length }}</span>
+          </button>
+        }
+      </div>
+      @for (r of relaciones; track r.nombre) {
+        @if (tabActiva() === r.nombre) {
+          @if (itemsDe(r.nombre).length === 0) {
+            <div class="rel-vacio">Sin {{ r.label.toLowerCase() }} todavía</div>
+          } @else {
+            <table class="rel-tabla">
+              <thead><tr>
+                @for (col of columnasDe(r.nombre); track col) { <th>{{ col }}</th> }
+                <th></th>
+              </tr></thead>
+              <tbody>
+                @for (row of itemsDe(r.nombre); track row.id) {
+                  <tr (click)="irA(r, row)">
+                    @for (col of columnasDe(r.nombre); track col) { <td>{{ row[col] }}</td> }
+                    <td><mat-icon class="rel-ir">chevron_right</mat-icon></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      }
+    </section>
+
+    <!-- ═══ Historia (auditoría) ═══ -->
+    @if (historia().length > 0) {
+      <section class="ficha-historia">
+        <h2>Historia</h2>
+        <div class="historia-linea">
+          @for (e of historia(); track $index) {
+            <div class="evento" [class.fallo]="!e.ok">
+              <span class="evento-dot"></span>
+              <span class="evento-que">{{ e.que }}</span>
+              <span class="evento-quien">{{ e.quien }}</span>
+              <span class="evento-fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>
