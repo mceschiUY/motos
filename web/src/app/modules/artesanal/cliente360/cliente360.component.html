@@ -114,7 +114,7 @@
 
     <!-- ═══ Tira de KPI ═══ -->
     <div class="header-stats c360-kpis">
-      <div class="stat-item" [class.stat-alerta]="cliente()!.diasSinVisita == null || cliente()!.diasSinVisita! > 30">
+      <div class="stat-item" [class.stat-alerta]="cliente()!.diasSinVisita == null || cliente()!.diasSinVisita! > cliente()!.diasSinVisitaUmbral">
         <div class="stat-icon"><mat-icon>event_busy</mat-icon></div>
         <div class="stat-content">
           <span class="stat-value">{{ cliente()!.diasSinVisita == null ? '—' : cliente()!.diasSinVisita }}</span>
@@ -124,14 +124,14 @@
       <div class="stat-item">
         <div class="stat-icon"><mat-icon>receipt_long</mat-icon></div>
         <div class="stat-content">
-          <span class="stat-value">{{ cliente()!.pedidosAnio }} <small>/ US$ {{ cliente()!.totalAnioUsd | number:'1.2-2' }}</small></span>
+          <span class="stat-value">{{ cliente()!.pedidosAnio }} <small>/ {{ cliente()!.totalAnioUsd | usd }}</small></span>
           <span class="stat-label">Pedidos del año</span>
         </div>
       </div>
       <div class="stat-item">
         <div class="stat-icon"><mat-icon>payments</mat-icon></div>
         <div class="stat-content">
-          <span class="stat-value">US$ {{ cliente()!.ticketPromedioUsd | number:'1.2-2' }}</span>
+          <span class="stat-value">{{ cliente()!.ticketPromedioUsd | usd }}</span>
           <span class="stat-label">Ticket promedio</span>
         </div>
       </div>
@@ -208,9 +208,13 @@
                 <span>{{ p.fecha | date:'dd/MM/yyyy' }}</span>
               </div>
               <div class="c360-ultimo-der">
-                <span class="c360-monto">US$ {{ p.totalUsd | number:'1.2-2' }}</span>
-                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
+                <span class="c360-monto">{{ p.totalUsd | usd }}</span>
+                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span>
               </div>
+            </a>
+            <!-- Repetir (revisión de escenas 2026-09-12): abre el armado con esas líneas cargadas -->
+            <a mat-stroked-button class="c360-repetir" [routerLink]="['/pedidos/nuevo']" [queryParams]="{ clienteId: cliente()!.id, pedidoId: p.id }">
+              <mat-icon>replay</mat-icon> Repetir este pedido
             </a>
           } @else {
             <p class="c360-muted">Este cliente todavía no hizo pedidos.</p>
@@ -226,7 +230,7 @@
               @for (t of cliente()!.topProductos; track t.productoId) {
                 <li>
                   <a [routerLink]="['/catalogo', t.productoId]">{{ t.productoNombre }}</a>
-                  <span class="c360-top-num">{{ t.unidades | number:'1.0-0' }} u · US$ {{ t.totalUsd | number:'1.2-2' }}</span>
+                  <span class="c360-top-num">{{ t.unidades | number:'1.0-0' }} u · {{ t.totalUsd | usd }}</span>
                 </li>
               }
             </ol>

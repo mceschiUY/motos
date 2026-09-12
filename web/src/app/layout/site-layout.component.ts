@@ -7,6 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatRippleModule } from '@angular/material/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { filter } from 'rxjs/operators';
 import { GENERATED_MENU_ITEMS, GENERATED_MENU_GROUPS, GeneratedMenuItem, GeneratedMenuGroup } from '../modules/generated/generated-menu.registry';
 import { AuthService } from '../core/services/auth.service';
@@ -41,6 +42,7 @@ const ESCENAS_SIN_MENU: GeneratedMenuItem[] = [
     RouterModule,
     RouterOutlet,
     MatIconModule,
+    MatDialogModule,
     MatButtonModule,
     MatTooltipModule,
     MatRippleModule,
@@ -96,8 +98,18 @@ export class SiteLayoutComponent {
   });
   readonly muestraSistema = computed(() => this.rolVista.info().sistema);
 
+  /** Diálogo con el QR para abrir el sitio desde el teléfono (solo desarrollo/demo). */
+  readonly esProduccion = environment.production;
+  private readonly dialog = inject(MatDialog);
+  abrirEnCelular(): void {
+    import('../modules/artesanal/celular/abrir-en-celular.component')
+      .then(m => this.dialog.open(m.AbrirEnCelularComponent, { autoFocus: false }));
+  }
+
   cambiarRol(rol: RolVista): void {
     this.rolVista.cambiar(rol);
+    // "Ver como vendedor" abre la app del celular (plan Etapa F4); los otros roles siguen acá.
+    if (rol === 'vendedor') { this.router.navigateByUrl('/m'); return; }
     this.navigateTo(this.rolVista.info().inicio);
   }
 

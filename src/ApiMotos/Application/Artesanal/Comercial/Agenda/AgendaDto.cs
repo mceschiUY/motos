@@ -24,5 +24,11 @@ namespace ApiMotos.Application.Artesanal.Comercial.Agenda
         /// <summary>pedido | sin_pedido | reprogramar | sin_contacto</summary>
         public string Resultado { get; set; } = "";
         public string? Notas { get; set; }
+        /// <summary>Contexto de la parada (revisión de escenas 2026-09-12): a qué va el vendedor.</summary>
+        public string? Telefono { get; set; }
+        public int? DiasSinVisita { get; set; }
+        public DateTime? UltimoPedidoFecha { get; set; }
+        public decimal? UltimoPedidoTotalUsd { get; set; }
+        public int PedidosAbiertos { get; set; }
     }
 }

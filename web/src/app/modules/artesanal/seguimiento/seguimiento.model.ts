@@ -24,6 +24,7 @@ export interface SeguimientoLinea {
   varianteId: number;
   sku: string | null;
   productoNombre: string | null;
+  imagenPrincipalId: number | null;
   talla: string | null;
   color: string | null;
   cantidad: number;
@@ -72,4 +73,23 @@ export interface SeguimientoEnvio {
   slaGlobal: EstadoSla | null;
   pedido: SeguimientoPedido | null;
   observaciones: SeguimientoObservacion[];
+}
+
+/**
+ * Fecha estimada de entrega (revisión de escenas 2026-09-12): desde el último hito cumplido,
+ * suma los días LÍMITE de la etapa en curso y de las que faltan. null si el ciclo cerró o si
+ * no hay límites configurados.
+ */
+export function estimarEntrega(etapas: SeguimientoEtapa[], estado: string): Date | null {
+  if (estado === 'entregado' || estado === 'anulado') return null;
+  const i = etapas.findIndex(e => e.actual && !e.cumplida);
+  if (i < 0) return null;
+  const previa = [...etapas.slice(0, i)].reverse().find(e => e.cumplida && e.fecha);
+  if (!previa?.fecha) return null;
+  const restantes = etapas.slice(i).filter(e => !e.cumplida);
+  if (restantes.some(e => e.limiteDias == null)) return null;
+  const dias = restantes.reduce((s, e) => s + (e.limiteDias ?? 0), 0);
+  const d = new Date(previa.fecha);
+  d.setDate(d.getDate() + dias);
+  return d;
 }

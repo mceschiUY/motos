@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { usd } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -88,7 +89,7 @@ export class ComisionesComponent implements OnInit {
   }
 
   usd(n: number): string {
-    return 'US$ ' + new Intl.NumberFormat('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0);
+    return usd(n);
   }
 
   verVendedor(fila: ComisionVendedor): void {

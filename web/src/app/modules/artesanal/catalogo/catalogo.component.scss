@@ -158,3 +158,64 @@
 
   &.cat-agotado { color: var(--ceskia-accent-danger); }
 }
+
+// ─── Celular (plan Etapa F3, 2026-09-12): el catálogo se muestra en la tienda desde el
+// teléfono. Cabecera apilada, KPI en tres columnas compactas, buscador y filtros a lo ancho,
+// grilla de dos cards por fila (una sola en pantallas muy angostas).
+@media (max-width: 640px) {
+  .catalogo-page {
+    .page-header {
+      margin-bottom: var(--ceskia-space-3);
+      .header-content { flex-direction: column; align-items: stretch; gap: var(--ceskia-space-3); }
+      .header-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--ceskia-space-2);
+        .stat-item { padding: var(--ceskia-space-2) var(--ceskia-space-3); gap: var(--ceskia-space-2); min-width: 0; }
+        .stat-value { font-size: var(--ceskia-text-lg); }
+        .stat-label { font-size: var(--ceskia-text-xs); white-space: nowrap; }
+      }
+    }
+
+    .smart-toolbar {
+      flex-wrap: wrap;
+      gap: var(--ceskia-space-2);
+      padding: var(--ceskia-space-3);
+      .search-container { flex: 1 1 100%; }
+      .filtros { flex: 1 1 auto; gap: var(--ceskia-space-2); }
+      .filtros .filtro-field { min-width: 0; flex: 1 1 calc(50% - var(--ceskia-space-2)); }
+      .toolbar-actions { margin-left: auto; }
+    }
+
+    .catalogo-grilla {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--ceskia-space-3);
+      padding: var(--ceskia-space-3);
+    }
+    .cat-cuerpo { padding: var(--ceskia-space-2) var(--ceskia-space-3) var(--ceskia-space-3); }
+    .cat-nombre { font-size: var(--ceskia-text-xs); min-height: 2.7em; }
+    .cat-pie { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .cat-precio { font-size: var(--ceskia-text-base); }
+  }
+}
+
+@media (max-width: 360px) {
+  .catalogo-page .catalogo-grilla { grid-template-columns: 1fr; }
+}
+
+// ─── Semáforo de stock en la card y "Vender" (revisión de escenas 2026-09-12) ─────────
+.cat-stock { display: inline-flex; align-items: center; gap: 6px; }
+.cat-punto { width: 9px; height: 9px; border-radius: 50%; background: var(--ceskia-accent-success); flex-shrink: 0; }
+.cat-stock[data-semaforo='bajo'] { color: var(--ceskia-accent-warning); .cat-punto { background: var(--ceskia-accent-warning); } }
+.cat-stock[data-semaforo='sin_stock'] { color: var(--ceskia-accent-danger); .cat-punto { background: var(--ceskia-accent-danger); } }
+.cat-acciones { display: flex; justify-content: flex-end; margin-top: var(--ceskia-space-2); }
+.cat-vender {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; cursor: pointer;
+  border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-full);
+  background: var(--ceskia-surface); color: var(--ceskia-accent-primary); font-size: var(--ceskia-text-xs); font-weight: var(--ceskia-font-semibold);
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  &:hover { background: var(--ceskia-accent-primary-glow); border-color: var(--ceskia-accent-primary); }
+}
+.header-stats .stat-boton { cursor: pointer; font: inherit; text-align: left; color: inherit;
+  &.stat-activo { border-color: var(--ceskia-accent-warning); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ceskia-accent-warning) 25%, transparent); } }
+.header-stats .stat-item.stat-alerta { .stat-icon { color: var(--ceskia-accent-warning); background: color-mix(in srgb, var(--ceskia-accent-warning) 14%, transparent); } .stat-value { color: var(--ceskia-accent-warning); } }

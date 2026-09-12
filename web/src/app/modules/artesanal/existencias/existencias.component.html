@@ -1,4 +1,4 @@
-<div class="kosmos-page" [class.density-compact]="densityMode() === 'compact'">
+<div class="kosmos-page existencias-page">
 
   <!-- PAGE HEADER -->
   <header class="page-header">
@@ -7,31 +7,34 @@
         <div class="header-icon"><mat-icon>inventory</mat-icon></div>
         <div class="header-text">
           <h1 class="page-title">Existencias</h1>
-          <p class="page-subtitle">{{ totalCount() }} posiciones SKU × depósito</p>
+          <p class="page-subtitle">
+            {{ totalSkus() }} SKU · {{ depositoNombre() || 'todos los depósitos' }} · umbral de stock bajo: {{ umbral() }}
+          </p>
         </div>
       </div>
       <div class="header-stats">
         <div class="stat-item">
           <div class="stat-icon"><mat-icon>inventory_2</mat-icon></div>
           <div class="stat-content">
-            <span class="stat-value">{{ formato(totalUnidades()) }}</span>
+            <span class="stat-value tnum">{{ totalUnidades() | number:'1.0-0' }}</span>
             <span class="stat-label">Unidades</span>
           </div>
         </div>
         <div class="stat-item">
-          <div class="stat-icon"><mat-icon>qr_code_2</mat-icon></div>
+          <div class="stat-icon"><mat-icon>lock_clock</mat-icon></div>
           <div class="stat-content">
-            <span class="stat-value">{{ skusConStock() }}</span>
-            <span class="stat-label">SKU con stock</span>
+            <span class="stat-value tnum">{{ comprometidoTotal() | number:'1.0-0' }}</span>
+            <span class="stat-label">Comprometidas</span>
           </div>
         </div>
-        <div class="stat-item" [class.stat-alerta]="negativos() > 0">
-          <div class="stat-icon"><mat-icon>warning</mat-icon></div>
+        <button type="button" class="stat-item stat-boton" [class.stat-alerta]="enAlerta() > 0" [class.stat-activo]="soloAlertas()"
+                (click)="soloAlertas.set(!soloAlertas())" matTooltip="Mostrar solo los SKU con alerta">
+          <div class="stat-icon"><mat-icon>{{ enAlerta() > 0 ? 'warning' : 'verified' }}</mat-icon></div>
           <div class="stat-content">
-            <span class="stat-value">{{ negativos() }}</span>
-            <span class="stat-label">En negativo</span>
+            <span class="stat-value tnum">{{ enAlerta() }}</span>
+            <span class="stat-label">Con alerta{{ negativos() > 0 ? ' · ' + negativos() + ' en negativo' : '' }}</span>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   </header>
@@ -39,32 +42,20 @@
   <!-- CONTENT CARD -->
   <div class="content-card">
 
-    <!-- SMART TOOLBAR: búsqueda en memoria + filtros server-side -->
     <div class="smart-toolbar">
       <div class="search-container">
         <mat-icon class="search-icon">search</mat-icon>
-        <input type="text" class="search-input" placeholder="Buscar SKU, producto o depósito..."
-               [value]="searchTerm()" (input)="onSearchChange($event)">
-        @if (searchTerm()) {
-          <button class="search-clear" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+        <input type="text" class="search-input" placeholder="Buscar SKU, producto, marca, talle o color…"
+               [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)">
+        @if (busqueda()) {
+          <button class="search-clear" (click)="busqueda.set('')"><mat-icon>close</mat-icon></button>
         }
       </div>
 
       <div class="filtros">
         <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
-          <mat-label>SKU / Variante</mat-label>
-          <mat-select [ngModel]="varianteId()" (ngModelChange)="varianteId.set($event); onFiltroChange()">
-            <mat-option [value]="null">Todos</mat-option>
-            @for (v of variantes(); track v.id) {
-              <mat-option [value]="v.id">{{ etiquetaVariante(v) }}</mat-option>
-            }
-          </mat-select>
-          <mat-icon matPrefix>qr_code_2</mat-icon>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
           <mat-label>Depósito</mat-label>
-          <mat-select [ngModel]="depositoId()" (ngModelChange)="depositoId.set($event); onFiltroChange()">
+          <mat-select [ngModel]="depositoId()" (ngModelChange)="onDepositoChange($event)">
             <mat-option [value]="null">Todos</mat-option>
             @for (d of depositos(); track d.id) {
               <mat-option [value]="d.id">{{ d.nombre }}</mat-option>
@@ -73,97 +64,129 @@
           <mat-icon matPrefix>warehouse</mat-icon>
         </mat-form-field>
 
-        @if (hayFiltros()) {
-          <button mat-icon-button class="toolbar-btn" (click)="limpiarFiltros()" matTooltip="Quitar filtros">
+        <button type="button" class="chip-filtro" [class.activo]="soloAlertas()" (click)="soloAlertas.set(!soloAlertas())">
+          <mat-icon>warning</mat-icon> Solo alertas
+        </button>
+
+        @if (busqueda() || soloAlertas()) {
+          <button mat-icon-button class="toolbar-btn" (click)="limpiar()" matTooltip="Quitar filtros">
             <mat-icon>filter_alt_off</mat-icon>
           </button>
         }
       </div>
 
       <div class="toolbar-actions">
-        <button mat-icon-button class="toolbar-btn" (click)="toggleDensity()"
-                [matTooltip]="densityMode() === 'comfortable' ? 'Vista compacta' : 'Vista confortable'">
-          <mat-icon>{{ densityMode() === 'comfortable' ? 'density_medium' : 'density_small' }}</mat-icon>
-        </button>
+        <button mat-icon-button class="toolbar-btn" (click)="expandirTodo()" matTooltip="Desplegar todo"><mat-icon>unfold_more</mat-icon></button>
+        <button mat-icon-button class="toolbar-btn" (click)="contraerTodo()" matTooltip="Plegar productos"><mat-icon>unfold_less</mat-icon></button>
+        <button mat-icon-button class="toolbar-btn" (click)="cargar()" matTooltip="Actualizar"><mat-icon>refresh</mat-icon></button>
       </div>
     </div>
 
-    <!-- TABLA (solo lectura) -->
-    <div class="table-wrapper">
-      <table mat-table [dataSource]="pageItems()" matSort (matSortChange)="ordenar($event)"
-             class="smart-table" [trackBy]="trackByClave">
+    @if (cargando()) {
+      <div class="ex-cargando"><mat-spinner diameter="36"></mat-spinner><span>Calculando existencias…</span></div>
+    } @else if (grupos().length === 0) {
+      <div class="empty-state">
+        <mat-icon>{{ soloAlertas() ? 'verified' : 'inventory' }}</mat-icon>
+        <h3>{{ soloAlertas() ? 'Sin alertas de stock' : 'Sin existencias' }}</h3>
+        <p>
+          @if (soloAlertas()) { Ningún SKU está en negativo, sin stock ni por debajo del umbral. }
+          @else if (busqueda()) { Nada coincide con «{{ busqueda() }}». }
+          @else { Todavía no hay variantes activas con productos activos. }
+        </p>
+      </div>
+    } @else {
+      <!-- Leyenda de columnas (solo escritorio) -->
+      <div class="ex-cab">
+        <span>Categoría · producto · SKU</span>
+        <span class="col-num">Saldo</span>
+        <span class="col-num ex-solo-ancho">Comprometido</span>
+        <span class="ex-solo-ancho">Cobertura</span>
+        <span>Estado</span>
+        <span></span>
+      </div>
 
-        <ng-container matColumnDef="sku">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
-          <td mat-cell *matCellDef="let item" class="col-primary">{{ item.sku ?? '—' }}</td>
-        </ng-container>
+      @for (g of grupos(); track g.nombre) {
+        <!-- CATEGORÍA -->
+        <button type="button" class="ex-fila ex-categoria" [class.abierta]="estaAbierto(g.nombre)" (click)="alternar(g.nombre)">
+          <span class="ex-nombre">
+            <mat-icon class="ex-chevron">{{ estaAbierto(g.nombre) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            <strong>{{ g.nombre }}</strong>
+            <small>{{ g.productos.length }} {{ g.productos.length === 1 ? 'producto' : 'productos' }} · {{ g.skus }} SKU</small>
+          </span>
+          <span class="col-num tnum ex-unidades">{{ g.unidades | number:'1.0-0' }} <small>u</small></span>
+          <span class="col-num ex-solo-ancho"></span>
+          <span class="ex-solo-ancho"></span>
+          <span>
+            @if (g.alertas > 0) { <span class="ex-badge ex-badge-alerta"><mat-icon>warning</mat-icon>{{ g.alertas }}</span> }
+            @else { <span class="ex-badge ex-badge-ok"><mat-icon>check</mat-icon></span> }
+          </span>
+          <span></span>
+        </button>
 
-        <ng-container matColumnDef="productoDisplay">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Producto</th>
-          <td mat-cell *matCellDef="let item">{{ item.productoDisplay ?? '—' }}</td>
-        </ng-container>
+        @if (estaAbierto(g.nombre)) {
+          @for (p of g.productos; track p.productoId) {
+            <!-- PRODUCTO -->
+            <button type="button" class="ex-fila ex-producto" [class.abierta]="estaAbierto('p:' + p.productoId)" [attr.data-semaforo]="p.peor" (click)="alternar('p:' + p.productoId)">
+              <span class="ex-nombre">
+                <mat-icon class="ex-chevron">{{ estaAbierto('p:' + p.productoId) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                <span class="ex-producto-texto">
+                  <span>{{ p.nombre }}</span>
+                  <small>{{ p.marca || '' }}@if (p.categoria && p.categoria !== g.nombre) { · {{ p.categoria }}} · {{ p.skus.length }} SKU</small>
+                </span>
+              </span>
+              <span class="col-num tnum ex-unidades">{{ p.unidades | number:'1.0-0' }} <small>u</small></span>
+              <span class="col-num tnum ex-solo-ancho ex-secundario">{{ p.comprometido > 0 ? (p.comprometido | number:'1.0-0') : '' }}</span>
+              <span class="ex-solo-ancho"></span>
+              <span>
+                @if (p.alertas > 0) { <span class="ex-badge ex-badge-alerta"><mat-icon>warning</mat-icon>{{ p.alertas }}</span> }
+              </span>
+              <span class="ex-acciones">
+                <button mat-icon-button (click)="$event.stopPropagation(); verProducto(p)" matTooltip="Ficha comercial"><mat-icon>storefront</mat-icon></button>
+              </span>
+            </button>
 
-        <ng-container matColumnDef="depositoDisplay">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Depósito</th>
-          <td mat-cell *matCellDef="let item">{{ item.depositoDisplay ?? '—' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="disponible">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="col-num">Disponible</th>
-          <td mat-cell *matCellDef="let item" class="col-num tnum" [class.negativo]="item.disponible < 0">
-            {{ formato(item.disponible) }}
-            @if (item.disponible < 0) {
-              <mat-icon class="negativo-icon" matTooltip="Saldo negativo: revisar Kardex">warning</mat-icon>
+            @if (estaAbierto('p:' + p.productoId)) {
+              @for (f of p.skus; track f.varianteId) {
+                <!-- SKU -->
+                <div class="ex-fila ex-sku" [attr.data-semaforo]="f.semaforo" role="button" tabindex="0" (click)="verSku(f)" (keydown.enter)="verSku(f)">
+                  <span class="ex-nombre">
+                    <span class="ex-color" [style.background]="f.colorHex || 'transparent'" [class.sin-color]="!f.colorHex"></span>
+                    <span class="ex-sku-texto">
+                      <span><strong>{{ f.talla || 'Única' }}</strong>@if (f.color) { · {{ f.color }}}</span>
+                      <small class="mono">{{ f.sku }}</small>
+                    </span>
+                  </span>
+                  <span class="col-num tnum ex-saldo">
+                    {{ f.saldo | number:'1.0-0' }}
+                    @if (!depositoId() && f.porDeposito.length > 1) {
+                      <small class="ex-desglose">
+                        @for (d of f.porDeposito; track d.depositoId) { <span>{{ d.nombre }} {{ d.saldo | number:'1.0-0' }}</span> }
+                      </small>
+                    }
+                  </span>
+                  <span class="col-num tnum ex-solo-ancho ex-secundario">{{ f.comprometido > 0 ? (f.comprometido | number:'1.0-0') : '' }}</span>
+                  <span class="ex-solo-ancho ex-secundario tnum">{{ cobertura(f) }}</span>
+                  <span><span class="enum-pill" [attr.data-valor]="f.semaforo">{{ etiquetaSemaforo(f.semaforo) }}</span></span>
+                  <span class="ex-acciones">
+                    <button mat-icon-button (click)="agregarAlPedido(f, $event)" matTooltip="Agregar al pedido"><mat-icon>add_shopping_cart</mat-icon></button>
+                  </span>
+                </div>
+              }
             }
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-        <tr mat-row *matRowDef="let row; columns: columnas;" class="fila-link"
-            (click)="verVariante(row)" matTooltip="Ver ficha del SKU"></tr>
-
-        <tr class="mat-row" *matNoDataRow>
-          @if (!isLoading()) {
-            <td class="mat-cell empty-state-cell" [attr.colspan]="columnas.length">
-              <div class="empty-state">
-                @if (searchTerm()) {
-                  <mat-icon>search_off</mat-icon>
-                  <h3>Sin resultados para «{{ searchTerm() }}»</h3>
-                  <button mat-stroked-button class="empty-btn" (click)="searchTerm.set('')">
-                    <mat-icon>close</mat-icon>Limpiar búsqueda</button>
-                } @else {
-                  <mat-icon>inventory_2</mat-icon>
-                  <h3>Sin existencias</h3>
-                  <p>Los saldos se calculan desde los movimientos de stock. Registrá una entrada para ver stock acá.</p>
-                }
-              </div>
-            </td>
-          } @else {
-            <td class="mat-cell" [attr.colspan]="columnas.length">
-              <div class="relation-loading">
-                <mat-spinner diameter="32"></mat-spinner>
-                <span>Calculando existencias...</span>
-              </div>
-            </td>
           }
-        </tr>
-      </table>
-    </div>
-    <mat-paginator [length]="ordenados().length" [pageSizeOptions]="[25, 50, 100]" [pageSize]="tamPagina()"
-                   showFirstLastButtons aria-label="Paginación" (page)="paginar($event)"></mat-paginator>
-
+        }
+      }
+    }
   </div>
 
-  <!-- FLOATING ACTION BUTTONS (sin crear: el stock no se edita, se mueve) -->
-  <div class="floating-actions" [class.expanded]="fabMenuExpanded">
+  <!-- FAB -->
+  <div class="floating-actions" [class.expanded]="fabMenuExpanded()">
     <div class="fab-expandable">
-      <button class="fab-btn fab-primary" (click)="verKardex()" [disabled]="varianteId() == null"
-              matTooltip="Ver Kardex del SKU filtrado" matTooltipPosition="left"><mat-icon>swap_vert</mat-icon></button>
-      <button class="fab-btn fab-secondary" (click)="exportAll()" matTooltip="Exportar CSV" matTooltipPosition="left"><mat-icon>file_download</mat-icon></button>
-      <button class="fab-btn fab-secondary" (click)="loadData()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
+      <button class="fab-btn fab-primary" (click)="soloAlertas.set(!soloAlertas())" [matTooltip]="soloAlertas() ? 'Ver todo' : 'Solo alertas'" matTooltipPosition="left"><mat-icon>{{ soloAlertas() ? 'visibility' : 'warning' }}</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="exportarCsv()" matTooltip="Exportar CSV" matTooltipPosition="left"><mat-icon>file_download</mat-icon></button>
+      <button class="fab-btn fab-secondary" (click)="cargar()" matTooltip="Actualizar" matTooltipPosition="left"><mat-icon>refresh</mat-icon></button>
     </div>
     <button class="fab-btn fab-exit" (click)="goBack()" matTooltip="Salir" matTooltipPosition="left"><mat-icon>logout</mat-icon></button>
-    <button class="fab-btn fab-menu" (click)="toggleFabMenu()" matTooltip="Opciones" matTooltipPosition="left"><mat-icon>{{ fabMenuExpanded ? 'close' : 'more_vert' }}</mat-icon></button>
+    <button class="fab-btn fab-menu" (click)="toggleFabMenu()" matTooltip="Opciones" matTooltipPosition="left"><mat-icon>{{ fabMenuExpanded() ? 'close' : 'more_vert' }}</mat-icon></button>
   </div>
-
 </div>

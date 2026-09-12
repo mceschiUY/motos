@@ -1,4 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { etiqueta } from '../comun/etiquetas';
+import { EtiquetaPipe } from '../comun/etiquetas';
+import { UsdPipe } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -35,7 +38,7 @@ interface BarraSemana extends PanelVendedorSemana { label: string; altura: numbe
 @Component({
   selector: 'app-vendedor-panel',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, EtiquetaPipe, 
     CommonModule, FormsModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatDialogModule,
@@ -216,7 +219,7 @@ export class VendedorPanelComponent implements OnInit {
     return ({ verde: 'Al día', amarillo: 'Enfriándose', rojo: 'Sin visitar' } as Record<string, string>)[s] ?? s;
   }
   etiquetaResultado(r: string): string {
-    return ({ pedido: 'Pedido', sin_pedido: 'Sin pedido', reprogramar: 'Reprogramar', sin_contacto: 'Sin contacto' } as Record<string, string>)[r] ?? r;
+    return etiqueta(r);
   }
   iconoTipo(t: string): string {
     return ({ visita: 'storefront', llamada: 'call', whatsapp: 'chat', email: 'mail' } as Record<string, string>)[t] ?? 'event_note';

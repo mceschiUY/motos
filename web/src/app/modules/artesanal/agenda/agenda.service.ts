@@ -22,7 +22,8 @@ export class AgendaService {
     return this.http.get<AvanceVendedor>(`${this.base}/vendedor/${vendedorId}/avance`, { params });
   }
 
-  clientesSinVisitar(dias = 30): Observable<ClienteSinVisitar[]> {
+  // dias 0 = el parámetro crm.dias_sin_visita de Configuración del sitio.
+  clientesSinVisitar(dias = 0): Observable<ClienteSinVisitar[]> {
     return this.http.get<ClienteSinVisitar[]>(`${this.base}/alertas/clientes-sin-visitar`, { params: new HttpParams().set('dias', dias) });
   }
 }

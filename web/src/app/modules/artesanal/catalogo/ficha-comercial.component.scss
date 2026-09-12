@@ -288,3 +288,7 @@
   .fc-galeria, .fc-celda-acciones, .fc-deposito { display: none !important; }
   .fc-cabecera, .fc-seccion { border-color: #d0d0d0; }
 }
+
+// Revisión de escenas 2026-09-12: comprometido y cobertura en la celda, chip de alerta
+.fc-celda-extra { display: block; font-size: 10px; color: var(--ceskia-text-tertiary); line-height: 1.2; }
+.fc-chip-alerta { color: var(--ceskia-accent-warning) !important; border-color: var(--ceskia-accent-warning) !important; }

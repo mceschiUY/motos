@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ApiMotos.Application.Artesanal.Catalogo.FichaSku;
+using ApiMotos.Application.Artesanal.Catalogo.Existencias;
 
 namespace ApiMotos.Controllers.Artesanal
 {
@@ -37,6 +38,18 @@ namespace ApiMotos.Controllers.Artesanal
             }
             if (result == null)
                 return NotFound($"Variante con ID {id} no encontrada");
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Existencias agrupables (escena "¿qué se está acabando?"): una fila por SKU con
+        /// categoría raíz, saldo por depósito, comprometido, ventas de 30 días, cobertura y
+        /// semáforo. `depositoId` opcional; sin él, el saldo suma todos los depósitos.
+        /// </summary>
+        [HttpGet("existencias")]
+        public async Task<IActionResult> Existencias([FromQuery] int? depositoId = null)
+        {
+            var result = await _mediator.Send(new ExistenciasQuery(depositoId));
             return Ok(result);
         }
     }

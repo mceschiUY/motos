@@ -231,3 +231,12 @@
   .grafico { height: 160px; .columna-valor { display: none; } }
   .page-header .header-content { flex-direction: column; align-items: flex-start; gap: var(--ceskia-space-3); }
 }
+
+// ─── Celular (plan Etapa F5) ──────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ceskia-space-2); }
+  .panel-grid { gap: var(--ceskia-space-3); }
+  .grafico { height: 140px; gap: 4px; }
+  .page-header .header-content { align-items: stretch; }
+  .ficha-acciones, .panel-acciones { flex-wrap: wrap; }
+}

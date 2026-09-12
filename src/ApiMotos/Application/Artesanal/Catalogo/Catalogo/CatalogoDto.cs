@@ -21,5 +21,13 @@ namespace ApiMotos.Application.Artesanal.Catalogo.Catalogo
         public int Skus { get; set; }
         /// <summary>Unidades en stock sumando todos los depósitos.</summary>
         public decimal Unidades { get; set; }
+        /// <summary>SKU activos con saldo positivo (revisión de escenas 2026-09-12).</summary>
+        public int SkusConStock { get; set; }
+        /// <summary>SKU activos con saldo por debajo del umbral de stock bajo (incluye sin stock y negativo).</summary>
+        public int SkusEnAlerta { get; set; }
+        /// <summary>sin_stock (ningún SKU con saldo) · bajo (algún SKU en alerta) · ok.</summary>
+        public string Semaforo { get; set; } = "ok";
+        /// <summary>Umbral usado (Configuración `stock.umbral_bajo`).</summary>
+        public decimal UmbralStockBajo { get; set; }
     }
 }

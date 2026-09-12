@@ -1,5 +1,6 @@
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
 using ApiMotos.Domain.Common;
 
 namespace ApiMotos.Application.Artesanal.Comercial.PanelVendedor
@@ -104,11 +105,15 @@ ORDER BY VendidoUsd DESC, v.Nombre, v.Id";
                 InicioAnio = inicioAnio,
                 FinAnio = finAnio,
             });
+            // Semáforo con el parámetro de Configuración (crm.dias_sin_visita): verde hasta la mitad,
+            // amarillo hasta el límite, rojo pasado el límite o nunca visitado. Mismo criterio que Cliente 360.
+            var diasAlerta = await ParametrosAlertas.DiasSinVisitaAsync(_consultas);
+            dto.DiasSinVisitaUmbral = diasAlerta;
             foreach (var c in dto.Clientes)
             {
                 c.Semaforo = c.DiasSinVisita == null ? "rojo"
-                           : c.DiasSinVisita <= 15 ? "verde"
-                           : c.DiasSinVisita <= 30 ? "amarillo"
+                           : c.DiasSinVisita <= diasAlerta / 2 ? "verde"
+                           : c.DiasSinVisita <= diasAlerta ? "amarillo"
                            : "rojo";
             }
 

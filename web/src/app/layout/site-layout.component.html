@@ -290,6 +290,17 @@
           }
         </button>
 
+        <!-- Abrir en el celular (plan Etapa F2): QR con la URL del sitio en la IP de la máquina. -->
+        @if (!esProduccion) {
+          <button mat-icon-button class="tool-btn" matTooltip="Abrir en el celular" (click)="abrirEnCelular()">
+            <mat-icon>qr_code_2</mat-icon>
+          </button>
+          <!-- Marco de celular para Teams (plan Etapa F6): el teléfono dibujado más el tablero. -->
+          <button mat-icon-button class="tool-btn" matTooltip="Marco de celular (demo por Teams)" (click)="navigateTo('celular')">
+            <mat-icon>smartphone</mat-icon>
+          </button>
+        }
+
         <!-- Rol de VISTA (Gerencia / Vendedor / Depósito): presentación, no seguridad.
              Cambia el menú y el inicio para contar la demo desde cada silla. -->
         <button mat-icon-button [matMenuTriggerFor]="rolMenu" class="tool-btn rol-btn"

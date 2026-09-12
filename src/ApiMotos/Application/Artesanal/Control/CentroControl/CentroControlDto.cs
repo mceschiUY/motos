@@ -8,6 +8,8 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
         public string Periodo { get; set; } = "";
         /// <summary>Umbral de "stock bajo" (Cfg_ConfiguracionSitio `stock.umbral_bajo`, default 3).</summary>
         public decimal UmbralStockBajo { get; set; }
+        /// <summary>Días sin actividad a partir de los cuales un cliente entra en alerta (`crm.dias_sin_visita`, default 30).</summary>
+        public int DiasSinVisita { get; set; }
         public CentroControlKpisDto Kpis { get; set; } = new();
         /// <summary>El feed: qué hacer hoy, ordenado por urgencia (máximo 12).</summary>
         public List<AccionDto> Acciones { get; set; } = new();

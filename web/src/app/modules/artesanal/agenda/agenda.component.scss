@@ -141,3 +141,24 @@
 
 .empty-state p { margin: var(--ceskia-space-2) 0 var(--ceskia-space-3); color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); max-width: 420px; }
 .relation-loading { display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-3); padding: var(--ceskia-space-8); color: var(--ceskia-text-tertiary); }
+
+// ─── Celular (plan Etapa F5): lateral plegable bajo el botón "Mapa", paradas a lo ancho ────
+.lateral-toggle { display: none; }
+@media (max-width: 640px) {
+  .lateral-toggle { display: inline-flex; margin-left: auto; mat-icon { font-size: 18px; width: 18px; height: 18px; margin-right: 4px; } }
+  .agenda-body { padding: var(--ceskia-space-3); gap: var(--ceskia-space-3); }
+  .agenda-lateral { display: none; &.abierto { display: block; order: -1; } }
+  .parada .notas { max-width: 100%; }
+  .page-header .header-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+// ─── Contexto de la parada y alerta accionable (revisión de escenas 2026-09-12) ──────
+.parada-contexto { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary);
+  span { display: inline-flex; align-items: center; gap: 3px; }
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  .ctx-rojo { color: var(--ceskia-accent-danger); font-weight: var(--ceskia-font-semibold); }
+  .ctx-info { color: var(--ceskia-accent-info, var(--ceskia-accent-primary)); }
+}
+.parada[data-urgente='1'] { border-left: 3px solid var(--ceskia-accent-danger); }
+.alerta-item { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.alerta-item .alerta-agendar { margin-left: auto; height: 28px; line-height: 28px; font-size: var(--ceskia-text-xs); padding: 0 8px; mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 2px; } }

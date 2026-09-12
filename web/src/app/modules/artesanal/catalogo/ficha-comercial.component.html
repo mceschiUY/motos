@@ -42,7 +42,7 @@
       <div class="fc-resumen">
         <div class="fc-precio-grande">
           @if (ficha()!.precioDesdeUsd > 0) {
-            <small>desde</small> US$ {{ ficha()!.precioDesdeUsd | number:'1.2-2' }}
+            <small>desde</small> {{ ficha()!.precioDesdeUsd | usd }}
           } @else {
             <small>sin precio de lista</small>
           }
@@ -52,6 +52,7 @@
           <span class="fc-chip"><mat-icon>qr_code_2</mat-icon> {{ ficha()!.variantes.length }} SKU</span>
           <span class="fc-chip"><mat-icon>inventory_2</mat-icon> {{ ficha()!.unidadesTotales | number:'1.0-0' }} unidades</span>
           <span class="fc-chip"><mat-icon>check_circle</mat-icon> {{ skusConStock() }} con stock</span>
+           @if (ficha()!.skusEnAlerta > 0) { <span class="fc-chip fc-chip-alerta"><mat-icon>warning</mat-icon> {{ ficha()!.skusEnAlerta }} bajo el umbral ({{ ficha()!.umbralStockBajo }})</span> }
           @if (ficha()!.margenPromedioPorcentaje > 0) {
             <span class="fc-chip fc-chip-margen"><mat-icon>trending_up</mat-icon> margen {{ ficha()!.margenPromedioPorcentaje | number:'1.0-1' }}%</span>
           }
@@ -120,9 +121,12 @@
                   @for (celda of f.celdas; track $index) {
                     <td>
                       @if (celda) {
-                        <div class="fc-celda" [class.fc-celda-agotada]="celda.disponible <= 0" [class.fc-celda-baja]="celda.disponible > 0 && celda.disponible <= 3">
+                        <div class="fc-celda" [class.fc-celda-agotada]="celda.disponible <= 0" [class.fc-celda-baja]="celda.disponible > 0 && celda.disponible < ficha()!.umbralStockBajo">
                           <span class="fc-celda-stock">{{ celda.disponible | number:'1.0-0' }} u</span>
-                          <span class="fc-celda-precio">US$ {{ celda.precioListaUsd | number:'1.2-2' }}</span>
+                          @if (celda.comprometido > 0 || celda.coberturaDias != null) {
+                            <span class="fc-celda-extra">@if (celda.comprometido > 0) { {{ celda.comprometido | number:'1.0-0' }} comprometidas · }@if (celda.coberturaDias != null) { {{ celda.coberturaDias | number:'1.0-0' }} días }</span>
+                          }
+                          <span class="fc-celda-precio">{{ celda.precioListaUsd | usd }}</span>
                           <span class="fc-celda-sku" [matTooltip]="'Margen US$ ' + (celda.margenUsd | number:'1.2-2') + ' (' + (celda.margenPorcentaje | number:'1.0-1') + '%)'">{{ celda.sku }}</span>
                           <div class="fc-celda-acciones">
                             <button mat-icon-button (click)="agregarAlPedido(celda)" matTooltip="Agregar al pedido"><mat-icon>add_shopping_cart</mat-icon></button>

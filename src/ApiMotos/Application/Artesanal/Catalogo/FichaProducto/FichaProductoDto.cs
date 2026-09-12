@@ -32,6 +32,10 @@ namespace ApiMotos.Application.Artesanal.Catalogo.FichaProducto
         public decimal UnidadesTotales { get; set; }
         /// <summary>Margen promedio de los SKU con costo cargado, en %.</summary>
         public decimal MargenPromedioPorcentaje { get; set; }
+        /// <summary>Umbral de stock bajo (Configuración `stock.umbral_bajo`), para pintar las celdas (revisión 2026-09-12).</summary>
+        public decimal UmbralStockBajo { get; set; }
+        /// <summary>SKU activos con saldo por debajo del umbral.</summary>
+        public int SkusEnAlerta { get; set; }
 
         public List<FichaProductoVarianteDto> Variantes { get; set; } = new();
     }
@@ -55,5 +59,10 @@ namespace ApiMotos.Application.Artesanal.Catalogo.FichaProducto
         public decimal MargenPorcentaje { get; set; }
         public decimal Disponible { get; set; }
         public bool Activo { get; set; }
+        /// <summary>Unidades en pedidos borrador/confirmado/preparado (revisión 2026-09-12).</summary>
+        public decimal Comprometido { get; set; }
+        public decimal Vendidas30d { get; set; }
+        /// <summary>Días que dura el saldo al ritmo de 30 días; null sin ventas o sin stock.</summary>
+        public decimal? CoberturaDias { get; set; }
     }
 }

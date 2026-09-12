@@ -58,7 +58,7 @@
     <a class="kpi" routerLink="/comisiones" [attr.data-acento]="acentoVentas()">
       <div class="kpi-icono"><mat-icon>payments</mat-icon></div>
       <div class="kpi-cuerpo">
-        <span class="kpi-valor tnum">{{ cargado() && kpis() ? 'US$ ' + formato(kpis()!.ventasMesUsd) : '—' }}</span>
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? (kpis()!.ventasMesUsd | usd:0) : '—' }}</span>
         <span class="kpi-label">Ventas del mes</span>
         <span class="kpi-sub">{{ variacionTexto() }}</span>
       </div>
@@ -110,7 +110,7 @@
                 <span class="feed-detalle">{{ a.detalle }}</span>
               </div>
               <span class="feed-meta">
-                <span class="enum-pill" [attr.data-valor]="a.tipo">{{ a.tipo.split('_').join(' ') }}</span>
+                <span class="enum-pill" [attr.data-valor]="a.tipo">{{ a.tipo | etiqueta }}</span>
                 @if (cuando(a.fecha); as c) { <span class="feed-cuando">{{ c }}</span> }
               </span>
               <mat-icon class="feed-flecha">chevron_right</mat-icon>
@@ -128,16 +128,16 @@
           <a class="card-link" routerLink="/pedido">abrir pedidos <mat-icon>arrow_forward</mat-icon></a>
         </div>
         <div class="pipe-total">
-          <span class="pipe-total-valor tnum">US$ {{ pipelineTotal() | number:'1.2-2' }}</span>
+          <span class="pipe-total-valor tnum">{{ pipelineTotal() | usd }}</span>
           <span class="pipe-total-label">{{ pipelineCantidad() }} {{ pipelineCantidad() === 1 ? 'pedido' : 'pedidos' }} · sin anulados</span>
         </div>
         <div class="pipe-lista">
           @for (p of pipeline(); track p.estado) {
             <a class="pipe-fila" routerLink="/pedido" [queryParams]="{ estado: p.estado }">
-              <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
+              <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span>
               <span class="pipe-barra"><i [class]="'pipe-fill estado-' + estadoIndice(p.estado)" [style.width.%]="pctPipeline(p)"></i></span>
               <span class="pipe-cant tnum">{{ p.cantidad }}</span>
-              <span class="pipe-monto tnum">US$ {{ p.totalUsd | number:'1.0-0' }}</span>
+              <span class="pipe-monto tnum">{{ p.totalUsd | usd:0 }}</span>
             </a>
           }
           @if (cargado() && pipeline().length === 0) {
@@ -166,8 +166,8 @@
               </div>
               <span class="eq-barra"><i class="eq-fill" [style.width.%]="pctMeta(v)"></i></span>
               <div class="eq-pie">
-                <span class="tnum">vendió <strong>US$ {{ v.vendidoMesUsd | number:'1.0-0' }}</strong>@if (v.objetivoUsd > 0) { de US$ {{ v.objetivoUsd | number:'1.0-0' }}}</span>
-                <span class="tnum">comisión <strong>US$ {{ v.comisionMesUsd | number:'1.2-2' }}</strong></span>
+                <span class="tnum">vendió <strong>{{ v.vendidoMesUsd | usd:0 }}</strong>@if (v.objetivoUsd > 0) { de {{ v.objetivoUsd | usd:0 }}}</span>
+                <span class="tnum">comisión <strong>{{ v.comisionMesUsd | usd }}</strong></span>
                 <span class="tnum">{{ v.visitasMes }} {{ v.visitasMes === 1 ? 'visita' : 'visitas' }}</span>
               </div>
             </a>
@@ -195,7 +195,7 @@
                 <span class="top-marca">{{ p.marca || '' }} · {{ p.unidadesMes | number:'1.0-0' }} u.</span>
                 <span class="top-barra"><i [style.width.%]="pctTop(p.totalUsd)"></i></span>
               </div>
-              <span class="top-monto tnum">US$ {{ p.totalUsd | number:'1.0-0' }}</span>
+              <span class="top-monto tnum">{{ p.totalUsd | usd:0 }}</span>
             </a>
           }
         </div>

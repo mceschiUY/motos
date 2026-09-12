@@ -1,4 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { usd } from '../comun/usd.pipe';
+import { EtiquetaPipe } from '../comun/etiquetas';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,7 +30,7 @@ import { FichaSku, FichaSkuMovimiento, SemaforoStock } from './sku.model';
 @Component({
   selector: 'app-sku',
   standalone: true,
-  imports: [
+  imports: [EtiquetaPipe, 
     CommonModule,
     MatIconModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule,
     MatSnackBarModule, MatDialogModule,
@@ -178,7 +180,7 @@ export class SkuComponent implements OnInit {
   }
 
   formatoUsd(n: number | null | undefined): string {
-    return 'US$ ' + this.formatoNumero(n, 2);
+    return usd(n);
   }
 
   trackByMovimiento(_: number, m: FichaSkuMovimiento): number { return m.movimientoId; }

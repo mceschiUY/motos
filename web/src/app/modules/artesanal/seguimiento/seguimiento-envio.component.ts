@@ -1,4 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { EtiquetaPipe } from '../comun/etiquetas';
+import { UsdPipe } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +18,7 @@ import { EnvioApiService } from '../../generated/services/envio.api.service';
 import { Envio } from '../../generated/models/envio.model';
 import { ObservacionFormComponent } from '../../generated/components/observacion/observacion-form/observacion-form.component';
 import { SeguimientoService } from './seguimiento.service';
-import { SeguimientoEnvio, SeguimientoEtapa } from './seguimiento.model';
+import { SeguimientoEnvio, SeguimientoEtapa, estimarEntrega } from './seguimiento.model';
 
 /** Un movimiento del ciclo que se ofrece desde el estado actual. */
 interface AccionCiclo {
@@ -40,7 +42,7 @@ interface AccionCiclo {
 @Component({
   selector: 'app-seguimiento-envio',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, EtiquetaPipe, 
     CommonModule, FormsModule, RouterLink,
     MatIconModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule,
     MatSnackBarModule, MatDialogModule,
@@ -93,6 +95,22 @@ export class SeguimientoEnvioComponent implements OnInit {
   readonly cerrado = computed(() => { const e = this.datos()?.estado; return e === 'entregado' || e === 'anulado'; });
   readonly linkPublico = computed(() => { const c = this.datos()?.codigoRastreo; return c ? this.service.linkPublico(c) : ''; });
   readonly unidades = computed(() => (this.datos()?.pedido?.lineas ?? []).reduce((s, l) => s + Number(l.cantidad || 0), 0));
+  /** Fecha estimada de entrega (revisión de escenas 2026-09-12). */
+  readonly eta = computed<Date | null>(() => { const d = this.datos(); return d ? estimarEntrega(d.etapas, d.estado) : null; });
+  imagen(id: number | null): string | null { return id != null ? this.service.imagenPublicaUrl(id) : null; }
+  /** Le manda al cliente el estado y el link público por WhatsApp. */
+  avisarCliente(): void {
+    const d = this.datos(); if (!d) return;
+    const tel = (d.cliente.telefono || '').replace(/[^0-9]/g, '');
+    const eta = this.eta();
+    const estado = (d.estadoLabel || d.estado).toLowerCase();
+    const texto = [
+      `Hola ${d.cliente.nombre ?? ''}, tu envío ${d.codigoRastreo} ${d.estado === 'despachado' ? 'ya salió' : 'está ' + estado}${d.agencia.nombre ? ' por ' + d.agencia.nombre : ''}.`,
+      eta ? `Llegaría alrededor del ${eta.getDate()}/${eta.getMonth() + 1}.` : '',
+      `Seguilo acá: ${this.linkPublico()}`,
+    ].filter(Boolean).join(' ');
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(pm => {

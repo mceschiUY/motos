@@ -1,0 +1,210 @@
+<app-membrete-impresion></app-membrete-impresion>
+
+@if (cargando()) {
+  <div class="ficha-view pe-cargando"><mat-spinner diameter="36"></mat-spinner><span>Cargando el pedido…</span></div>
+} @else if (!pedido()) {
+  <div class="ficha-view pe-cargando pe-vacio">
+    <mat-icon>receipt_long</mat-icon>
+    <p>No encontramos ese pedido.</p>
+    <button mat-stroked-button (click)="volver()"><mat-icon>arrow_back</mat-icon> Volver a pedidos</button>
+  </div>
+} @else {
+  @if (pedido(); as p) {
+  <div class="ficha-view pedido-escena">
+
+    <!-- CABECERA -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Pedidos" class="pe-volver"><mat-icon>arrow_back</mat-icon></button>
+      <div class="pe-titulo">
+        <h1>{{ p.numero }} <span class="enum-pill pe-estado" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span></h1>
+        <p class="pe-sub">
+          {{ p.fecha | date:'EEEE d \'de\' MMMM' }} · {{ p.unidades | number:'1.0-0' }} {{ p.unidades === 1 ? 'unidad' : 'unidades' }} en {{ p.lineas.length }} {{ p.lineas.length === 1 ? 'línea' : 'líneas' }}
+          · desde {{ p.depositoNombre || 'depósito' }}
+        </p>
+      </div>
+      <div class="ficha-acciones pe-acciones">
+        <button mat-stroked-button (click)="whatsapp()" [disabled]="!p.clienteTelefono" matTooltip="Mandar el detalle al cliente por WhatsApp"><mat-icon>chat</mat-icon> WhatsApp</button>
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir"><mat-icon>print</mat-icon></button>
+        <button mat-icon-button (click)="nuevoParaCliente()" matTooltip="Nuevo pedido para este cliente"><mat-icon>add_shopping_cart</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- QUIÉN Y CÓMO -->
+    <section class="pe-datos">
+      <a class="pe-dato pe-link" [routerLink]="['/cliente', p.clienteId]">
+        <mat-icon>storefront</mat-icon>
+        <div>
+          <span class="pe-dato-label">Cliente</span>
+          <span class="pe-dato-valor">{{ p.clienteNombre }}</span>
+          <span class="pe-dato-sub">{{ p.clienteCiudad || '' }}@if (p.clienteTipo) { · {{ p.clienteTipo | etiqueta }}}@if (p.clienteDireccion) { · {{ p.clienteDireccion }}}</span>
+        </div>
+      </a>
+      <a class="pe-dato pe-link" [routerLink]="['/vendedor', p.vendedorId]">
+        <mat-icon>badge</mat-icon>
+        <div>
+          <span class="pe-dato-label">Vendedor</span>
+          <span class="pe-dato-valor">{{ p.vendedorNombre }}</span>
+          <span class="pe-dato-sub">comisión {{ p.comisionPorcentaje | number:'1.0-2' }} % · {{ comisionEstimada() | usd }}{{ p.comisionUsd > 0 ? '' : ' al entregar' }}</span>
+        </div>
+      </a>
+      @if (p.envioId) {
+        <a class="pe-dato pe-link" [routerLink]="['/envio', p.envioId]">
+          <mat-icon>local_shipping</mat-icon>
+          <div>
+            <span class="pe-dato-label">Envío</span>
+            <span class="pe-dato-valor">{{ p.envioCodigo }} <span class="enum-pill" [attr.data-valor]="p.envioEstado">{{ p.envioEstado | etiqueta }}</span></span>
+            <span class="pe-dato-sub">{{ p.agenciaNombre || 'sin agencia' }}@if (p.envioFechaEntrega && p.envioEstado === 'entregado') { · entregado el {{ p.envioFechaEntrega | date:'d/MM' }}}</span>
+          </div>
+        </a>
+      } @else {
+        <div class="pe-dato">
+          <mat-icon>local_shipping</mat-icon>
+          <div>
+            <span class="pe-dato-label">Envío</span>
+            <span class="pe-dato-valor">{{ p.agenciaNombre ? 'Sale por ' + p.agenciaNombre : 'Agencia a definir' }}</span>
+            <span class="pe-dato-sub">el envío nace al despachar</span>
+          </div>
+        </div>
+      }
+      <div class="pe-dato pe-total">
+        <mat-icon>payments</mat-icon>
+        <div>
+          <span class="pe-dato-label">Total</span>
+          <span class="pe-dato-valor pe-total-valor">{{ p.totalUsd | usd }}</span>
+          <span class="pe-dato-sub">@if (lineasConDescuento() > 0) { {{ lineasConDescuento() }} {{ lineasConDescuento() === 1 ? 'línea' : 'líneas' }} bajo lista } @else { precios de lista }</span>
+        </div>
+      </div>
+    </section>
+
+    @if (p.observaciones || p.motivoAnulacion) {
+      <p class="pe-nota" [class.pe-nota-anulado]="p.motivoAnulacion">
+        <mat-icon>{{ p.motivoAnulacion ? 'cancel' : 'sticky_note_2' }}</mat-icon>
+        {{ p.motivoAnulacion ? 'Anulado: ' + p.motivoAnulacion : p.observaciones }}
+      </p>
+    }
+
+    <!-- RECORRIDO DEL CICLO + PRÓXIMO PASO -->
+    <section class="pe-ciclo card">
+      <div class="pe-recorrido" [class.pe-anulado]="estado() === 'anulado'">
+        @for (e of recorrido; track e; let i = $index) {
+          <div class="pe-hito" [class.hecho]="i < indiceEstado()" [class.actual]="i === indiceEstado()">
+            <span class="pe-hito-punto"><mat-icon>{{ i < indiceEstado() ? 'check' : (i === indiceEstado() ? 'radio_button_checked' : 'radio_button_unchecked') }}</mat-icon></span>
+            <span class="pe-hito-label">{{ e | etiqueta }}</span>
+          </div>
+        }
+      </div>
+
+      @if (estado() === 'anulado') {
+        <p class="pe-paso pe-paso-fin"><mat-icon>cancel</mat-icon> Pedido anulado{{ p.motivoAnulacion ? ': ' + p.motivoAnulacion : '' }}.</p>
+      } @else if (estado() === 'entregado') {
+        <p class="pe-paso pe-paso-fin"><mat-icon>task_alt</mat-icon> Entregado. Comisión sellada: <strong>{{ p.comisionUsd | usd }}</strong> para {{ p.vendedorNombre }}.</p>
+      } @else { @if (siguiente(); as s) {
+        <div class="pe-paso">
+          <div class="pe-paso-texto">
+            <span class="pe-paso-label">Próximo paso · {{ s.actor }}</span>
+            <span class="pe-paso-cond">{{ s.condicion }}</span>
+            @if (s.destino === 'confirmado' && p.lineasConFaltante > 0) {
+              <span class="pe-paso-aviso"><mat-icon>warning</mat-icon> {{ p.lineasConFaltante }} {{ p.lineasConFaltante === 1 ? 'línea pide' : 'líneas piden' }} más de lo que hay en {{ p.depositoNombre }}. Se puede confirmar igual.</span>
+            }
+          </div>
+          <div class="pe-paso-botones">
+            <button mat-flat-button color="primary" (click)="avanzar()" [disabled]="ejecutando()">
+              @if (ejecutando()) { <mat-spinner diameter="18"></mat-spinner> } @else { <mat-icon>{{ s.icon }}</mat-icon> }
+              {{ s.label }}
+            </button>
+            @if (puedeAnular()) {
+              <button mat-button class="pe-anular" (click)="pedirAnulacion()" [disabled]="ejecutando()"><mat-icon>cancel</mat-icon> Anular</button>
+            }
+          </div>
+        </div>
+      } }
+
+      @if (eligiendoAgencia()) {
+        <div class="pe-inline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="pe-inline-campo">
+            <mat-label>¿Con qué agencia sale?</mat-label>
+            <mat-select [(ngModel)]="agenciaElegida">
+              @for (a of listaAgencias(); track a.id) { <mat-option [value]="a.id">{{ a.nombre }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="guardarAgenciaYDespachar()" [disabled]="ejecutando() || !agenciaElegida"><mat-icon>local_shipping</mat-icon> Despachar</button>
+          <button mat-button (click)="eligiendoAgencia.set(false)">Cancelar</button>
+        </div>
+      }
+
+      @if (anulando()) {
+        <div class="pe-inline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="pe-inline-campo">
+            <mat-label>Motivo de la anulación</mat-label>
+            <input matInput [(ngModel)]="motivoAnulacion" placeholder="El cliente desistió, error de carga…">
+          </mat-form-field>
+          <button mat-flat-button color="warn" (click)="confirmarAnulacion()" [disabled]="ejecutando()"><mat-icon>cancel</mat-icon> Confirmar anulación</button>
+          <button mat-button (click)="anulando.set(false)">Cancelar</button>
+        </div>
+      }
+    </section>
+
+    <!-- LÍNEAS -->
+    <section class="pe-lineas card">
+      <div class="card-head">
+        <h2><mat-icon>list_alt</mat-icon> Qué lleva</h2>
+        @if (editable()) {
+          <button mat-stroked-button (click)="agregarLinea()"><mat-icon>add</mat-icon> Agregar línea</button>
+        } @else {
+          <span class="pe-congelado" matTooltip="Después de preparar, las líneas no se tocan"><mat-icon>lock</mat-icon> líneas cerradas</span>
+        }
+      </div>
+
+      @if (p.lineas.length === 0) {
+        <p class="pe-sin-lineas"><mat-icon>info</mat-icon> El pedido no tiene líneas todavía.</p>
+      } @else {
+        <div class="pe-tabla" role="table">
+          <div class="pe-fila pe-cab" role="row">
+            <span></span><span>Producto</span><span>Talle · color</span>
+            <span class="num">Cant.</span><span class="num">Precio</span><span class="num">Subtotal</span>
+            <span class="num pe-col-stock">En depósito</span><span></span>
+          </div>
+          @for (l of p.lineas; track l.id) {
+            <div class="pe-fila" role="row" [class.pe-faltante]="faltante(l)">
+              <span class="pe-foto">
+                @if (foto(l); as src) { <img [src]="src" [alt]="l.productoNombre" loading="lazy"> }
+                @else { <span class="pe-foto-vacia"><mat-icon>image</mat-icon></span> }
+              </span>
+              <span class="pe-producto">
+                <a [routerLink]="['/variante', l.varianteId]" class="pe-producto-nombre">{{ l.productoNombre }}</a>
+                <small>{{ l.marca || '' }} · <span class="mono">{{ l.sku }}</span></small>
+              </span>
+              <span class="pe-variante">
+                <span class="pe-color" [style.background]="l.colorHex || 'transparent'" [class.sin-color]="!l.colorHex"></span>
+                {{ l.talla || 'Única' }}@if (l.color) { · {{ l.color }}}
+              </span>
+              <span class="num tnum">{{ l.cantidad | number:'1.0-0' }}</span>
+              <span class="num tnum pe-precio">
+                {{ l.precioUnitarioUsd | usd }}
+                @if (l.precioListaUsd > 0 && l.precioUnitarioUsd < l.precioListaUsd) {
+                  <small class="pe-descuento" [matTooltip]="'Lista: ' + (l.precioListaUsd | usd)">−{{ (1 - l.precioUnitarioUsd / l.precioListaUsd) * 100 | number:'1.0-0' }} %</small>
+                }
+              </span>
+              <span class="num tnum pe-subtotal">{{ l.subtotalUsd | usd }}</span>
+              <span class="num tnum pe-col-stock" [class.pe-stock-falta]="faltante(l)">
+                @if (l.disponibleDeposito != null) { {{ l.disponibleDeposito | number:'1.0-0' }} } @else { — }
+              </span>
+              <span class="pe-linea-acciones">
+                @if (editable()) {
+                  <button mat-icon-button (click)="quitarLinea(l)" matTooltip="Quitar"><mat-icon>delete_outline</mat-icon></button>
+                }
+              </span>
+            </div>
+          }
+          <div class="pe-fila pe-pie" role="row">
+            <span></span><span>Total</span><span></span>
+            <span class="num tnum">{{ p.unidades | number:'1.0-0' }}</span><span></span>
+            <span class="num tnum pe-total-pie">{{ p.totalUsd | usd }}</span>
+            <span class="pe-col-stock"></span><span></span>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+  }
+}

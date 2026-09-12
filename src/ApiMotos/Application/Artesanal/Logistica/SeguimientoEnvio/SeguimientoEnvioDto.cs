@@ -84,6 +84,8 @@ namespace ApiMotos.Application.Artesanal.Logistica.SeguimientoEnvio
         public int VarianteId { get; set; }
         public string? Sku { get; set; }
         public string? ProductoNombre { get; set; }
+        /// <summary>Portada del producto (PC_DOCUMENTOS); la pública la sirve GET api/publico/imagen/{id} (revisión 2026-09-12).</summary>
+        public int? ImagenPrincipalId { get; set; }
         public string? Talla { get; set; }
         public string? Color { get; set; }
         public decimal Cantidad { get; set; }

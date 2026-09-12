@@ -1,5 +1,7 @@
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
+using ApiMotos.Domain.Common;
 
 namespace ApiMotos.Application.Artesanal.Catalogo.FichaProducto
 {
@@ -60,6 +62,23 @@ LEFT JOIN saldo s ON s.VarianteId = v.Id
 WHERE v.ProductoId = @ProductoId
 ORDER BY ISNULL(t.Orden, 0), t.Nombre, co.Nombre, v.Sku";
 
+        private sealed class TotalFila { public int VarianteId { get; set; } public decimal Total { get; set; } }
+
+        private const string SqlComprometido = @"
+SELECT l.VarianteId, SUM(l.Cantidad) AS Total
+FROM PC_PEDIDO_LINEAS l
+JOIN PC_PEDIDOS p ON p.Id = l.PedidoId
+JOIN PC_VARIANTES v ON v.Id = l.VarianteId
+WHERE v.ProductoId = @ProductoId AND p.Estado IN (N'borrador', N'confirmado', N'preparado')
+GROUP BY l.VarianteId";
+
+        private const string SqlVendidas30d = @"
+SELECT m.VarianteId, SUM(m.Cantidad) AS Total
+FROM PC_MOVIMIENTOS_STOCK m
+JOIN PC_VARIANTES v ON v.Id = m.VarianteId
+WHERE v.ProductoId = @ProductoId AND m.Tipo = 'salida' AND m.Fecha >= DATEADD(DAY, -30, @Hoy)
+GROUP BY m.VarianteId";
+
         private readonly IQueryService _consultas;
 
         public FichaProductoHandler(IQueryService consultas)
@@ -78,12 +97,22 @@ ORDER BY ISNULL(t.Orden, 0), t.Nombre, co.Nombre, v.Sku";
 
             ficha.Variantes = await _consultas.ConsultarAsync<FichaProductoVarianteDto>(SqlVariantes, parametros);
 
+            // Revisión de escenas 2026-09-12: umbral configurable, comprometido y cobertura por SKU.
+            var umbral = await ParametrosAlertas.UmbralStockBajoAsync(_consultas);
+            var comprometido = (await _consultas.ConsultarAsync<TotalFila>(SqlComprometido, new { query.ProductoId })).ToDictionary(t => t.VarianteId, t => t.Total);
+            var vendidas = (await _consultas.ConsultarAsync<TotalFila>(SqlVendidas30d, new { query.ProductoId, Hoy = Clock.Current.Today })).ToDictionary(t => t.VarianteId, t => t.Total);
+            ficha.UmbralStockBajo = umbral;
+
             foreach (var v in ficha.Variantes)
             {
                 v.MargenUsd = Math.Round(v.PrecioListaUsd - v.CostoEstandarUsd, 2, MidpointRounding.AwayFromZero);
                 v.MargenPorcentaje = v.CostoEstandarUsd == 0m
                     ? 0m
                     : Math.Round((v.PrecioListaUsd - v.CostoEstandarUsd) / v.CostoEstandarUsd * 100m, 2, MidpointRounding.AwayFromZero);
+                v.Comprometido = comprometido.TryGetValue(v.VarianteId, out var c) ? c : 0m;
+                v.Vendidas30d = vendidas.TryGetValue(v.VarianteId, out var vv) ? vv : 0m;
+                v.CoberturaDias = v.Vendidas30d > 0m && v.Disponible > 0m ? Math.Round(v.Disponible / (v.Vendidas30d / 30m), 1, MidpointRounding.AwayFromZero) : null;
+                if (v.Activo && v.Disponible < umbral) ficha.SkusEnAlerta++;
             }
 
             var activas = ficha.Variantes.Where(v => v.Activo).ToList();

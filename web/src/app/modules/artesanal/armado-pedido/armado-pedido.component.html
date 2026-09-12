@@ -32,14 +32,21 @@
   <!-- CABECERA DEL PEDIDO -->
   <div class="content-card">
     <div class="cabecera">
+      <!-- Cliente con autocompletado (revisión de escenas 2026-09-12): se tipea nombre, ciudad o tipo -->
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Cliente</mat-label>
-        <mat-select [ngModel]="clienteId()" (ngModelChange)="onClienteChange($event)">
-          @for (c of clientes(); track c.id) {
-            <mat-option [value]="c.id">{{ c.nombre }}</mat-option>
+        <input matInput type="text" [ngModel]="clienteTexto()" (ngModelChange)="onClienteTexto($event)"
+               [matAutocomplete]="autoCliente" placeholder="Nombre, ciudad o tipo…" autocomplete="off">
+        <mat-autocomplete #autoCliente="matAutocomplete" [displayWith]="nombreDeCliente" (optionSelected)="onClienteElegido($event)">
+          @for (c of clientesFiltrados(); track c.id) {
+            <mat-option [value]="c.id">
+              <span class="ac-nombre">{{ c.nombre }}</span>
+              <small class="ac-sub">{{ c.ciudad || '' }}@if (c.tipo) { · {{ c.tipo | etiqueta }}}</small>
+            </mat-option>
           }
-        </mat-select>
+        </mat-autocomplete>
         <mat-icon matPrefix>person</mat-icon>
+        @if (clienteId() != null) { <mat-icon matSuffix class="ac-ok">check_circle</mat-icon> }
       </mat-form-field>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
@@ -74,6 +81,56 @@
       </mat-form-field>
     </div>
   </div>
+
+  <!-- ESTE CLIENTE: contexto del 360 para no vender a ciegas (revisión de escenas 2026-09-12) -->
+  @if (clienteId() != null) {
+    <div class="content-card ctx" [attr.data-semaforo]="contexto()?.semaforo">
+      @if (contextoCargando()) {
+        <div class="ctx-cargando"><mat-spinner diameter="20"></mat-spinner><span>Leyendo la historia del cliente…</span></div>
+      } @else { @if (contexto(); as c) {
+        <div class="ctx-cab">
+          <a class="ctx-titulo" [routerLink]="['/cliente', c.id]" matTooltip="Abrir el cliente 360">
+            <mat-icon>storefront</mat-icon>
+            <span>{{ c.nombre }}</span>
+            <small>{{ c.ciudad || '' }}@if (c.tipo) { · {{ c.tipo | etiqueta }}}</small>
+          </a>
+          <span class="ctx-semaforo"><span class="ctx-punto"></span>{{ c.motivoSemaforo }}</span>
+        </div>
+        <div class="ctx-kpis">
+          <span><b>{{ c.diasSinVisita == null ? '—' : c.diasSinVisita }}</b> días sin visita</span>
+          <span><b>{{ c.pedidosAnio }}</b> pedidos en el año · <b>{{ c.totalAnioUsd | usd:0 }}</b></span>
+          <span>ticket <b>{{ c.ticketPromedioUsd | usd:0 }}</b></span>
+          @if (c.pedidosAbiertos > 0) { <span class="ctx-alerta"><mat-icon>info</mat-icon> <b>{{ c.pedidosAbiertos }}</b> {{ c.pedidosAbiertos === 1 ? 'pedido abierto' : 'pedidos abiertos' }}</span> }
+        </div>
+        <div class="ctx-cuerpo">
+          @if (c.ultimoPedido; as u) {
+            <div class="ctx-ultimo">
+              <span class="ctx-label">Último pedido</span>
+              <a [routerLink]="['/pedido', u.id]" class="ctx-ultimo-link">{{ u.numero }} · {{ u.fecha | date:'d/MM' }} · {{ u.totalUsd | usd:0 }} <span class="enum-pill" [attr.data-valor]="u.estado">{{ u.estado | etiqueta }}</span></a>
+              <button mat-stroked-button class="ctx-repetir" (click)="repetirPedido(u.id)" [disabled]="repitiendo()" matTooltip="Carga las mismas líneas y cantidades, a precio de lista de hoy">
+                @if (repitiendo()) { <mat-spinner diameter="16"></mat-spinner> } @else { <mat-icon>replay</mat-icon> }
+                Repetir pedido
+              </button>
+            </div>
+          } @else {
+            <div class="ctx-ultimo"><span class="ctx-label">Primer pedido</span><span class="ctx-sub">Todavía no le vendimos nada.</span></div>
+          }
+          @if (c.topProductos.length > 0) {
+            <div class="ctx-top">
+              <span class="ctx-label">Lo que más compra</span>
+              <div class="ctx-chips">
+                @for (t of c.topProductos; track t.productoId) {
+                  <button type="button" class="ctx-chip" (click)="buscarProducto(t.productoNombre)" matTooltip="Buscarlo para elegir talle y color">
+                    {{ t.productoNombre }} <small>{{ t.unidades | number:'1.0-0' }} u</small>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } }
+    </div>
+  }
 
   <!-- BUSCADOR DE SKU -->
   <div class="content-card">
@@ -122,53 +179,53 @@
         <p>Buscá un SKU arriba y agregalo. El total se arma solo.</p>
       </div>
     } @else {
-      <table class="carrito">
-        <thead>
-          <tr>
-            <th>SKU</th>
-            <th>Producto</th>
-            <th class="col-num">Cantidad</th>
-            <th class="col-num">Precio US$</th>
-            <th class="col-num">Subtotal</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (l of lineas(); track l.varianteId) {
-            <tr [class.faltante]="l.cantidad > l.disponible">
-              <td class="col-primary">{{ l.sku }}</td>
-              <td>
-                {{ l.producto }}
-                @if (l.detalle) { <span class="detalle">· {{ l.detalle }}</span> }
-                @if (l.cantidad > l.disponible) {
-                  <span class="aviso" matTooltip="Se puede pedir igual: queda avisado al confirmar">
-                    <mat-icon>warning</mat-icon> hay {{ l.disponible }}
-                  </span>
-                }
-              </td>
-              <td class="col-num">
-                <input type="number" min="1" step="1" class="celda-num"
-                       [value]="l.cantidad" (change)="cambiarCantidad(l, $any($event.target).value)">
-              </td>
-              <td class="col-num">
-                <input type="number" min="0" step="0.01" class="celda-num"
-                       [value]="l.precioUnitarioUsd" (change)="cambiarPrecio(l, $any($event.target).value)">
-              </td>
-              <td class="col-num tnum">{{ usd(l.cantidad * l.precioUnitarioUsd) }}</td>
-              <td class="col-accion">
-                <button mat-icon-button (click)="quitar(l)" matTooltip="Quitar"><mat-icon>delete_outline</mat-icon></button>
-              </td>
-            </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="4" class="col-num total-label">Total</td>
-            <td class="col-num tnum total-valor">{{ usd(total()) }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
+      <!-- Carrito: grilla en escritorio, tarjetas apiladas en el celular (plan Etapa F3). -->
+      <div class="carrito" role="table" aria-label="Líneas del pedido">
+        <div class="carrito-cab" role="row">
+          <span>SKU</span>
+          <span>Producto</span>
+          <span class="col-num">Cantidad</span>
+          <span class="col-num">Precio US$</span>
+          <span class="col-num">Subtotal</span>
+          <span></span>
+        </div>
+        @for (l of lineas(); track l.varianteId) {
+          <div class="linea" role="row" [class.faltante]="l.cantidad > l.disponible">
+            <span class="c-sku col-primary">{{ l.sku }}</span>
+            <span class="c-producto">
+              {{ l.producto }}
+              @if (l.detalle) { <span class="detalle">· {{ l.detalle }}</span> }
+              @if (l.cantidad > l.disponible) {
+                <span class="aviso" matTooltip="Se puede pedir igual: queda avisado al confirmar">
+                  <mat-icon>warning</mat-icon> hay {{ l.disponible }}
+                </span>
+              }
+            </span>
+            <label class="c-cantidad col-num">
+              <small>Cantidad</small>
+              <input type="number" min="1" step="1" inputmode="numeric" class="celda-num"
+                     [value]="l.cantidad" (change)="cambiarCantidad(l, $any($event.target).value)">
+            </label>
+            <label class="c-precio col-num">
+              <small>Precio US$</small>
+              <input type="number" min="0" step="0.01" inputmode="decimal" class="celda-num"
+                     [value]="l.precioUnitarioUsd" (change)="cambiarPrecio(l, $any($event.target).value)">
+              <span class="precio-pistas">
+                @if (descuento(l) > 0) { <em class="pista-desc" [matTooltip]="'Lista: ' + usd(l.precioListaUsd)">−{{ descuento(l) }} %</em> }
+                @if (margen(l) != null) { <em class="pista-margen" [class.pista-margen-bajo]="margen(l)! < 15" matTooltip="Margen sobre costo">m. {{ margen(l) }} %</em> }
+              </span>
+            </label>
+            <span class="c-subtotal col-num tnum"><small>Subtotal</small>{{ usd(l.cantidad * l.precioUnitarioUsd) }}</span>
+            <span class="c-accion">
+              <button mat-icon-button (click)="quitar(l)" matTooltip="Quitar" aria-label="Quitar línea"><mat-icon>delete_outline</mat-icon></button>
+            </span>
+          </div>
+        }
+        <div class="carrito-pie" role="row">
+          <span class="total-label">Total@if (margenTotal() != null) { <small class="total-margen" [class.pista-margen-bajo]="margenTotal()! < 15">margen {{ margenTotal() }} %</small> }</span>
+          <span class="tnum total-valor">{{ usd(total()) }}</span>
+        </div>
+      </div>
 
       <div class="observaciones">
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="obs-field">

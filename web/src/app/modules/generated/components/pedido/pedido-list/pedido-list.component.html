@@ -269,6 +269,7 @@
               <span class="kanban-dot {{ col.clase }}"></span>
               <span class="kanban-col-title">{{ col.label }}</span>
               <span class="kanban-col-count">{{ itemsDeEstado(col.id).length }}</span>
+              <span class="kanban-col-total">{{ totalDeEstado(col.id) | usd:0 }}</span>
             </div>
             <div class="kanban-col-list"
                  cdkDropList
@@ -278,10 +279,13 @@
                  [cdkDropListEnterPredicate]="puedeEntrarEn(col.id)"
                  (cdkDropListDropped)="onKanbanDrop($event, col.id)">
               @for (item of itemsDeEstado(col.id); track item.id) {
-                <div class="kanban-card" cdkDrag [cdkDragData]="item">
-                  <div class="kanban-card-title" (click)="verFicha(item)">{{ getItemTitle(item) }}</div>
-                  <div class="kanban-card-sub">{{ getItemSubtitle(item) }}</div>
-                  <button mat-icon-button class="kanban-card-edit" (click)="openForm(item); $event.stopPropagation()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+                <!-- Ajuste del sitio (revisión de escenas 2026-09-12): la tarjeta cuenta el pedido
+                     (cliente, total, días en el estado) y abre la escena, no el form. -->
+                <div class="kanban-card" cdkDrag [cdkDragData]="item" (click)="verFicha(item)">
+                  <div class="kanban-card-title">{{ getItemTitle(item) }} <span class="kanban-card-monto">{{ item.totalUsd | usd:0 }}</span></div>
+                  <div class="kanban-card-sub">{{ item.clienteDisplay || getItemSubtitle(item) }}</div>
+                  <div class="kanban-card-sub">{{ diasEnEstado(item) }}</div>
+                  <button mat-icon-button class="kanban-card-edit" (click)="verFicha(item); $event.stopPropagation()" matTooltip="Abrir"><mat-icon>open_in_new</mat-icon></button>
                 </div>
               }
               @if (itemsDeEstado(col.id).length === 0) {

@@ -1,3 +1,4 @@
+import { UsdPipe } from '../../../../artesanal/comun/usd.pipe';
 ﻿import { Component, OnInit, OnDestroy, ViewChild, inject, signal, computed, effect } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -66,6 +67,7 @@ interface HasManyRelation {
   selector: 'app-pedido-list',
   standalone: true,
   imports: [
+    UsdPipe,
     CommonModule,
     FormsModule,
     MatTableModule,
@@ -127,6 +129,17 @@ export class PedidoListComponent implements OnInit, OnDestroy {
     'entregado': ['despachado'],
     'anulado': ['borrador', 'confirmado', 'preparado', 'despachado']
   };
+
+  // Ajuste del sitio (revisión de escenas 2026-09-12): total US$ por columna y días en el estado.
+  totalDeEstado(estado: string): number {
+    return this.itemsDeEstado(estado).reduce((s: number, i: any) => s + (Number(i.totalUsd) || 0), 0);
+  }
+  diasEnEstado(item: any): string {
+    const f = item?.fechaActualizacion || item?.fecha;
+    if (!f) return '';
+    const d = Math.max(0, Math.round((Date.now() - new Date(f).getTime()) / 86400000));
+    return d === 0 ? 'hoy' : d === 1 ? 'hace 1 día' : `hace  días`;
+  }
 
   private normEstado(v: unknown): string {
     return (v ?? '').toString().trim().toLowerCase().replace(/ /g, '_');

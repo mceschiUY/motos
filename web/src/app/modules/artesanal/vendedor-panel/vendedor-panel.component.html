@@ -43,9 +43,9 @@
         <div>
           <span class="meta-titulo">Meta {{ avance()?.periodo || (hoy | date:'yyyy-MM') }}</span>
           <span class="meta-sub">
-            US$ {{ vendidoSimulado() | number:'1.0-0' }} de
+            {{ vendidoSimulado() | usd:0 }} de
             {{ objetivo() ? ('US$ ' + (objetivo() | number:'1.0-0')) : 'meta sin cargar' }}
-            @if (extraUsd() > 0) { <em>(incluye US$ {{ extraUsd() | number:'1.0-0' }} simulados)</em> }
+            @if (extraUsd() > 0) { <em>(incluye {{ extraUsd() | usd:0 }} simulados)</em> }
           </span>
         </div>
         <div class="meta-semaforo">
@@ -66,35 +66,35 @@
       </div>
       @if (objetivo() > 0) {
         <div class="meta-leyenda">
-          <span>Esperado a hoy: <b>US$ {{ esperadoHoy() | number:'1.0-0' }}</b></span>
-          <span>Falta: <b>US$ {{ faltaParaMeta() | number:'1.0-0' }}</b></span>
+          <span>Esperado a hoy: <b>{{ esperadoHoy() | usd:0 }}</b></span>
+          <span>Falta: <b>{{ faltaParaMeta() | usd:0 }}</b></span>
         </div>
       }
 
       <div class="meta-comisiones">
         <div class="comision">
           <span class="comision-label">Comisión sellada</span>
-          <span class="comision-valor">US$ {{ comisionSimulada() | number:'1.2-2' }}</span>
+          <span class="comision-valor">{{ comisionSimulada() | usd }}</span>
           <span class="comision-sub">sobre pedidos entregados del mes@if (extraUsd() > 0) { + lo simulado }</span>
         </div>
         <div class="comision proyectada">
           <span class="comision-label">Proyectada</span>
-          <span class="comision-valor">+ US$ {{ panel()!.comisionProyectadaUsd | number:'1.2-2' }}</span>
-          <span class="comision-sub">si entrega lo que tiene abierto (US$ {{ panel()!.pendienteEntregaUsd | number:'1.0-0' }})</span>
+          <span class="comision-valor">+ {{ panel()!.comisionProyectadaUsd | usd }}</span>
+          <span class="comision-sub">si entrega lo que tiene abierto ({{ panel()!.pendienteEntregaUsd | usd:0 }})</span>
         </div>
         <div class="comision total">
           <span class="comision-label">Podría cobrar</span>
-          <span class="comision-valor">US$ {{ (comisionSimulada() + panel()!.comisionProyectadaUsd) | number:'1.2-2' }}</span>
+          <span class="comision-valor">{{ (comisionSimulada() + panel()!.comisionProyectadaUsd) | usd }}</span>
           <span class="comision-sub"><a (click)="verComisiones()">ver liquidación</a></span>
         </div>
       </div>
 
       <div class="simulador">
-        <label for="extra">¿Y si vende <b>US$ {{ extraUsd() | number:'1.0-0' }}</b> más?</label>
+        <label for="extra">¿Y si vende <b>{{ extraUsd() | usd:0 }}</b> más?</label>
         <input id="extra" type="range" min="0" [max]="maxExtra()" step="100" [value]="extraUsd()" (input)="onExtraChange($any($event.target).value)">
         <span class="simulador-hint">
           @if (extraUsd() > 0) {
-            Llegaría al {{ porcentajeSimulado() }}% y cobraría US$ {{ comisionSimulada() | number:'1.2-2' }} de comisión.
+            Llegaría al {{ porcentajeSimulado() }}% y cobraría {{ comisionSimulada() | usd }} de comisión.
           } @else {
             Mové el control: recalcula el avance y la comisión al {{ porcentajeComision() | number:'1.0-2' }} %. Solo simula, no guarda nada.
           }
@@ -118,7 +118,7 @@
       </div>
       <div class="stat-item" [class.stat-alerta]="(avance()?.clientesSinVisitar30d ?? clientesRojos()) > 0">
         <div class="stat-icon"><mat-icon>person_off</mat-icon></div>
-        <div class="stat-content"><span class="stat-value">{{ avance()?.clientesSinVisitar30d ?? clientesRojos() }}</span><span class="stat-label">Sin visitar +30 d</span></div>
+        <div class="stat-content"><span class="stat-value">{{ avance()?.clientesSinVisitar30d ?? clientesRojos() }}</span><span class="stat-label">Sin visitar +{{ avance()?.diasSinVisitaUmbral ?? panel()?.diasSinVisitaUmbral ?? 30 }} d</span></div>
       </div>
       <div class="stat-item">
         <div class="stat-icon"><mat-icon>receipt_long</mat-icon></div>
@@ -132,7 +132,7 @@
       <section class="card">
         <header class="card-head">
           <h2><mat-icon>bar_chart</mat-icon> Ventas por semana</h2>
-          <span class="card-sub">últimas 8 semanas · US$ {{ totalSemanas() | number:'1.0-0' }} colocados</span>
+          <span class="card-sub">últimas 8 semanas · {{ totalSemanas() | usd:0 }} colocados</span>
         </header>
         @if (totalSemanas() === 0) {
           <div class="card-vacio">Sin pedidos en las últimas 8 semanas.</div>
@@ -187,7 +187,7 @@
       <section class="card card-ancha">
         <header class="card-head">
           <h2><mat-icon>groups</mat-icon> Mis clientes</h2>
-          <span class="card-sub">{{ clientes().length }} en cartera · US$ {{ totalCarteraAnio() | number:'1.0-0' }} en el año@if (clientesRojos() > 0) { · <b class="rojo">{{ clientesRojos() }} sin visitar</b> }</span>
+          <span class="card-sub">{{ clientes().length }} en cartera · {{ totalCarteraAnio() | usd:0 }} en el año@if (clientesRojos() > 0) { · <b class="rojo">{{ clientesRojos() }} sin visitar</b> }</span>
         </header>
         @if (clientes().length === 0) {
           <div class="card-vacio">Este vendedor no tiene clientes asignados.</div>
@@ -207,13 +207,13 @@
                     <td><span class="salud" [attr.data-semaforo]="c.semaforo"><i></i>{{ etiquetaSalud(c.semaforo) }}</span></td>
                     <td>
                       <span class="cliente-nombre">{{ c.nombre }}</span>
-                      @if (c.tipo) { <span class="enum-pill" [attr.data-valor]="c.tipo">{{ c.tipo }}</span> }
+                      @if (c.tipo) { <span class="enum-pill" [attr.data-valor]="c.tipo">{{ c.tipo | etiqueta }}</span> }
                     </td>
                     <td>{{ c.ciudad || '—' }}</td>
                     <td class="num" [class.rojo]="c.semaforo === 'rojo'">{{ diasSinVisitaLabel(c) }}</td>
                     <td>{{ c.ultimoPedidoFecha ? (c.ultimoPedidoFecha | date:'dd/MM/yy') : '—' }}</td>
                     <td class="num">{{ c.pedidosAnio }}</td>
-                    <td class="num">US$ {{ c.totalAnioUsd | number:'1.2-2' }}</td>
+                    <td class="num">{{ c.totalAnioUsd | usd }}</td>
                     <td class="acciones" (click)="$event.stopPropagation()">
                       <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(c.id)"><mat-icon>add_task</mat-icon></button>
                       <button mat-icon-button class="action-btn edit" matTooltip="Nuevo pedido" (click)="nuevoPedido(c.id)"><mat-icon>add_shopping_cart</mat-icon></button>
@@ -230,7 +230,7 @@
       <section class="card card-ancha">
         <header class="card-head">
           <h2><mat-icon>receipt_long</mat-icon> Pedidos abiertos</h2>
-          <span class="card-sub">{{ panel()!.pedidosAbiertos.length }} en curso · US$ {{ totalAbiertos() | number:'1.0-0' }}</span>
+          <span class="card-sub">{{ panel()!.pedidosAbiertos.length }} en curso · {{ totalAbiertos() | usd:0 }}</span>
           <button mat-stroked-button class="card-btn" (click)="nuevoPedido()"><mat-icon>add_shopping_cart</mat-icon> Nuevo pedido</button>
         </header>
         @if (panel()!.pedidosAbiertos.length === 0) {
@@ -244,8 +244,8 @@
                   <span class="pedido-cliente">{{ p.clienteNombre || '—' }}</span>
                   <span class="pedido-fecha">{{ p.fecha | date:'dd/MM/yy' }}</span>
                 </div>
-                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
-                <span class="pedido-total">US$ {{ p.totalUsd | number:'1.2-2' }}</span>
+                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span>
+                <span class="pedido-total">{{ p.totalUsd | usd }}</span>
                 <mat-icon class="pedido-ir">chevron_right</mat-icon>
               </div>
             }

@@ -74,9 +74,9 @@ namespace ApiMotos.Controllers.Artesanal
             }
         }
 
-        /// <summary>Clientes con vendedor asignado y sin actividad en los últimos `dias` (default 30).</summary>
+        /// <summary>Clientes con vendedor asignado y sin actividad en los últimos `dias` (0 = el parámetro `crm.dias_sin_visita` de Configuración, default 30).</summary>
         [HttpGet("alertas/clientes-sin-visitar")]
-        public async Task<IActionResult> ClientesSinVisitar([FromQuery] int dias = 30)
+        public async Task<IActionResult> ClientesSinVisitar([FromQuery] int dias = 0)
         {
             var result = await _mediator.Send(new ClientesSinVisitarQuery(dias));
             return Ok(result);

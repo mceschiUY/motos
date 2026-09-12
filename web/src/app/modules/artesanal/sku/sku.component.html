@@ -153,7 +153,7 @@
                 <tr (click)="verPedido(p.pedidoId)" matTooltip="Ver el pedido">
                   <td class="sku-mono">{{ p.numero || ('#' + p.pedidoId) }}<small>{{ p.fecha | date:'dd/MM/yyyy' }}</small></td>
                   <td>{{ p.clienteNombre || '—' }}</td>
-                  <td><span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span></td>
+                  <td><span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span></td>
                   <td class="num">{{ formatoNumero(p.cantidad) }}</td>
                   <td><mat-icon class="rel-ir">chevron_right</mat-icon></td>
                 </tr>
@@ -183,7 +183,7 @@
               <div class="mov-cuerpo">
                 <div class="mov-linea1">
                   <span class="mov-fecha">{{ m.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
-                  <span class="enum-pill" [attr.data-valor]="m.tipo">{{ m.tipo }}</span>
+                  <span class="enum-pill" [attr.data-valor]="m.tipo">{{ m.tipo | etiqueta }}</span>
                   <span class="mov-cantidad" [ngClass]="claseDelta(m)">
                     {{ cantidadConSigno(m) }}
                     @if (m.tipo === 'transferencia' && m.depositoDestinoId != null) { <mat-icon>sync_alt</mat-icon> }

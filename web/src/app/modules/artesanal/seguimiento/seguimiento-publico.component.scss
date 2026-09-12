@@ -261,3 +261,10 @@
 
   button mat-icon { margin-right: 4px; font-size: 18px; width: 18px; height: 18px; }
 }
+
+// ─── Fecha estimada, fotos y contacto (revisión de escenas 2026-09-12) ─────────────────
+.sp-eta { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary); b { color: var(--ceskia-text-primary); } mat-icon { color: var(--ceskia-accent-primary); font-size: 18px; width: 18px; height: 18px; } }
+.sp-item { display: flex; align-items: center; gap: 10px; }
+.sp-foto { width: 44px; height: 44px; border-radius: var(--ceskia-radius-md); object-fit: cover; flex-shrink: 0; background: var(--ceskia-surface); }
+.sp-foto-vacia { display: grid; place-items: center; mat-icon { color: var(--ceskia-text-muted); } }
+.sp-contacto { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; p { margin: 0; color: var(--ceskia-text-secondary); } button mat-icon { margin-right: 4px; } }

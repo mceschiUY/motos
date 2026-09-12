@@ -50,6 +50,7 @@
           @if (d.agencia.nombre) { <span class="sp-chip"><mat-icon>local_shipping</mat-icon> {{ d.agencia.nombre }}</span> }
           @if (d.cliente.ciudad) { <span class="sp-chip"><mat-icon>place</mat-icon> {{ d.cliente.ciudad }}</span> }
         </div>
+        @if (eta(); as f) { <p class="sp-eta"><mat-icon>event_available</mat-icon> Llegaría alrededor del <b>{{ f | date:'EEEE d \'de\' MMMM' }}</b></p> }
         @if (d.estado === 'anulado' && d.motivoAnulacion) {
           <p class="sp-motivo">Motivo: {{ d.motivoAnulacion }}</p>
         }
@@ -90,6 +91,7 @@
             <ul class="sp-lineas">
               @for (l of p.lineas; track l.varianteId + '-' + $index) {
                 <li class="sp-item">
+                  @if (imagen(l.imagenPrincipalId); as src) { <img class="sp-foto" [src]="src" [alt]="l.productoNombre" loading="lazy"> } @else { <span class="sp-foto sp-foto-vacia"><mat-icon>image</mat-icon></span> }
                   <div class="sp-item-texto">
                     <span class="sp-item-nombre">{{ l.productoNombre || l.sku || 'Artículo' }}</span>
                     <span class="sp-item-detalle">
@@ -104,6 +106,13 @@
             </ul>
             <p class="sp-nota">{{ unidades() | number:'1.0-0' }} {{ unidades() === 1 ? 'unidad' : 'unidades' }} en total</p>
           }
+        </section>
+      }
+
+      @if (contactoWhatsapp()) {
+        <section class="sp-tarjeta sp-contacto">
+          <p>¿Dudas con tu envío?</p>
+          <button mat-stroked-button (click)="contactar()"><mat-icon>chat</mat-icon> Escribinos por WhatsApp</button>
         </section>
       }
 

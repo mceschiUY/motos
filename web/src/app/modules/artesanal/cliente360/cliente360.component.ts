@@ -1,4 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { etiqueta } from '../comun/etiquetas';
+import { EtiquetaPipe } from '../comun/etiquetas';
+import { UsdPipe } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,7 +28,7 @@ import { Cliente360, Cliente360TimelineItem } from './cliente360.model';
 @Component({
   selector: 'app-cliente360',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, EtiquetaPipe, 
     CommonModule, RouterLink,
     MatIconModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule,
     MatSnackBarModule, MatDialogModule,
@@ -143,17 +146,16 @@ export class Cliente360Component implements OnInit {
   }
 
   etiquetaTipoCliente(t: string | null): string {
-    return ({ tienda: 'Tienda', distribuidor: 'Distribuidor', online: 'Online', particular: 'Particular' } as Record<string, string>)[t ?? ''] ?? (t || 'Sin tipo');
+    return t ? etiqueta(t) : 'Sin tipo';
   }
 
   etiquetaTipoActividad(t: string | null): string {
-    return ({ visita: 'Visita', llamada: 'Llamada', whatsapp: 'WhatsApp', email: 'Email' } as Record<string, string>)[t ?? ''] ?? (t || '');
+    return etiqueta(t);
   }
 
+  /** Estados de pedido y envío y resultados de actividad, del diccionario compartido. */
   etiquetaEstado(e: string | null): string {
-    return ({
-      pedido: 'Con pedido', sin_pedido: 'Sin pedido', reprogramar: 'Reprogramar', sin_contacto: 'Sin contacto',
-    } as Record<string, string>)[e ?? ''] ?? (e || '');
+    return etiqueta(e);
   }
 
   private waUrl(telefono: string | null | undefined): string | null {

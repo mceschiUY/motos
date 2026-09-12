@@ -1,6 +1,7 @@
 using System.Globalization;
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
 using ApiMotos.Domain.Common;
 
 namespace ApiMotos.Application.Artesanal.Control.CentroControl
@@ -23,12 +24,9 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
     public class CentroControlHandler : IRequestHandler<CentroControlQuery, CentroControlDto>
     {
         private const int MaxAcciones = 12;
-        private const int DiasSinVisita = 30;
-        private const decimal UmbralDefault = 3m;
 
         // ── Filas internas (una clase por consulta) ─────────────────────────────
 
-        private sealed class ValorFila { public string? Valor { get; set; } }
 
         private sealed class KpiFila
         {
@@ -106,9 +104,6 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
         }
 
         // ── SQL ──────────────────────────────────────────────────────────────────
-
-        private const string SqlUmbral = @"
-SELECT TOP 1 Valor FROM Cfg_ConfiguracionSitio WHERE Clave = N'stock.umbral_bajo' AND Activo = 1";
 
         private const string SqlKpis = @"
 SELECT
@@ -256,7 +251,8 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
             var desdeMes = new DateTime(hoy.Year, hoy.Month, 1);
             var hastaMes = desdeMes.AddMonths(1);
             var periodo = desdeMes.ToString("yyyy-MM", CultureInfo.InvariantCulture);
-            var umbral = await LeerUmbralAsync();
+            var umbral = await ParametrosAlertas.UmbralStockBajoAsync(_consultas);
+            var diasSinVisita = await ParametrosAlertas.DiasSinVisitaAsync(_consultas);
 
             var p = new
             {
@@ -266,7 +262,7 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
                 DesdeMesAnterior = desdeMes.AddMonths(-1),
                 Periodo = periodo,
                 Umbral = umbral,
-                Dias = DiasSinVisita,
+                Dias = diasSinVisita,
             };
 
             var kpi = (await _consultas.ConsultarAsync<KpiFila>(SqlKpis, p)).FirstOrDefault() ?? new KpiFila();
@@ -307,6 +303,7 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
                 Fecha = hoy,
                 Periodo = periodo,
                 UmbralStockBajo = umbral,
+                DiasSinVisita = diasSinVisita,
                 Kpis = new CentroControlKpisDto
                 {
                     PedidosNuevosHoy = kpi.PedidosNuevosHoy,
@@ -475,23 +472,6 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────
-
-        private async Task<decimal> LeerUmbralAsync()
-        {
-            try
-            {
-                var fila = (await _consultas.ConsultarAsync<ValorFila>(SqlUmbral)).FirstOrDefault();
-                if (fila?.Valor != null
-                    && decimal.TryParse(fila.Valor.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out var v)
-                    && v > 0m)
-                    return v;
-            }
-            catch
-            {
-                // La tabla de configuración puede no existir todavía: se usa el default.
-            }
-            return UmbralDefault;
-        }
 
         private static int DiasSla(EnvioFila e, DateTime hoy)
         {

@@ -167,7 +167,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll",
         policy =>
         {
+            // Lista de appsettings siempre; en Development también cualquier origen de la red local
+            // (localhost o IP privada), para abrir el front desde el celular (plan Etapa F2).
             policy.WithOrigins(allowedOrigins)
+                  .SetIsOriginAllowed(origen => allowedOrigins.Contains(origen)
+                      || (builder.Environment.IsDevelopment() && ApiMotos.Application.Artesanal.Comun.RedLocal.EsOrigenDeRedLocal(origen)))
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();

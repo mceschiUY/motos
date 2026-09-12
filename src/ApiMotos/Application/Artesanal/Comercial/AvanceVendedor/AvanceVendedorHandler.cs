@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
 using ApiMotos.Domain.Agregates.Metas;
 using ApiMotos.Domain.Common;
 
@@ -42,7 +43,7 @@ SELECT v.Id AS VendedorId
      , (SELECT COUNT(*) FROM PC_CLIENTES c
         WHERE c.VendedorId = v.Id
           AND NOT EXISTS (SELECT 1 FROM PC_ACTIVIDADES a
-                          WHERE a.ClienteId = c.Id AND a.Fecha >= DATEADD(DAY, -30, @Hoy))) AS ClientesSinVisitar30d
+                          WHERE a.ClienteId = c.Id AND a.Fecha >= DATEADD(DAY, -@Dias, @Hoy))) AS ClientesSinVisitar30d
 FROM PC_VENDEDORES v
 WHERE v.Id = @VendedorId";
 
@@ -63,6 +64,7 @@ WHERE v.Id = @VendedorId";
             var desde = DateTime.ParseExact(periodo + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var hasta = desde.AddMonths(1);
 
+            var dias = await ParametrosAlertas.DiasSinVisitaAsync(_consultas);
             var filas = await _consultas.ConsultarAsync<Fila>(Sql, new
             {
                 VendedorId = query.VendedorId,
@@ -70,6 +72,7 @@ WHERE v.Id = @VendedorId";
                 Desde = desde,
                 Hasta = hasta,
                 Hoy = hoy,
+                Dias = dias,
             });
             var f = filas.FirstOrDefault();
             if (f == null) return null;
@@ -88,6 +91,7 @@ WHERE v.Id = @VendedorId";
                 TasaCierre = f.Actividades == 0 ? 0m : Math.Round((decimal)f.ConPedido / f.Actividades, 4),
                 ClientesAsignados = f.ClientesAsignados,
                 ClientesSinVisitar30d = f.ClientesSinVisitar30d,
+                DiasSinVisitaUmbral = dias,
             };
         }
     }

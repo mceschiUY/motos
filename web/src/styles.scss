@@ -1133,3 +1133,48 @@ h1, h2, h3 {
   .mdc-text-field--with-leading-icon { padding-left: 16px; }
   .mdc-text-field--with-leading-icon .mdc-floating-label { left: 4px; }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Paracaídas móvil (plan Etapa F5, 2026-09-12): reglas globales para que ninguna pantalla
+// generada (listas, forms en diálogo, fichas) se rompa en un celular aunque no esté diseñada
+// para él. No rediseña: apila la cabecera, envuelve la toolbar, deja las tablas con scroll
+// propio y los diálogos a lo ancho. Solo clases compartidas por los shells; no toca core.
+// ═══════════════════════════════════════════════════════════════════════════════
+@media (max-width: 640px) {
+  .kosmos-page { padding: var(--ceskia-space-3); }
+  .kosmos-page .page-header {
+    margin-bottom: var(--ceskia-space-3);
+    .header-content { flex-direction: column; align-items: stretch; gap: var(--ceskia-space-3); }
+    .header-stats {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ceskia-space-2);
+      .stat-item { min-width: 0; padding: var(--ceskia-space-2) var(--ceskia-space-3); }
+    }
+  }
+  .kosmos-page .smart-toolbar {
+    flex-wrap: wrap; gap: var(--ceskia-space-2); padding: var(--ceskia-space-3);
+    .search-container { flex: 1 1 100%; }
+  }
+  // Las tablas ya tienen .table-wrapper con overflow-x; lo que falta es que nada las estire.
+  .kosmos-page .content-card { overflow-x: hidden; }
+  .kosmos-page .table-wrapper { -webkit-overflow-scrolling: touch; }
+  // Vistas de lista con columnas fijas: scroll propio en vez de scroll del body.
+  .kosmos-page .master-detail, .kosmos-page .with-relations { grid-template-columns: 1fr !important; height: auto !important; }
+  // Diálogos (forms generados, 600px): a lo ancho del teléfono, contenido con scroll.
+  .cdk-overlay-pane.crm-dialog, .cdk-overlay-pane:has(> .mat-mdc-dialog-container) {
+    max-width: 100vw !important; width: 100vw !important;
+  }
+  .mat-mdc-dialog-container .mat-mdc-dialog-surface { border-radius: 0 !important; }
+  .mat-mdc-dialog-content { max-height: 70dvh !important; }
+  // Fichas generadas: acciones del cabezal que envuelven, grilla de datos a una columna.
+  .ficha-view .ficha-header, .ficha-view .ficha-acciones { flex-wrap: wrap; gap: var(--ceskia-space-2); }
+  .ficha-view .datos-grid, .ficha-view .ficha-datos { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 640px) {
+  // Fichas (generadas y artesanales sobre entity-ficha): menos aire a los costados.
+  .ficha-view { padding: var(--ceskia-space-3) !important; }
+}
+
+// Kanban de pedidos (revisión de escenas 2026-09-12): monto en la tarjeta y total por columna.
+.kanban-col-total { margin-left: auto; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); font-variant-numeric: tabular-nums; }
+.kanban-card-monto { float: right; font-size: var(--ceskia-text-xs); font-weight: 600; color: var(--ceskia-accent-primary); font-variant-numeric: tabular-nums; }
+.kanban-card { cursor: pointer; }

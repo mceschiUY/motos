@@ -43,6 +43,8 @@ namespace ApiMotos.Application.Artesanal.Comercial.Cliente360
         /// <summary>verde (visita ≤ 15 días) · amarillo (16–30 o sin pedidos en 90 días) · rojo (> 30 o nunca visitado).</summary>
         public string Semaforo { get; set; } = "rojo";
         public string MotivoSemaforo { get; set; } = "";
+        /// <summary>Días del parámetro `crm.dias_sin_visita` usado para el semáforo.</summary>
+        public int DiasSinVisitaUmbral { get; set; }
 
         public List<Cliente360TimelineItemDto> Timeline { get; set; } = new();
         public List<Cliente360TopProductoDto> TopProductos { get; set; } = new();

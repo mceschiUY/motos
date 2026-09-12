@@ -1,7 +1,8 @@
-// Existencias (artesanal, solo lectura): misma piel que las listas generadas.
+// Existencias (artesanal, solo lectura): misma piel que las listas generadas, con una
+// grilla plegable categoría → producto → SKU en lugar de la tabla plana (plan Etapa D, 2026-09-12).
 @use 'generated/entity-list' as *;
 
-// Filtros server-side en la toolbar, entre la búsqueda y las acciones.
+// ─── Toolbar ────────────────────────────────────────────────────────────────
 .filtros {
   display: flex;
   align-items: center;
@@ -9,8 +10,7 @@
   flex-wrap: wrap;
 
   .filtro-field {
-    min-width: 220px;
-    // Compactar el outline de Material a la altura de la toolbar
+    min-width: 200px;
     ::ng-deep .mat-mdc-text-field-wrapper { height: 40px; }
     ::ng-deep .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; min-height: 40px; }
     ::ng-deep .mat-mdc-floating-label { top: 20px; }
@@ -18,39 +18,148 @@
   }
 }
 
-// Columnas numéricas alineadas a la derecha
-.smart-table {
-  th.col-num, td.col-num { text-align: right; }
-  td.tnum { font-variant-numeric: tabular-nums; }
-
-  // Saldo negativo: rojo del sistema + ícono de aviso
-  td.negativo {
-    color: var(--ceskia-accent-danger);
-    font-weight: var(--ceskia-font-semibold);
-    .negativo-icon {
-      font-size: 16px; width: 16px; height: 16px;
-      vertical-align: -3px; margin-left: 4px;
-    }
-  }
-
-  tr.fila-link { cursor: pointer; }
+.chip-filtro {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 40px; padding: 0 var(--ceskia-space-3);
+  border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-full);
+  background: var(--ceskia-surface); color: var(--ceskia-text-secondary);
+  font-size: var(--ceskia-text-sm); cursor: pointer;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &.activo { border-color: var(--ceskia-accent-warning); color: var(--ceskia-accent-warning); background: color-mix(in srgb, var(--ceskia-accent-warning) 12%, transparent); }
 }
 
-// KPI de "en negativo" se enciende cuando hay alguno
+// El KPI "Con alerta" es un botón: mismo look que un stat-item, y se marca cuando filtra.
+.header-stats .stat-boton {
+  cursor: pointer; font: inherit; text-align: left; color: inherit;
+  &.stat-activo { border-color: var(--ceskia-accent-warning); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ceskia-accent-warning) 25%, transparent); }
+}
 .header-stats .stat-item.stat-alerta {
-  .stat-icon { color: var(--ceskia-accent-danger); background: var(--ceskia-accent-danger-glow); }
-  .stat-value { color: var(--ceskia-accent-danger); }
+  .stat-icon { color: var(--ceskia-accent-warning); background: color-mix(in srgb, var(--ceskia-accent-warning) 14%, transparent); }
+  .stat-value { color: var(--ceskia-accent-warning); }
 }
 
-.empty-state p {
-  margin: var(--ceskia-space-2) 0 0;
-  color: var(--ceskia-text-tertiary);
-  font-size: var(--ceskia-text-sm);
-  max-width: 420px;
-}
-
-.relation-loading {
+.ex-cargando {
   display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-3);
-  padding: var(--ceskia-space-8);
-  color: var(--ceskia-text-tertiary);
+  padding: var(--ceskia-space-8); color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm);
+}
+
+// ─── Grilla plegable ───────────────────────────────────────────────────────
+$cols: minmax(0, 1fr) 120px 120px 130px 110px 48px;
+
+.ex-cab, .ex-fila {
+  display: grid;
+  grid-template-columns: $cols;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  padding: 0 var(--ceskia-space-4);
+}
+
+.ex-cab {
+  height: 36px;
+  border-bottom: 1px solid var(--ceskia-border-default);
+  span {
+    font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .04em;
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+.col-num { text-align: right; }
+.tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--ceskia-font-mono); }
+
+.ex-fila {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--ceskia-border-subtle);
+  background: transparent;
+  color: var(--ceskia-text-primary);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--ceskia-transition-fast);
+  &:hover { background: var(--ceskia-hover); }
+}
+
+.ex-nombre { display: flex; align-items: center; gap: var(--ceskia-space-2); min-width: 0; }
+.ex-chevron { color: var(--ceskia-text-tertiary); flex-shrink: 0; }
+.ex-unidades { font-weight: var(--ceskia-font-semibold); small { font-weight: 400; color: var(--ceskia-text-tertiary); } }
+.ex-secundario { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); }
+.ex-acciones { display: flex; justify-content: flex-end; button { opacity: .55; } }
+.ex-fila:hover .ex-acciones button { opacity: 1; }
+
+// Nivel 1: categoría
+.ex-categoria {
+  min-height: 52px;
+  background: var(--ceskia-surface);
+  border-bottom: 1px solid var(--ceskia-border-default);
+  strong { font-size: var(--ceskia-text-base); }
+  small { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-xs); margin-left: var(--ceskia-space-2); }
+  .ex-unidades { font-size: var(--ceskia-text-base); }
+}
+
+// Nivel 2: producto (sangría y barra de color según el peor SKU)
+.ex-producto {
+  min-height: 48px;
+  padding-left: calc(var(--ceskia-space-4) + 18px);
+  border-left: 3px solid transparent;
+  &[data-semaforo='negativo'] { border-left-color: var(--ceskia-accent-danger); }
+  &[data-semaforo='sin_stock'] { border-left-color: var(--ceskia-accent-danger); opacity: .95; }
+  &[data-semaforo='bajo'] { border-left-color: var(--ceskia-accent-warning); }
+  .ex-producto-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+  .ex-producto-texto > span { font-weight: var(--ceskia-font-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ex-producto-texto small { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-xs); }
+}
+
+// Nivel 3: SKU (más sangría, muestra de color, saldo con desglose por depósito)
+.ex-sku {
+  min-height: 44px;
+  padding-left: calc(var(--ceskia-space-4) + 46px);
+  font-size: var(--ceskia-text-sm);
+  background: color-mix(in srgb, var(--ceskia-base) 55%, transparent);
+  &[data-semaforo='negativo'] .ex-saldo { color: var(--ceskia-accent-danger); font-weight: var(--ceskia-font-semibold); }
+  &[data-semaforo='sin_stock'] .ex-saldo { color: var(--ceskia-text-muted); }
+  &[data-semaforo='bajo'] .ex-saldo { color: var(--ceskia-accent-warning); font-weight: var(--ceskia-font-semibold); }
+  .ex-sku-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+  .ex-sku-texto small { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-xs); }
+  .ex-saldo { display: flex; flex-direction: column; align-items: flex-end; }
+  .ex-desglose { display: flex; gap: var(--ceskia-space-2); font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); white-space: nowrap; }
+}
+
+.ex-color {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--ceskia-border-strong);
+  &.sin-color { background: repeating-linear-gradient(45deg, var(--ceskia-border-default) 0 3px, transparent 3px 6px); }
+}
+
+.ex-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px 8px; border-radius: var(--ceskia-radius-full);
+  font-size: var(--ceskia-text-xs); font-weight: var(--ceskia-font-semibold);
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &.ex-badge-alerta { color: var(--ceskia-accent-warning); background: color-mix(in srgb, var(--ceskia-accent-warning) 14%, transparent); }
+  &.ex-badge-ok { color: var(--ceskia-accent-success); background: color-mix(in srgb, var(--ceskia-accent-success) 12%, transparent); padding: 2px 6px; }
+}
+
+// Pills del semáforo (valores propios de esta escena; el mapeo global no los tiene)
+.enum-pill[data-valor='negativo'], .enum-pill[data-valor='sin_stock'] {
+  color: var(--ceskia-accent-danger); background: color-mix(in srgb, var(--ceskia-accent-danger) 14%, transparent);
+}
+.enum-pill[data-valor='bajo'] { color: var(--ceskia-accent-warning); background: color-mix(in srgb, var(--ceskia-accent-warning) 14%, transparent); }
+.enum-pill[data-valor='ok'] { color: var(--ceskia-accent-success); background: color-mix(in srgb, var(--ceskia-accent-success) 12%, transparent); }
+
+.empty-state p { margin: var(--ceskia-space-2) 0 0; color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); max-width: 420px; }
+
+// ─── Celular (plan Etapa F5): cuatro columnas, sin comprometido ni cobertura ─────
+@media (max-width: 860px) {
+  .ex-cab, .ex-fila { grid-template-columns: minmax(0, 1fr) 90px 90px 40px; gap: var(--ceskia-space-2); }
+  .ex-solo-ancho { display: none; }
+  .ex-desglose { display: none !important; }
+}
+@media (max-width: 640px) {
+  .filtros { width: 100%; .filtro-field { min-width: 0; flex: 1 1 auto; } }
+  .page-header .header-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ex-cab, .ex-fila { padding-left: var(--ceskia-space-3); padding-right: var(--ceskia-space-2); }
+  .ex-producto { padding-left: calc(var(--ceskia-space-3) + 12px); }
+  .ex-sku { padding-left: calc(var(--ceskia-space-3) + 28px); }
+  .ex-categoria small { display: none; }
 }

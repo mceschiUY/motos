@@ -1,4 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { EtiquetaPipe } from '../comun/etiquetas';
+import { UsdPipe } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +22,7 @@ const REFRESCO_MS = 60_000;
 @Component({
   selector: 'app-hoy',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, MatTooltipModule, ActividadRecienteComponent],
+  imports: [UsdPipe, EtiquetaPipe, CommonModule, RouterModule, MatIconModule, MatTooltipModule, ActividadRecienteComponent],
   templateUrl: './hoy.component.html',
   styleUrl: './hoy.component.scss',
 })

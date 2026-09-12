@@ -76,16 +76,20 @@
 }
 
 // ─── Carrito ──────────────────────────────────────────────────────────────
+// Grilla de seis columnas en escritorio; en el celular cada línea es una tarjeta (ver @media).
 .carrito {
   width: 100%;
-  border-collapse: collapse;
+  $cols: minmax(120px, 1.1fr) minmax(0, 2fr) 110px 120px 120px 48px;
 
-  th, td {
+  .carrito-cab, .linea, .carrito-pie {
+    display: grid;
+    grid-template-columns: $cols;
+    align-items: center;
+    gap: var(--ceskia-space-2);
     padding: var(--ceskia-space-3) var(--ceskia-space-4);
     border-bottom: 1px solid var(--ceskia-border-default);
-    text-align: left;
   }
-  th {
+  .carrito-cab span {
     font-size: var(--ceskia-text-xs);
     text-transform: uppercase;
     letter-spacing: .04em;
@@ -94,7 +98,16 @@
   .col-num { text-align: right; }
   .tnum { font-variant-numeric: tabular-nums; }
   .col-primary { font-weight: var(--ceskia-font-semibold); }
-  .col-accion { width: 48px; text-align: right; }
+  .c-accion { text-align: right; }
+  .c-producto { min-width: 0; }
+  // Las etiquetas chicas solo se ven en el celular
+  .c-cantidad small, .c-precio small, .c-subtotal small { display: none; }
+  .carrito-pie {
+    grid-template-columns: 1fr auto;
+    border-bottom: none;
+    padding-top: var(--ceskia-space-4);
+    .total-label { text-align: right; }
+  }
 
   .detalle { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); }
 
@@ -119,10 +132,6 @@
     color: var(--ceskia-text-primary);
   }
 
-  tfoot td {
-    border-bottom: none;
-    padding-top: var(--ceskia-space-4);
-  }
   .total-label { color: var(--ceskia-text-tertiary); }
   .total-valor {
     font-size: var(--ceskia-text-lg);
@@ -167,4 +176,132 @@
   color: var(--ceskia-text-tertiary);
   font-size: var(--ceskia-text-sm);
   max-width: 420px;
+}
+
+// ─── Celular (plan Etapa F3, 2026-09-12): la pantalla que vende, desde el teléfono ────────
+// Cabecera apilada, KPI a dos columnas, cabecera del pedido en una columna, cada línea del
+// carrito como tarjeta y la barra "Crear pedido · total" pegada abajo.
+@media (max-width: 640px) {
+  .armado {
+    // Deja lugar a la barra fija de abajo (más el borde seguro de iPhone)
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+
+    .page-header {
+      margin-bottom: var(--ceskia-space-3);
+      .header-content { flex-direction: column; align-items: stretch; gap: var(--ceskia-space-3); }
+      .header-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--ceskia-space-2);
+        .stat-item { padding: var(--ceskia-space-2) var(--ceskia-space-3); min-width: 0; }
+      }
+    }
+    .content-card + .content-card { margin-top: var(--ceskia-space-3); }
+    .smart-toolbar { padding: var(--ceskia-space-3); }
+  }
+
+  .cabecera {
+    grid-template-columns: 1fr;
+    gap: var(--ceskia-space-2);
+    padding: var(--ceskia-space-3);
+  }
+
+  .resultados .resultado {
+    padding: var(--ceskia-space-3);
+    .res-numeros { min-width: 84px; }
+  }
+
+  .carrito {
+    .carrito-cab { display: none; }
+    .linea {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "sku accion"
+        "producto producto"
+        "cantidad precio"
+        "subtotal subtotal";
+      row-gap: var(--ceskia-space-2);
+      padding: var(--ceskia-space-3);
+    }
+    .c-sku { grid-area: sku; }
+    .c-accion { grid-area: accion; }
+    .c-producto { grid-area: producto; font-size: var(--ceskia-text-sm); }
+    .c-cantidad { grid-area: cantidad; }
+    .c-precio { grid-area: precio; }
+    .c-subtotal { grid-area: subtotal; display: flex; justify-content: space-between; align-items: baseline; font-weight: var(--ceskia-font-semibold); }
+    .c-cantidad, .c-precio {
+      display: flex; flex-direction: column; align-items: stretch; gap: 2px; text-align: left;
+      .celda-num { width: 100%; padding: 8px 10px; font-size: var(--ceskia-text-base); }
+    }
+    .c-cantidad small, .c-precio small, .c-subtotal small {
+      display: inline; font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--ceskia-text-tertiary);
+    }
+    .carrito-pie { padding: var(--ceskia-space-3); }
+  }
+
+  .observaciones, .nota-faltante { padding-left: var(--ceskia-space-3); padding-right: var(--ceskia-space-3); }
+
+  // Barra de acción fija: siempre a mano, con el total a la vista
+  .acciones {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 20;
+    padding: var(--ceskia-space-3) var(--ceskia-space-3) calc(var(--ceskia-space-3) + env(safe-area-inset-bottom, 0px));
+    background: var(--ceskia-elevated);
+    border-top: 1px solid var(--ceskia-border-default);
+    box-shadow: var(--ceskia-shadow-lg);
+    .save-btn { flex: 1; height: 48px; font-size: var(--ceskia-text-base); }
+  }
+}
+
+// ─── Este cliente (revisión de escenas 2026-09-12): contexto del 360 al elegir el cliente ────
+.ctx {
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  border-left: 4px solid var(--ceskia-border-default);
+  &[data-semaforo='verde'] { border-left-color: var(--ceskia-accent-success); .ctx-punto { background: var(--ceskia-accent-success); } }
+  &[data-semaforo='amarillo'] { border-left-color: var(--ceskia-accent-warning); .ctx-punto { background: var(--ceskia-accent-warning); } }
+  &[data-semaforo='rojo'] { border-left-color: var(--ceskia-accent-danger); .ctx-punto { background: var(--ceskia-accent-danger); } }
+}
+.ctx-cargando { display: flex; align-items: center; gap: var(--ceskia-space-2); color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); }
+.ctx-cab { display: flex; align-items: center; justify-content: space-between; gap: var(--ceskia-space-3); flex-wrap: wrap; }
+.ctx-titulo { display: flex; align-items: baseline; gap: 6px; color: var(--ceskia-text-primary); text-decoration: none; font-weight: var(--ceskia-font-semibold);
+  mat-icon { align-self: center; color: var(--ceskia-accent-primary); font-size: 20px; width: 20px; height: 20px; }
+  small { font-weight: 400; color: var(--ceskia-text-tertiary); }
+  &:hover span { color: var(--ceskia-accent-primary); }
+}
+.ctx-semaforo { display: inline-flex; align-items: center; gap: 6px; font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary); }
+.ctx-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--ceskia-border-strong); }
+.ctx-kpis { display: flex; flex-wrap: wrap; gap: var(--ceskia-space-2) var(--ceskia-space-4); margin-top: var(--ceskia-space-2); font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary);
+  b { color: var(--ceskia-text-primary); font-variant-numeric: tabular-nums; }
+  .ctx-alerta { display: inline-flex; align-items: center; gap: 4px; color: var(--ceskia-accent-info, var(--ceskia-accent-primary)); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+}
+.ctx-cuerpo { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: var(--ceskia-space-4); margin-top: var(--ceskia-space-3); }
+.ctx-label { display: block; font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--ceskia-text-tertiary); margin-bottom: 4px; }
+.ctx-sub { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-tertiary); }
+.ctx-ultimo { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ctx-ultimo-link { display: inline-flex; align-items: center; gap: 6px; color: var(--ceskia-text-primary); text-decoration: none; font-size: var(--ceskia-text-sm); font-variant-numeric: tabular-nums; &:hover { color: var(--ceskia-accent-primary); } }
+.ctx-repetir mat-spinner { display: inline-block; margin-right: 6px; }
+.ctx-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ctx-chip {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; cursor: pointer;
+  border: 1px solid var(--ceskia-border-default); border-radius: var(--ceskia-radius-full); background: var(--ceskia-surface); color: var(--ceskia-text-primary); font-size: var(--ceskia-text-sm);
+  small { color: var(--ceskia-text-tertiary); }
+  &:hover { border-color: var(--ceskia-accent-primary); color: var(--ceskia-accent-primary); }
+}
+.ac-nombre { display: block; }
+.ac-sub { display: block; color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-xs); line-height: 1.1; }
+.ac-ok { color: var(--ceskia-accent-success); }
+
+// Pistas de precio en la línea: descuento sobre lista y margen sobre costo
+.precio-pistas { display: flex; gap: 8px; justify-content: flex-end; font-size: var(--ceskia-text-xs); margin-top: 2px; font-style: normal;
+  em { font-style: normal; }
+  .pista-desc { color: var(--ceskia-accent-warning); }
+  .pista-margen { color: var(--ceskia-text-tertiary); }
+  .pista-margen-bajo { color: var(--ceskia-accent-danger); font-weight: var(--ceskia-font-semibold); }
+}
+.total-margen { margin-left: 8px; font-size: var(--ceskia-text-xs); font-weight: 400; color: var(--ceskia-text-tertiary); &.pista-margen-bajo { color: var(--ceskia-accent-danger); } }
+
+@media (max-width: 640px) {
+  .ctx-cuerpo { grid-template-columns: 1fr; }
+  .ctx .ctx-kpis { gap: var(--ceskia-space-1) var(--ceskia-space-3); }
 }

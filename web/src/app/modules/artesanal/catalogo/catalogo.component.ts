@@ -1,4 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { UsdPipe } from '../comun/usd.pipe';
+import { EtiquetaPipe } from '../comun/etiquetas';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -30,7 +32,7 @@ interface Card { item: CatalogoItem; foto: string | null; }
 @Component({
   selector: 'app-catalogo',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, EtiquetaPipe, 
     CommonModule, FormsModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatSelectModule, MatProgressSpinnerModule,
@@ -56,7 +58,10 @@ export class CatalogoComponent implements OnInit {
 
   readonly destacados = computed(() => this.cards().filter(c => c.item.destacado).length);
   readonly novedades = computed(() => this.cards().filter(c => c.item.novedad).length);
-  readonly conFoto = computed(() => this.cards().filter(c => c.item.imagenPrincipalId != null).length);
+  /** Productos con algún SKU bajo el umbral (revisión de escenas 2026-09-12): el KPI que avisa. */
+  readonly enAlerta = computed(() => this.cards().filter(c => c.item.semaforo !== 'ok').length);
+  readonly soloAlertas = signal(false);
+  readonly cardsVisibles = computed(() => this.soloAlertas() ? this.cards().filter(c => c.item.semaforo !== 'ok') : this.cards());
 
   ngOnInit(): void {
     this.marcaService.getAll().subscribe({
@@ -105,6 +110,12 @@ export class CatalogoComponent implements OnInit {
   }
 
   abrir(item: CatalogoItem): void { this.router.navigate(['/catalogo', item.id]); }
+
+  /** "Vender" desde la card: abre el armado con el producto en el buscador para elegir talle y color. */
+  vender(item: CatalogoItem, ev: Event): void {
+    ev.stopPropagation();
+    this.router.navigate(['/pedidos/nuevo'], { queryParams: { buscar: item.nombre } });
+  }
 
   /** Iniciales de la marca, para la card sin foto: mejor que un ícono genérico. */
   iniciales(item: CatalogoItem): string {

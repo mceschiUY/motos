@@ -1,0 +1,98 @@
+// Escena "Pedido": misma piel que las fichas (ficha-view, ficha-header, ficha-acciones, print).
+@use 'generated/entity-ficha' as *;
+
+.pedido-escena { max-width: 1180px; }
+.pe-cargando { display: flex; align-items: center; justify-content: center; gap: var(--ceskia-space-3); padding: var(--ceskia-space-8); color: var(--ceskia-text-tertiary); }
+.pe-vacio { flex-direction: column; mat-icon { font-size: 40px; width: 40px; height: 40px; } }
+
+.pe-titulo { min-width: 0; h1 { display: flex; align-items: center; gap: var(--ceskia-space-3); margin: 0; font-size: var(--ceskia-text-2xl); } }
+.pe-estado { font-size: var(--ceskia-text-sm); }
+.pe-sub { margin: 2px 0 0; color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); text-transform: none; &::first-letter { text-transform: uppercase; } }
+.pe-acciones { display: flex; align-items: center; gap: var(--ceskia-space-1); margin-left: auto; }
+
+.card { background: var(--ceskia-elevated); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-xl); padding: var(--ceskia-space-4) var(--ceskia-space-5); margin-top: var(--ceskia-space-4); }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ceskia-space-3); margin-bottom: var(--ceskia-space-3);
+  h2 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--ceskia-text-base); font-weight: var(--ceskia-font-semibold); mat-icon { color: var(--ceskia-accent-primary); font-size: 20px; width: 20px; height: 20px; } } }
+
+// ─── Quién y cómo ─────────────────────────────────────────────────────────
+.pe-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--ceskia-space-3); margin-top: var(--ceskia-space-4); }
+.pe-dato {
+  display: flex; gap: var(--ceskia-space-3); align-items: flex-start; min-width: 0;
+  padding: var(--ceskia-space-3) var(--ceskia-space-4); border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-lg);
+  background: var(--ceskia-elevated); color: inherit; text-decoration: none;
+  > mat-icon { color: var(--ceskia-accent-primary); flex-shrink: 0; margin-top: 2px; }
+  > div { display: flex; flex-direction: column; min-width: 0; }
+  &.pe-link:hover { border-color: var(--ceskia-accent-primary); }
+}
+.pe-dato-label { font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--ceskia-text-tertiary); }
+.pe-dato-valor { font-weight: var(--ceskia-font-semibold); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pe-dato-sub { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); }
+.pe-total .pe-total-valor { font-size: var(--ceskia-text-xl); color: var(--ceskia-accent-primary); font-variant-numeric: tabular-nums; }
+
+.pe-nota { display: flex; align-items: center; gap: var(--ceskia-space-2); margin: var(--ceskia-space-3) 0 0; padding: var(--ceskia-space-2) var(--ceskia-space-3); border-radius: var(--ceskia-radius-md); background: var(--ceskia-surface); color: var(--ceskia-text-secondary); font-size: var(--ceskia-text-sm);
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &.pe-nota-anulado { color: var(--ceskia-accent-danger); }
+}
+
+// ─── Recorrido del ciclo ──────────────────────────────────────────────────
+.pe-recorrido { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--ceskia-space-2); position: relative; margin-bottom: var(--ceskia-space-3);
+  &.pe-anulado { opacity: .45; }
+}
+.pe-hito { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--ceskia-text-muted); font-size: var(--ceskia-text-xs);
+  .pe-hito-punto { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ceskia-surface); border: 2px solid var(--ceskia-border-default); mat-icon { font-size: 18px; width: 18px; height: 18px; } }
+  &.hecho { color: var(--ceskia-accent-success); .pe-hito-punto { border-color: var(--ceskia-accent-success); color: var(--ceskia-accent-success); } }
+  &.actual { color: var(--ceskia-accent-primary); font-weight: var(--ceskia-font-semibold); .pe-hito-punto { border-color: var(--ceskia-accent-primary); color: var(--ceskia-accent-primary); box-shadow: 0 0 0 4px var(--ceskia-accent-primary-glow); } }
+}
+.pe-paso { display: flex; align-items: center; justify-content: space-between; gap: var(--ceskia-space-4); padding: var(--ceskia-space-3) var(--ceskia-space-4); border-radius: var(--ceskia-radius-lg); background: var(--ceskia-surface); }
+.pe-paso-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pe-paso-label { font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--ceskia-accent-primary); font-weight: var(--ceskia-font-semibold); }
+.pe-paso-cond { font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary); }
+.pe-paso-aviso { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ceskia-text-xs); color: var(--ceskia-accent-warning); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+.pe-paso-botones { display: flex; gap: var(--ceskia-space-2); flex-shrink: 0; button mat-spinner { display: inline-block; margin-right: 6px; } }
+.pe-anular { color: var(--ceskia-accent-danger); }
+.pe-paso-fin { margin: 0; font-size: var(--ceskia-text-sm); mat-icon { color: var(--ceskia-accent-success); } }
+.pe-inline { display: flex; align-items: center; gap: var(--ceskia-space-2); flex-wrap: wrap; margin-top: var(--ceskia-space-3); .pe-inline-campo { flex: 1 1 260px; } }
+
+// ─── Líneas ──────────────────────────────────────────────────────────────
+$cols: 56px minmax(0, 2fr) minmax(120px, 1fr) 70px 120px 120px 100px 44px;
+.pe-tabla { display: flex; flex-direction: column; }
+.pe-fila { display: grid; grid-template-columns: $cols; align-items: center; gap: var(--ceskia-space-3); padding: var(--ceskia-space-2) 0; border-bottom: 1px solid var(--ceskia-border-subtle); }
+.pe-cab { padding-top: 0; span { font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--ceskia-text-tertiary); } }
+.num { text-align: right; }
+.tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--ceskia-font-mono); }
+.pe-foto { width: 48px; height: 48px; border-radius: var(--ceskia-radius-md); overflow: hidden; background: var(--ceskia-surface); display: grid; place-items: center;
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pe-foto-vacia mat-icon { color: var(--ceskia-text-muted); }
+}
+.pe-producto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25;
+  .pe-producto-nombre { color: var(--ceskia-text-primary); font-weight: var(--ceskia-font-medium); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; &:hover { color: var(--ceskia-accent-primary); } }
+  small { color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-xs); }
+}
+.pe-variante { display: flex; align-items: center; gap: 6px; font-size: var(--ceskia-text-sm); }
+.pe-color { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--ceskia-border-strong); flex-shrink: 0; &.sin-color { background: repeating-linear-gradient(45deg, var(--ceskia-border-default) 0 3px, transparent 3px 6px); } }
+.pe-precio { display: flex; flex-direction: column; align-items: flex-end; .pe-descuento { font-size: var(--ceskia-text-xs); color: var(--ceskia-accent-warning); } }
+.pe-subtotal { font-weight: var(--ceskia-font-semibold); }
+.pe-stock-falta { color: var(--ceskia-accent-danger); font-weight: var(--ceskia-font-semibold); }
+.pe-faltante { background: color-mix(in srgb, var(--ceskia-accent-danger) 5%, transparent); }
+.pe-pie { border-bottom: none; padding-top: var(--ceskia-space-3); font-weight: var(--ceskia-font-semibold); .pe-total-pie { font-size: var(--ceskia-text-lg); color: var(--ceskia-accent-primary); } }
+.pe-linea-acciones { text-align: right; }
+.pe-congelado { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+.pe-sin-lineas { display: flex; align-items: center; gap: 6px; color: var(--ceskia-text-tertiary); font-size: var(--ceskia-text-sm); margin: 0; }
+
+@media (max-width: 860px) {
+  .pe-fila { grid-template-columns: 48px minmax(0, 2fr) 60px 110px 40px; }
+  .pe-variante, .pe-col-stock, .pe-precio { display: none; }
+  .pe-producto small::after { content: ''; }
+}
+@media (max-width: 640px) {
+  .pe-titulo h1 { font-size: var(--ceskia-text-xl); flex-wrap: wrap; }
+  .pe-acciones { width: 100%; margin-left: 0; }
+  .pe-recorrido { gap: 4px; .pe-hito-label { font-size: 10px; } }
+  .pe-paso { flex-direction: column; align-items: stretch; }
+  .pe-paso-botones { justify-content: flex-end; }
+  .card { padding: var(--ceskia-space-3); }
+}
+@media print {
+  .pe-acciones, .pe-paso, .pe-inline, .pe-linea-acciones, .card-head button { display: none !important; }
+}

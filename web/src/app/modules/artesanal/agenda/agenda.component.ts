@@ -1,6 +1,9 @@
 ﻿import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { usd, UsdPipe } from '../comun/usd.pipe';
+import { etiqueta } from '../comun/etiquetas';
+import { EtiquetaPipe } from '../comun/etiquetas';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -35,7 +38,7 @@ interface GrupoCiudad { ciudad: string; paradas: ParadaAgenda[]; }
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, EtiquetaPipe, 
     CommonModule, FormsModule,
     MatIconModule, MatButtonModule, MatTooltipModule, MatFormFieldModule, MatSelectModule,
     MatProgressSpinnerModule, MatProgressBarModule, MatSnackBarModule, MatDialogModule,
@@ -49,6 +52,7 @@ export class AgendaComponent implements OnInit {
   private readonly vendedorService = inject(VendedorService);
   private readonly clienteService = inject(ClienteService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -58,8 +62,12 @@ export class AgendaComponent implements OnInit {
   readonly vendedorId = signal<number | null>(null);
   readonly esMio = signal(false);
   readonly rango = signal<Rango>('7d');
+  /** Celular (plan Etapa F5): el lateral (mapa, ruta del día, alertas) se pliega bajo un botón. */
+  readonly mostrarLateral = signal(false);
   readonly seleccionada = signal<ParadaAgenda | null>(null);
   readonly avance = signal<AvanceVendedor | null>(null);
+  /** Días de "sin visitar" del parámetro crm.dias_sin_visita (llega con el avance; 30 si no hay vendedor). */
+  readonly diasAlerta = computed(() => this.avance()?.diasSinVisitaUmbral ?? 30);
   readonly sinVisitar = signal<ClienteSinVisitar[]>([]);
   readonly mostrarRealizadas = signal(true);
 
@@ -116,7 +124,17 @@ export class AgendaComponent implements OnInit {
       next: (v: Vendedor[]) => this.vendedores.set(v.filter(x => x.activo !== false)),
       error: (err: unknown) => console.error('[Agenda] Error cargando vendedores:', err),
     });
-    // Vendedor del usuario logueado: si existe, la agenda arranca en "lo mío".
+    // `?vendedorId=N` (desde el panel del vendedor o el home) manda: se abre ESA agenda.
+    // Si no viene, el vendedor del usuario logueado: la agenda arranca en "lo mío".
+    const pedido = Number(this.route.snapshot.queryParamMap.get('vendedorId'));
+    if (pedido > 0) {
+      this.vendedorId.set(pedido);
+      this.vendedorService.mio().subscribe({
+        next: (v: Vendedor | null) => { this.esMio.set(!!v && v.id === pedido); this.loadData(); },
+        error: () => this.loadData(),
+      });
+      return;
+    }
     this.vendedorService.mio().subscribe({
       next: (v: Vendedor | null) => { if (v) { this.vendedorId.set(v.id); this.esMio.set(true); } this.loadData(); },
       error: () => this.loadData(),
@@ -148,8 +166,9 @@ export class AgendaComponent implements OnInit {
     } else {
       this.avance.set(null);
     }
-    this.agendaService.clientesSinVisitar(30).subscribe({
-      next: c => this.sinVisitar.set(vid != null ? c.filter(x => x.vendedorId === vid) : c),
+    this.agendaService.clientesSinVisitar().subscribe({
+      // Los más abandonados primero (revisión de escenas 2026-09-12).
+      next: c => this.sinVisitar.set((vid != null ? c.filter(x => x.vendedorId === vid) : c).sort((a, b) => b.diasSinVisita - a.diasSinVisita)),
       error: () => this.sinVisitar.set([]),
     });
   }
@@ -164,7 +183,8 @@ export class AgendaComponent implements OnInit {
 
   seleccionar(p: ParadaAgenda): void { this.seleccionada.set(p); }
 
-  registrarVisita(p?: ParadaAgenda): void {
+  /** Con parada o con cliente de la alerta ("Agendar"): el form sale con ese cliente fijado. */
+  registrarVisita(p?: { clienteId: number }): void {
     const contextoFk = p ? { campo: 'clienteId', valor: p.clienteId } : null;
     const ref = this.dialog.open(ActividadFormComponent, {
       width: '600px', maxWidth: '95vw', panelClass: 'crm-dialog', autoFocus: true,
@@ -194,10 +214,28 @@ export class AgendaComponent implements OnInit {
   }
 
   verCliente(p: ParadaAgenda | ClienteSinVisitar): void { this.router.navigate(['/cliente', p.clienteId]); }
+
+  /** Contacto de un tap desde la parada (revisión de escenas 2026-09-12). */
+  whatsapp(p: ParadaAgenda, ev: Event): void {
+    ev.stopPropagation();
+    const tel = (p.telefono || '').replace(/[^0-9]/g, '');
+    if (!tel) return;
+    const texto = `Hola ${p.clienteDisplay ?? ''}, te escribo de la distribuidora para coordinar la visita.`;
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+  }
+  llamar(p: ParadaAgenda, ev: Event): void {
+    ev.stopPropagation();
+    const tel = (p.telefono || '').replace(/[^0-9+]/g, '');
+    if (tel) window.location.href = `tel:${tel}`;
+  }
+  /** true si la parada es de un cliente ya en alerta de "sin visitar". */
+  urgente(p: ParadaAgenda): boolean { return p.diasSinVisita == null || p.diasSinVisita > this.diasAlerta(); }
   verActividad(p: ParadaAgenda): void { this.router.navigate(['/actividad', p.actividadId]); }
+  // Con vendedor elegido va a SU panel (cartera con semáforo); sin vendedor, a la lista de clientes.
   misClientes(): void {
     const vid = this.vendedorId();
-    this.router.navigate(['/cliente'], vid != null ? { queryParams: { vendedorId: vid } } : {});
+    if (vid != null) { this.router.navigate(['/vendedor', vid]); return; }
+    this.router.navigate(['/cliente']);
   }
   goBack(): void { this.router.navigate(['/']); }
 
@@ -207,7 +245,7 @@ export class AgendaComponent implements OnInit {
   }
 
   etiquetaResultado(r: string): string {
-    return ({ pedido: 'Pedido', sin_pedido: 'Sin pedido', reprogramar: 'Reprogramar', sin_contacto: 'Sin contacto' } as Record<string, string>)[r] ?? r;
+    return etiqueta(r);
   }
 
   iconoTipo(t: string): string {
@@ -215,7 +253,7 @@ export class AgendaComponent implements OnInit {
   }
 
   formatoUsd(n: number): string {
-    return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol', maximumFractionDigits: 0 }).format(n ?? 0);
+    return usd(n, 0);
   }
 
   private rangoFechas(): { desde: string; hasta: string } {

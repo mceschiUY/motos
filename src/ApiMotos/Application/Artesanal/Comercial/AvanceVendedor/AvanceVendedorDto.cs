@@ -18,5 +18,7 @@
         public decimal TasaCierre { get; set; }
         public int ClientesAsignados { get; set; }
         public int ClientesSinVisitar30d { get; set; }
+        /// <summary>Días del parámetro `crm.dias_sin_visita` con el que se contó ClientesSinVisitar30d.</summary>
+        public int DiasSinVisitaUmbral { get; set; }
     }
 }

@@ -63,3 +63,15 @@ BEGIN
     PRINT 'Datos iniciales insertados exitosamente';
 END
 GO
+
+-- =============================================================================
+-- ALERTAS DEL NEGOCIO (plan Etapa D, 2026-09-12): idempotente por clave, para bases ya creadas.
+-- Las leen el centro de control, la agenda, el panel del vendedor y el cliente 360.
+-- =============================================================================
+IF NOT EXISTS (SELECT 1 FROM Cfg_ConfiguracionSitio WHERE Clave = 'stock.umbral_bajo')
+    INSERT INTO Cfg_ConfiguracionSitio (Clave, Valor, Tipo, Grupo, Orden, Descripcion, FechaCreacion) VALUES
+    ('stock.umbral_bajo', '3', 'number', 'alertas', 1, 'Un SKU con menos unidades que este umbral se marca como stock bajo', GETDATE());
+IF NOT EXISTS (SELECT 1 FROM Cfg_ConfiguracionSitio WHERE Clave = 'crm.dias_sin_visita')
+    INSERT INTO Cfg_ConfiguracionSitio (Clave, Valor, Tipo, Grupo, Orden, Descripcion, FechaCreacion) VALUES
+    ('crm.dias_sin_visita', '30', 'number', 'alertas', 2, 'Un cliente sin actividad hace mas de estos dias dispara la alerta de sin visitar', GETDATE());
+GO

@@ -30,6 +30,8 @@ export interface Cliente360 {
   enviosEnCurso: number;
   semaforo: 'verde' | 'amarillo' | 'rojo';
   motivoSemaforo: string;
+  /** Días del parámetro crm.dias_sin_visita usado para el semáforo. */
+  diasSinVisitaUmbral: number;
 
   timeline: Cliente360TimelineItem[];
   topProductos: Cliente360TopProducto[];

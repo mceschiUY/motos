@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { UsdPipe } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -41,7 +42,7 @@ interface ColumnaColor {
 @Component({
   selector: 'app-ficha-comercial',
   standalone: true,
-  imports: [
+  imports: [UsdPipe, 
     CommonModule, FormsModule,
     MatIconModule, MatButtonModule, MatTooltipModule,
     MatFormFieldModule, MatSelectModule, MatProgressSpinnerModule,

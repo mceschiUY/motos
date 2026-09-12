@@ -9,6 +9,8 @@ export interface PanelVendedor {
   pedidosAbiertos: PanelVendedorPedido[];
   /** Total del mes no anulado ni entregado × % de comisión. */
   comisionProyectadaUsd: number;
+  /** Días del parámetro crm.dias_sin_visita usado para el semáforo. */
+  diasSinVisitaUmbral: number;
   /** Base de esa proyección (USD todavía no entregados del mes). */
   pendienteEntregaUsd: number;
   /** Siempre 8 filas, la más vieja primero; semanaInicio = lunes (ISO date). */

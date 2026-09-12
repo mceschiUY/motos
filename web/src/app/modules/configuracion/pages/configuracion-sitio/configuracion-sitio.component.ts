@@ -69,7 +69,9 @@ export class ConfiguracionSitioComponent implements OnInit {
     'social.twitter': 'Twitter / X',
     'social.whatsapp': 'WhatsApp',
     'social.youtube': 'YouTube',
-    'legal.copyright': 'Texto de Copyright'
+    'legal.copyright': 'Texto de Copyright',
+    'stock.umbral_bajo': 'Umbral de stock bajo (unidades)',
+    'crm.dias_sin_visita': 'Días sin visita para alertar'
   };
 
   ngOnInit(): void {
@@ -92,7 +94,10 @@ export class ConfiguracionSitioComponent implements OnInit {
   }
 
   private organizeByGroups(items: ConfiguracionItem[]): void {
-    const grouped: ConfigGroup[] = CONFIG_GROUPS.map(g => ({
+    // Grupo "alertas" (plan Etapa D): parámetros de las alertas del negocio. Se agrega acá y no en
+    // CONFIG_GROUPS (core) para no tocar el core del generador.
+    const gruposSitio = [...CONFIG_GROUPS, { key: 'alertas', label: 'Alertas', icon: 'notifications_active' }];
+    const grouped: ConfigGroup[] = gruposSitio.map(g => ({
       ...g,
       items: items
         .filter(item => item.grupo === g.key)
@@ -115,6 +120,7 @@ export class ConfiguracionSitioComponent implements OnInit {
     switch (tipo) {
       case 'email': return 'email';
       case 'url': return 'url';
+      case 'number': return 'number';
       default: return 'text';
     }
   }

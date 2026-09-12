@@ -12,6 +12,8 @@ namespace ApiMotos.Application.Artesanal.Comercial.PanelVendedor
         public List<PanelVendedorPedidoDto> PedidosAbiertos { get; set; } = new();
         /// <summary>Total de los pedidos del mes no anulados y todavía no entregados × % de comisión del vendedor.</summary>
         public decimal ComisionProyectadaUsd { get; set; }
+        /// <summary>Días del parámetro `crm.dias_sin_visita` usado para el semáforo de los clientes.</summary>
+        public int DiasSinVisitaUmbral { get; set; }
         /// <summary>Base de la proyección (total USD de esos pedidos), para mostrar "si entrega lo que tiene abierto".</summary>
         public decimal PendienteEntregaUsd { get; set; }
         /// <summary>Últimas 8 semanas (lunes a domingo), la más vieja primero. Siempre 8 filas.</summary>

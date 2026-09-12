@@ -24,6 +24,11 @@ export class SeguimientoService {
   }
 
   /** Link que se comparte con el cliente (QR y botón copiar). */
+  /** Foto de producto para la página pública y para las miniaturas (sin token). */
+  imagenPublicaUrl(documentoId: number): string {
+    return `${environment.apiUrl}/publico/imagen/${documentoId}`;
+  }
+
   linkPublico(codigo: string): string {
     return `${location.origin}/seguimiento/${encodeURIComponent(codigo.trim())}`;
   }

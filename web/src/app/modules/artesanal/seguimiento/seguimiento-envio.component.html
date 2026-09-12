@@ -26,6 +26,7 @@
       </div>
       <div class="ficha-acciones no-print">
         <button mat-icon-button (click)="agregarObservacion()" matTooltip="Agregar observación"><mat-icon>post_add</mat-icon></button>
+        <button mat-stroked-button class="sg-avisar no-print" (click)="avisarCliente()" [disabled]="!d.cliente.telefono" matTooltip="Mandarle al cliente el estado y el link de seguimiento por WhatsApp"><mat-icon>chat</mat-icon> Avisar al cliente</button>
         <button mat-icon-button (click)="alternarCompartir()" [class.sg-activo]="compartiendo()" matTooltip="Compartir seguimiento (link y QR)"><mat-icon>qr_code_2</mat-icon></button>
         <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir"><mat-icon>print</mat-icon></button>
       </div>
@@ -52,7 +53,7 @@
       </div>
       <div class="sg-dato">
         <span class="sg-dato-label"><mat-icon>local_shipping</mat-icon> Agencia</span>
-        <a class="sg-dato-valor sg-link" [routerLink]="['/agencia', d.agencia.id]">{{ d.agencia.nombre || '—' }}</a>
+        <span class="sg-dato-valor">{{ d.agencia.nombre || '—' }}</span>
       </div>
       <div class="sg-dato" [attr.data-sla]="etapaEnCurso()?.estadoSla">
         <span class="sg-dato-label"><mat-icon>timer</mat-icon> Etapa en curso</span>
@@ -61,6 +62,7 @@
           @if (e.limiteDias != null) {
             <span class="sg-dato-extra">aviso a los {{ e.umbralDias }} días · límite {{ e.limiteDias }} días</span>
           }
+          @if (eta(); as f) { <span class="sg-dato-extra sg-eta"><mat-icon>event_available</mat-icon> llegaría alrededor del {{ f | date:'EEEE d/MM' }}</span> }
         } @else {
           <span class="sg-dato-valor">{{ d.estado === 'entregado' ? 'Ciclo cerrado' : 'Sin etapa pendiente' }}</span>
         }
@@ -163,10 +165,10 @@
       @if (d.pedido; as p) {
         <div class="sg-pedido-meta">
           <span><b>{{ p.numero || ('#' + p.id) }}</b> · {{ p.fecha | date:'dd/MM/yyyy' }}</span>
-          @if (p.estado) { <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span> }
+          @if (p.estado) { <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado | etiqueta }}</span> }
           @if (p.vendedorNombre) { <span>Vendedor: {{ p.vendedorNombre }}</span> }
           <span>{{ unidades() | number:'1.0-0' }} unidades</span>
-          @if (p.totalUsd != null) { <span class="sg-total">Total US$ {{ p.totalUsd | number:'1.2-2' }}</span> }
+          @if (p.totalUsd != null) { <span class="sg-total">Total {{ p.totalUsd | usd }}</span> }
         </div>
         @if (p.lineas.length === 0) {
           <div class="sg-vacio">El pedido no tiene líneas.</div>
@@ -175,13 +177,14 @@
             <table class="sg-tabla">
               <thead>
                 <tr>
-                  <th>SKU</th><th>Producto</th><th>Talla</th><th>Color</th>
+                  <th></th><th>SKU</th><th>Producto</th><th>Talla</th><th>Color</th>
                   <th class="num">Cant.</th><th class="num">Precio US$</th><th class="num">Subtotal US$</th>
                 </tr>
               </thead>
               <tbody>
                 @for (l of p.lineas; track l.varianteId + '-' + $index) {
                   <tr>
+                    <td class="sg-foto-celda">@if (imagen(l.imagenPrincipalId); as src) { <img class="sg-foto" [src]="src" [alt]="l.productoNombre" loading="lazy"> } @else { <span class="sg-foto sg-foto-vacia"><mat-icon>image</mat-icon></span> }</td>
                     <td><a class="sg-link sg-mono" [routerLink]="['/variante', l.varianteId]">{{ l.sku || ('#' + l.varianteId) }}</a></td>
                     <td>{{ l.productoNombre || '—' }}</td>
                     <td>{{ l.talla || '—' }}</td>

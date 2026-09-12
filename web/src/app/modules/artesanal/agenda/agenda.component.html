@@ -29,7 +29,7 @@
           <div class="stat-icon"><mat-icon>person_off</mat-icon></div>
           <div class="stat-content">
             <span class="stat-value">{{ sinVisitar().length }}</span>
-            <span class="stat-label">Sin visitar +30d</span>
+            <span class="stat-label">Sin visitar +{{ diasAlerta() }}d</span>
           </div>
         </div>
       </div>
@@ -79,6 +79,10 @@
         <button mat-button class="rango-btn" [class.active]="rango() === 'hoy'" (click)="setRango('hoy')">Hoy</button>
         <button mat-button class="rango-btn" [class.active]="rango() === '7d'" (click)="setRango('7d')">7 días</button>
         <button mat-button class="rango-btn" [class.active]="rango() === '30d'" (click)="setRango('30d')">30 días</button>
+        <!-- Solo en el celular: pliega/despliega el lateral con el mapa y la ruta del día -->
+        <button mat-button class="rango-btn lateral-toggle" [class.active]="mostrarLateral()" (click)="mostrarLateral.set(!mostrarLateral())">
+          <mat-icon>map</mat-icon> Mapa
+        </button>
       </div>
 
       <div class="toolbar-actions">
@@ -117,23 +121,37 @@
                   <div class="ciudad-nombre"><mat-icon>location_city</mat-icon>{{ c.ciudad }}</div>
                   @for (p of c.paradas; track p.actividadId + '-' + p.tipo) {
                     <div class="parada" [class.selected]="seleccionada()?.actividadId === p.actividadId && seleccionada()?.tipo === p.tipo"
-                         [class.realizada]="p.tipo === 'realizada'" (click)="seleccionar(p)">
+                         [class.realizada]="p.tipo === 'realizada'" [attr.data-urgente]="p.tipo === 'planificada' && urgente(p) ? 1 : null" (click)="seleccionar(p)">
                       <mat-icon class="parada-icono">{{ iconoTipo(p.tipoActividad) }}</mat-icon>
                       <div class="parada-info">
                         <div class="parada-titulo">
                           <span class="cliente">{{ p.clienteDisplay }}</span>
                           <span class="enum-pill" [attr.data-valor]="p.tipo === 'planificada' ? 'reprogramar' : p.resultado">
-                            {{ p.tipo === 'planificada' ? 'Volver' : etiquetaResultado(p.resultado) }}
+                            {{ p.tipo === 'planificada' ? 'Planificada' : etiquetaResultado(p.resultado) }}
                           </span>
                         </div>
                         <div class="parada-sub">
-                          <span class="enum-pill" [attr.data-valor]="p.tipoActividad">{{ p.tipoActividad }}</span>
+                          <span class="enum-pill" [attr.data-valor]="p.tipoActividad">{{ p.tipoActividad | etiqueta }}</span>
                           @if (p.vendedorDisplay && vendedorId() == null) { <span>· {{ p.vendedorDisplay }}</span> }
                           @if (p.notas) { <span class="notas">· {{ p.notas }}</span> }
                           @if (!p.latitud || !p.longitud) { <span class="sin-ubicacion" matTooltip="El cliente no tiene coordenadas">· sin ubicación</span> }
                         </div>
+                        <!-- A qué va el vendedor (revisión de escenas 2026-09-12) -->
+                        <div class="parada-contexto">
+                          <span [class.ctx-rojo]="urgente(p)"><mat-icon>schedule</mat-icon>@if (p.diasSinVisita == null) { nunca visitado } @else if (p.diasSinVisita === 0) { visitado hoy } @else { hace {{ p.diasSinVisita }} d }</span>
+                          @if (p.ultimoPedidoFecha) { <span><mat-icon>receipt_long</mat-icon>último {{ p.ultimoPedidoFecha | date:'d/MM' }} · {{ p.ultimoPedidoTotalUsd | usd:0 }}</span> } @else { <span><mat-icon>receipt_long</mat-icon>sin pedidos</span> }
+                          @if (p.pedidosAbiertos > 0) { <span class="ctx-info"><mat-icon>pending_actions</mat-icon>{{ p.pedidosAbiertos }} {{ p.pedidosAbiertos === 1 ? 'abierto' : 'abiertos' }}</span> }
+                        </div>
                       </div>
                       <div class="parada-acciones" (click)="$event.stopPropagation()">
+                        @if (p.telefono) {
+                          <button mat-icon-button class="action-btn" matTooltip="WhatsApp" (click)="whatsapp(p, $event)"><mat-icon>chat</mat-icon></button>
+                          <button mat-icon-button class="action-btn" matTooltip="Llamar" (click)="llamar(p, $event)"><mat-icon>call</mat-icon></button>
+                        }
+                        @if (p.telefono) {
+                          <button mat-icon-button class="action-btn" matTooltip="WhatsApp" (click)="whatsapp(p, $event)"><mat-icon>chat</mat-icon></button>
+                          <button mat-icon-button class="action-btn" matTooltip="Llamar" (click)="llamar(p, $event)"><mat-icon>call</mat-icon></button>
+                        }
                         <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(p)"><mat-icon>add_task</mat-icon></button>
                         <button mat-icon-button class="action-btn edit" matTooltip="Ver cliente" (click)="verCliente(p)"><mat-icon>person</mat-icon></button>
                         <button mat-icon-button class="action-btn more" matTooltip="Ver actividad" (click)="verActividad(p)"><mat-icon>open_in_new</mat-icon></button>
@@ -148,7 +166,7 @@
       </div>
 
       <!-- COLUMNA DERECHA: mapa de la parada + ruta del día + alertas -->
-      <aside class="agenda-lateral">
+      <aside class="agenda-lateral" [class.abierto]="mostrarLateral()">
         @if (seleccionada(); as s) {
           <div class="lateral-titulo">
             <mat-icon>{{ iconoTipo(s.tipoActividad) }}</mat-icon>
@@ -179,11 +197,12 @@
 
         @if (sinVisitar().length > 0) {
           <section class="alerta-card">
-            <h4><mat-icon>person_off</mat-icon> Sin visitar hace más de 30 días</h4>
+            <h4><mat-icon>person_off</mat-icon> Sin visitar hace más de {{ diasAlerta() }} días</h4>
             @for (c of sinVisitar().slice(0, 6); track c.clienteId) {
               <div class="alerta-item" (click)="verCliente(c)">
                 <span class="cliente">{{ c.clienteDisplay }}</span>
-                <span class="sub">{{ c.ciudad || '—' }} · {{ c.diasSinVisita }} días</span>
+                <span class="sub">{{ c.ciudad || '—' }} · {{ c.diasSinVisita }} días@if (c.ultimaActividad) { · último contacto {{ c.ultimaActividad | date:'d/MM' }}}</span>
+                <button mat-stroked-button class="alerta-agendar" (click)="registrarVisita(c); $event.stopPropagation()"><mat-icon>add_task</mat-icon> Agendar</button>
               </div>
             }
             @if (sinVisitar().length > 6) { <div class="sub">y {{ sinVisitar().length - 6 }} más</div> }

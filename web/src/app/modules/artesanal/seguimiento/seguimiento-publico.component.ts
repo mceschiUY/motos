@@ -9,7 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SiteConfigService } from '../../../core/services/site-config.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SeguimientoService } from './seguimiento.service';
-import { SeguimientoEnvio, SeguimientoEtapa } from './seguimiento.model';
+import { SeguimientoEnvio, SeguimientoEtapa, estimarEntrega } from './seguimiento.model';
 
 /**
  * Seguimiento PÚBLICO del envío (`/seguimiento/:codigo`): la página que abre el cliente de
@@ -52,6 +52,14 @@ export class SeguimientoPublicoComponent implements OnInit, OnDestroy {
 
   readonly etapaEnCurso = computed<SeguimientoEtapa | null>(() => this.datos()?.etapas.find(e => e.actual && !e.cumplida) ?? null);
   readonly unidades = computed(() => (this.datos()?.pedido?.lineas ?? []).reduce((s, l) => s + Number(l.cantidad || 0), 0));
+  /** Fecha estimada de entrega y contacto (revisión de escenas 2026-09-12). */
+  readonly eta = computed<Date | null>(() => { const d = this.datos(); return d ? estimarEntrega(d.etapas, d.estado) : null; });
+  imagen(id: number | null): string | null { return id != null ? this.service.imagenPublicaUrl(id) : null; }
+  readonly contactoWhatsapp = computed(() => String(this.siteConfig.socialWhatsapp() || this.siteConfig.empresaTelefono() || '').replace(/[^0-9]/g, ''));
+  contactar(): void {
+    const d = this.datos(); const tel = this.contactoWhatsapp(); if (!tel) return;
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent('Hola, consulto por mi envío ' + (d?.codigoRastreo ?? ''))}`, '_blank', 'noopener');
+  }
 
   /** Frase amable de estado para el cliente, sin jerga interna. */
   readonly titular = computed(() => {

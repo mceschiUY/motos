@@ -50,7 +50,7 @@ WHERE (@PedidoId IS NOT NULL AND p.Id = @PedidoId)
 ORDER BY p.Id DESC";
 
         private const string SqlLineas = @"
-SELECT l.VarianteId, va.Sku, pr.Nombre AS ProductoNombre, t.Nombre AS Talla, co.Nombre AS Color,
+SELECT l.VarianteId, va.Sku, pr.Nombre AS ProductoNombre, pr.ImagenPrincipalId, t.Nombre AS Talla, co.Nombre AS Color,
        l.Cantidad, l.PrecioUnitarioUsd, l.SubtotalUsd
 FROM PC_PEDIDO_LINEAS l
 JOIN PC_VARIANTES va ON va.Id = l.VarianteId
@@ -138,6 +138,7 @@ ORDER BY FechaHora DESC, Id DESC";
                         VarianteId = l.VarianteId,
                         Sku = l.Sku,
                         ProductoNombre = l.ProductoNombre,
+                        ImagenPrincipalId = l.ImagenPrincipalId,
                         Talla = l.Talla,
                         Color = l.Color,
                         Cantidad = l.Cantidad,
@@ -276,6 +277,7 @@ ORDER BY FechaHora DESC, Id DESC";
             public int VarianteId { get; set; }
             public string? Sku { get; set; }
             public string? ProductoNombre { get; set; }
+            public int? ImagenPrincipalId { get; set; }
             public string? Talla { get; set; }
             public string? Color { get; set; }
             public decimal Cantidad { get; set; }

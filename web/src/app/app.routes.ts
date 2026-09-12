@@ -1,6 +1,7 @@
 ﻿import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { GENERATED_ROUTES } from './modules/generated/generated-components.registry';
+import { modoMovilGuard } from './modules/artesanal/movil/modo-movil.service';
 
 export const routes: Routes = [
   // Ruta de login (sin proteccion)
@@ -21,11 +22,26 @@ export const routes: Routes = [
   },
   // Seguimiento público del envío: sin login ni layout, lo abre el cliente desde el QR.
   { path: 'seguimiento/:codigo', loadComponent: () => import('./modules/artesanal/seguimiento/seguimiento-publico.component').then(m => m.SeguimientoPublicoComponent) },
-  // Rutas protegidas con layout
+  // Marco de celular para la demo por Teams (plan Etapa F6): el sitio en un teléfono dibujado,
+  // con el tablero de gerencia al lado. Sin layout; son iframes del mismo origen.
+  {
+    path: 'celular',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/artesanal/celular/marco-celular.component').then(m => m.MarcoCelularComponent)
+  },
+  // App del vendedor (plan Etapa F4): shell móvil con barra inferior, sin sidebar. Va ANTES del
+  // layout de escritorio; sus hijas reutilizan las escenas artesanales (ver movil.routes.ts).
+  {
+    path: 'm',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/artesanal/movil/movil-layout.component').then(m => m.MovilLayoutComponent),
+    loadChildren: () => import('./modules/artesanal/movil/movil.routes').then(m => m.MOVIL_ROUTES)
+  },
+  // Rutas protegidas con layout. Con el modo móvil activo, modoMovilGuard manda la misma URL a /m.
   {
     path: '',
     loadComponent: () => import('./layout/site-layout.component').then(m => m.SiteLayoutComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, modoMovilGuard],
     children: [
       // HOY: el centro de control como feed de acciones (escena artesanal, home del sitio).
       {
@@ -100,6 +116,8 @@ export const routes: Routes = [
       { path: 'cliente/:id', loadComponent: () => import('./modules/artesanal/cliente360/cliente360.component').then(m => m.Cliente360Component) },
       // Escena: panel del vendedor (pisa la ficha generada de Vendedor).
       { path: 'vendedor/:id', loadComponent: () => import('./modules/artesanal/vendedor-panel/vendedor-panel.component').then(m => m.VendedorPanelComponent) },
+      // Escena: pedido (pisa la ficha generada de Pedido; revisión de escenas 2026-09-12).
+      { path: 'pedido/:id', loadComponent: () => import('./modules/artesanal/pedido/pedido.component').then(m => m.PedidoEscenaComponent) },
       // Escena: seguimiento del envío (pisa la ficha generada de Envío).
       { path: 'envio/:id', loadComponent: () => import('./modules/artesanal/seguimiento/seguimiento-envio.component').then(m => m.SeguimientoEnvioComponent) },
       // Rutas generadas dinamicamente

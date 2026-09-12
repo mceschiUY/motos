@@ -1,5 +1,6 @@
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
 using ApiMotos.Domain.Common;
 
 namespace ApiMotos.Application.Artesanal.Comercial.Cliente360
@@ -115,7 +116,9 @@ ORDER BY SUM(l.SubtotalUsd) DESC, SUM(l.Cantidad) DESC";
                 },
             };
 
-            (dto.Semaforo, dto.MotivoSemaforo) = CalcularSemaforo(fila.DiasSinVisita, fila.Pedidos90);
+            var diasAlerta = await ParametrosAlertas.DiasSinVisitaAsync(_consultas);
+            dto.DiasSinVisitaUmbral = diasAlerta;
+            (dto.Semaforo, dto.MotivoSemaforo) = CalcularSemaforo(fila.DiasSinVisita, fila.Pedidos90, diasAlerta);
 
             var actividades = await _consultas.ConsultarAsync<FilaActividad>(SqlActividades, parametros);
             var pedidos = await _consultas.ConsultarAsync<FilaPedido>(SqlPedidos, parametros);
@@ -160,13 +163,13 @@ ORDER BY SUM(l.SubtotalUsd) DESC, SUM(l.Cantidad) DESC";
             return dto;
         }
 
-        /// <summary>Verde ≤ 15 días · amarillo 16–30 o sin pedidos en 90 días · rojo > 30 o nunca visitado.</summary>
-        private static (string, string) CalcularSemaforo(int? diasSinVisita, int pedidos90)
+        /// <summary>Con `dias` = crm.dias_sin_visita (default 30): verde hasta la mitad · amarillo hasta el límite o sin pedidos en 90 días · rojo pasado el límite o nunca visitado.</summary>
+        private static (string, string) CalcularSemaforo(int? diasSinVisita, int pedidos90, int dias)
         {
             if (diasSinVisita == null) return ("rojo", "Nunca visitado");
             var d = diasSinVisita.Value;
-            if (d > 30) return ("rojo", $"Sin visita hace {d} días");
-            if (d > 15) return ("amarillo", $"Sin visita hace {d} días");
+            if (d > dias) return ("rojo", $"Sin visita hace {d} días");
+            if (d > dias / 2) return ("amarillo", $"Sin visita hace {d} días");
             if (pedidos90 == 0) return ("amarillo", "Sin pedidos en los últimos 90 días");
             return ("verde", d == 0 ? "Visitado hoy" : d == 1 ? "Visitado ayer" : $"Visitado hace {d} días");
         }

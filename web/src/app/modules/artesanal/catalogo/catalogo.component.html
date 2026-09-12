@@ -25,13 +25,13 @@
             <span class="stat-label">Novedades</span>
           </div>
         </div>
-        <div class="stat-item">
-          <div class="stat-icon"><mat-icon>photo_library</mat-icon></div>
+        <button type="button" class="stat-item stat-boton" [class.stat-alerta]="enAlerta() > 0" [class.stat-activo]="soloAlertas()" (click)="soloAlertas.set(!soloAlertas())" matTooltip="Solo los productos con algún SKU bajo el umbral">
+          <div class="stat-icon"><mat-icon>{{ enAlerta() > 0 ? 'warning' : 'verified' }}</mat-icon></div>
           <div class="stat-content">
-            <span class="stat-value">{{ conFoto() }}</span>
-            <span class="stat-label">Con foto</span>
+            <span class="stat-value">{{ enAlerta() }}</span>
+            <span class="stat-label">En alerta</span>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   </header>
@@ -103,7 +103,7 @@
       </div>
     } @else {
       <div class="catalogo-grilla">
-        @for (c of cards(); track c.item.id) {
+        @for (c of cardsVisibles(); track c.item.id) {
           <button class="cat-card" (click)="abrir(c.item)">
             <div class="cat-foto">
               @if (c.foto) {
@@ -122,15 +122,18 @@
               <div class="cat-pie">
                 <span class="cat-precio">
                   @if (c.item.precioDesdeUsd > 0) {
-                    <small>desde</small> US$ {{ c.item.precioDesdeUsd | number:'1.2-2' }}
+                    <small>desde</small> {{ c.item.precioDesdeUsd | usd }}
                   } @else {
                     <small>sin precio</small>
                   }
                 </span>
-                <span class="cat-stock" [class.cat-agotado]="c.item.unidades <= 0">
-                  {{ c.item.unidades | number:'1.0-0' }} u · {{ c.item.skus }} SKU
+                <span class="cat-stock" [attr.data-semaforo]="c.item.semaforo" [matTooltip]="c.item.skusEnAlerta > 0 ? c.item.skusEnAlerta + ' SKU bajo el umbral de ' + c.item.umbralStockBajo : 'Todos los SKU con stock'">
+                  <i class="cat-punto"></i>{{ c.item.skusConStock }} de {{ c.item.skus }} SKU · {{ c.item.unidades | number:'1.0-0' }} u
                 </span>
               </div>
+              <span class="cat-acciones">
+                <button type="button" class="cat-vender" (click)="vender(c.item, $event)" matTooltip="Armar un pedido con este producto"><mat-icon>add_shopping_cart</mat-icon> Vender</button>
+              </span>
             </div>
           </button>
         }

@@ -275,3 +275,13 @@
   .c360-acciones, .c360-item-ir, .c360-mapa { display: none !important; }
   .c360-cuerpo { grid-template-columns: 1fr; }
 }
+
+// ─── Celular (plan Etapa F5) ──────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .cliente360 .ficha-header, .cliente360 .ficha-acciones { flex-wrap: wrap; gap: var(--ceskia-space-2); }
+  .cliente360 .ficha-acciones button { flex: 1 1 auto; }
+  .c360-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ceskia-space-2); }
+}
+
+// Repetir el último pedido (revisión de escenas 2026-09-12)
+.c360-repetir { margin-top: var(--ceskia-space-2); width: 100%; }

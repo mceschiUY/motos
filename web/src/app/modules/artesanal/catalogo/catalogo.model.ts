@@ -23,6 +23,11 @@ export interface CatalogoItem {
   skus: number;
   /** Unidades en stock sumando todos los depósitos. Puede ser negativa (Kardex sin entrada). */
   unidades: number;
+  /** Revisión de escenas 2026-09-12: semáforo de stock del producto. */
+  skusConStock: number;
+  skusEnAlerta: number;
+  semaforo: 'sin_stock' | 'bajo' | 'ok';
+  umbralStockBajo: number;
 }
 
 /** Una celda de la matriz talla × color de la ficha comercial. */
@@ -41,6 +46,9 @@ export interface FichaProductoVariante {
   margenPorcentaje: number;
   disponible: number;
   activo: boolean;
+  comprometido: number;
+  vendidas30d: number;
+  coberturaDias: number | null;
 }
 
 /** Ficha comercial: la hoja que se le muestra (o imprime) al cliente. */
@@ -70,6 +78,8 @@ export interface FichaProducto {
   precioDesdeUsd: number;
   unidadesTotales: number;
   margenPromedioPorcentaje: number;
+  umbralStockBajo: number;
+  skusEnAlerta: number;
   variantes: FichaProductoVariante[];
 }
 

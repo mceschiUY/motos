@@ -1,5 +1,6 @@
 using MediatR;
 using ApiMotos.Application.Common.Abstractions;
+using ApiMotos.Application.Artesanal.Comun;
 using ApiMotos.Domain.Common;
 
 namespace ApiMotos.Application.Artesanal.Comercial.ClientesSinVisitar
@@ -33,10 +34,11 @@ ORDER BY CASE WHEN ua.Ultima IS NULL THEN 0 ELSE 1 END, ua.Ultima, c.Nombre";
             _consultas = consultas;
         }
 
-        public Task<List<ClienteSinVisitarDto>> Handle(ClientesSinVisitarQuery query, CancellationToken cancellationToken)
+        public async Task<List<ClienteSinVisitarDto>> Handle(ClientesSinVisitarQuery query, CancellationToken cancellationToken)
         {
-            var dias = query.Dias <= 0 ? 30 : query.Dias;
-            return _consultas.ConsultarAsync<ClienteSinVisitarDto>(Sql, new { Dias = dias, Hoy = Clock.Current.Today });
+            // Dias <= 0 = usar el parámetro de Configuración del sitio (crm.dias_sin_visita).
+            var dias = query.Dias <= 0 ? await ParametrosAlertas.DiasSinVisitaAsync(_consultas) : query.Dias;
+            return await _consultas.ConsultarAsync<ClienteSinVisitarDto>(Sql, new { Dias = dias, Hoy = Clock.Current.Today });
         }
     }
 }

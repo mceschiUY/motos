@@ -27,6 +27,8 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
 - Centro: pipeline de pedidos del mes por estado y **Equipo** (meta, avance, comisión por
   vendedor). Derecha: top productos, stock por depósito y "Recién pasó".
 - Decir: *"Nada de esto es una tabla: es lo que el gerente necesita decidir a las 9 de la mañana."*
+- Opcional: el botón de TV (arriba a la derecha del home) abre `/pantalla`, la misma
+  información en cuatro slides grandes para la tele de la oficina. Esc para volver.
 - Click en la acción del envío fuera de SLA.
 
 ## 2. Seguir el paquete (`/envio/11`) — "¿dónde está mi pedido?"
@@ -40,8 +42,13 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
   sin precios, con los estados y las novedades. *"Esto es lo que ve el dueño de la tienda."*
 
 ## 3. Salir a vender (`/cliente/2`, Casa Bike Salto) — "¿a quién visito y qué le llevo?"
-- Cambiar el rol de vista a **Vendedor**: el menú se reduce y el inicio pasa a ser la agenda
-  (`/agenda`, con la ruta del día y el mapa). Desde una parada, abrir el cliente.
+- **Por Teams, la escena se cuenta desde el teléfono dibujado**: botón de celular en el
+  cabezal (o `/celular`). Abre el **marco de celular** con la app del vendedor (`/m`) adentro
+  y, en **vista doble**, el tablero "Hoy" de la gerencia al lado. Arriba, atajos a Mi día,
+  Clientes, Catálogo, Vender y Pedidos; Esc para salir. (Con un teléfono real: rol de vista
+  **Vendedor**, que abre `/m`, o el QR "Abrir en el celular".)
+- En el teléfono: **Mi día** es la agenda con las paradas de hoy; el botón "Mapa" despliega el
+  mapa y la ruta del día. Tocar una parada abre el cliente.
 - **Cliente 360**: tipo, ciudad, contacto, vendedor asignado, **semáforo** con motivo
   ("Visitado hace 3 días"), notas ("Cierra de 13 a 15"). KPI: días sin visita, pedidos del
   año, ticket promedio, pedidos abiertos, envíos en curso.
@@ -55,8 +62,12 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
   color con existencias y precio, margen. **Imprimir** deja la hoja con membrete.
 - "Agregar al pedido" desde una celda: el armado se abre con el SKU en el carrito y el
   cliente ya elegido si venís del 360. Buscar otro SKU, ver el aviso cuando se pide más de lo
-  que hay, total en vivo, **Crear pedido** (queda en borrador).
-- Decir: *"Esto lo hace el vendedor en el mostrador de la tienda, desde el teléfono."*
+  que hay, total en vivo, **Crear pedido** en la barra fija de abajo (queda en borrador).
+- En vista doble: al crear el pedido, mirar el tablero de la derecha. "Pedidos del mes" suma
+  uno en borrador y el pipeline cambia (el tablero se refresca solo cada minuto; el botón de
+  recarga del marco lo adelanta).
+- Decir: *"Esto lo hace el vendedor en el mostrador de la tienda, desde el teléfono, y la
+  oficina lo ve al instante."*
 
 ## 5. Preparar y despachar (`/pedido` en kanban → `/variante/70`)
 - Rol de vista **Depósito**: el inicio es el **kanban de pedidos**. Arrastrar PED-0007 de
@@ -79,8 +90,14 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
 
 ## Si algo falla
 - El seed se re-siembra vaciando el dominio con `Limpiar_Datos_Dominio.sql` y reiniciando la API.
-- Si el QR no abre desde el celular, el celular tiene que ver la IP de la máquina (no
-  `localhost`): usar `http://<ip>:4210/seguimiento/<codigo>` y el CORS de `appsettings`.
+- **Desde el celular** (Etapa F): levantar la API con `dotnet run --project src/ApiMotos
+  --launch-profile lan` (escucha en `0.0.0.0:5100`) y el front con `npm run start:lan`.
+  En la notebook, botón **QR** del cabezal ("Abrir en el celular"): muestra la URL en la IP de
+  la máquina; escanear con el teléfono en la misma WiFi y aceptar "Agregar a la pantalla de
+  inicio". El front abierto por IP habla con `http://<ip>:5100/api` solo. Si el teléfono no
+  llega: firewall de Windows (permitir `dotnet.exe` y `node.exe` en redes privadas) o WiFi con
+  aislamiento entre dispositivos; plan B, compartir internet desde el teléfono y conectar la
+  notebook a ese hotspot.
 - El asistente de voz sigue oculto (necesita `Asistente:OpenAIApiKey`).
 - Lo que **no** hay que mostrar: reportes programados (se guardan pero no se ejecutan) y las
   listas de Administración.
