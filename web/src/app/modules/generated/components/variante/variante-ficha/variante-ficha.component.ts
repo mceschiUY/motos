@@ -15,6 +15,8 @@ import { VarianteService } from '../../../services/variante.service';
 import { VarianteFormComponent } from '../variante-form/variante-form.component';
 import { FotoGaleriaComponent } from '../../../../../shared/components/foto-galeria/foto-galeria.component';
 import { MembreteImpresionComponent } from '../../../../../shared/components/membrete-impresion/membrete-impresion.component';
+import { CatalogoService } from '../../../../artesanal/catalogo/catalogo.service';
+import { PrecioVariante } from '../../../../artesanal/catalogo/catalogo.model';
 
 interface EventoHistoria { fecha: string; quien: string; que: string; ok: boolean; }
 interface RelacionFicha { nombre: string; label: string; icon: string; ruta: string; endpoint: string; }
@@ -34,10 +36,13 @@ export class VarianteFichaComponent implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly puenteVoz = inject(AsistenteFormBridgeService);
+  private readonly catalogo = inject(CatalogoService);
 
   readonly item = signal<Variante | null>(null);
   readonly cargando = signal<boolean>(true);
   readonly historia = signal<EventoHistoria[]>([]);
+  /** Etapa C: cambios de precio y costo, los que escribe VarianteHooks en cada PUT. */
+  readonly precios = signal<PrecioVariante[]>([]);
   readonly relacionados = signal<Record<string, any[]>>({});
   readonly tabActiva = signal<string>('');
   id: string | number = '';
@@ -67,6 +72,7 @@ export class VarianteFichaComponent implements OnInit, OnDestroy {
       error: () => { this.item.set(null); this.cargando.set(false); }
     });
     this.cargarHistoria();
+    this.cargarPrecios();
     for (const r of this.relaciones) { this.cargarRelacion(r); }
   }
 
@@ -96,6 +102,18 @@ export class VarianteFichaComponent implements OnInit, OnDestroy {
 
   // PDF con marca: el navegador imprime; el membrete y el @media print hacen el resto
   imprimir(): void { window.print(); }
+
+  // ═══ Etapa C: historial de precios (PC_PRECIO_HISTORIAL, lo escribe VarianteHooks) ═══
+  cargarPrecios(): void {
+    const id = Number(this.id);
+    if (!id) { this.precios.set([]); return; }
+    this.catalogo.historialPrecios(id).subscribe({
+      next: (p) => this.precios.set(p || []),
+      error: () => this.precios.set([])
+    });
+  }
+
+  etiquetaCampo(campo: string): string { return campo === 'costo' ? 'Costo' : 'Precio de lista'; }
 
   // ═══ Historia: la auditoría que el sistema YA registra, por fin visible ═══
   cargarHistoria(): void {

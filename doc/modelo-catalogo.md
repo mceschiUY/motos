@@ -90,6 +90,10 @@ modelo de casco/campera son decenas de SKU.
 | **Homologacion** | NVARCHAR(20) | SÍ | enum: `ece2206`\|`dot`\|`snell`\|`na` |
 | **HomologacionVigente** | BIT | SÍ | Regla: no vender casco con homolog. vencida |
 | **FechaVencHomologacion** | DATE | SÍ | |
+| **Destacado** | BIT | SÍ | Etapa C: aparece primero en el catálogo comercial |
+| **Novedad** | BIT | SÍ | Etapa C: etiqueta "Nuevo" en la card |
+| **FichaTecnica** | NVARCHAR(MAX) | SÍ | Etapa C: markdown simple (peso, materiales, certificaciones, talle) |
+| **ImagenPrincipalId** | INT | SÍ | Etapa C: id en `PC_DOCUMENTOS` de la portada. Sin FK a propósito: borrar una foto no debe bloquearse por esto |
 | Activo | BIT | NO | default 1 |
 
 > Los campos de casco son *nullable* y aplican solo a la categoría Casco (`na` / null para
@@ -111,6 +115,22 @@ modelo de casco/campera son decenas de SKU.
 
 **Índice único:** `(ProductoId, TallaId, ColorId)` — evita variantes duplicadas.
 **Único:** `Sku`, `CodigoBarras`.
+
+### 2.7 `PC_PRECIO_HISTORIAL` — Historial de precio y costo (Etapa C)
+| Campo | Tipo | Null | Nota |
+|---|---|---|---|
+| Id | INT IDENTITY PK | | |
+| VarianteId | INT FK→PC_VARIANTES.Id | NO | |
+| Campo | NVARCHAR(10) | NO | enum: `precio` (PrecioLista) \| `costo` (CostoEstandar) |
+| ValorAnterior | DECIMAL(18,4) | NO | |
+| ValorNuevo | DECIMAL(18,4) | NO | |
+| Fecha | DATETIME2 | NO | |
+| Usuario | NVARCHAR(80) | SÍ | Login del claim `Name` del JWT |
+
+> Tabla de **solo escritura desde el Hook**: la llena `VarianteHooks` cuando un PUT de Variante
+> cambia el precio o el costo (una fila por campo que cambió; si el valor no cambia, no se
+> escribe nada). No tiene CRUD, ni form, ni entrada de menú: se lee por
+> `GET /api/artesanal/variante/{id}/precios` y se ve como timeline en la ficha de Variante.
 
 ---
 

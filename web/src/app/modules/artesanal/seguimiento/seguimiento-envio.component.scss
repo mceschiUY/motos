@@ -1,0 +1,414 @@
+// Seguimiento del envío (artesanal): hereda la piel de las fichas generadas
+// (.ficha-view, .ficha-header, .ficha-acciones y el @media print que oculta botones).
+@use 'generated/entity-ficha' as *;
+
+.sg-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-8);
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+}
+
+.sg-titulo { flex-wrap: wrap; }
+.sg-codigo { font-family: var(--ceskia-font-mono); letter-spacing: .02em; }
+
+.ficha-acciones .sg-activo { color: var(--ceskia-accent-primary); }
+
+// ─── Semáforo SLA: un solo lenguaje de color en toda la escena ───
+// verde = en plazo · ámbar = atención · rojo = vencido. Se aplica por [data-sla].
+.sg-sla-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--ceskia-radius-full);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  background: var(--ceskia-hover);
+  color: var(--ceskia-text-secondary);
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &[data-sla='ok'] { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+  &[data-sla='advertencia'] { background: var(--ceskia-accent-warning-glow); color: var(--ceskia-accent-warning); }
+  &[data-sla='vencido'] { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+}
+
+.sg-alerta {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  border-radius: var(--ceskia-radius-md);
+  margin-bottom: var(--ceskia-space-4);
+  font-size: var(--ceskia-text-sm);
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
+
+  &.sg-alerta-danger { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+}
+
+// ─── Resumen: 4 datos en una fila ───
+.sg-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--ceskia-space-3);
+  margin-bottom: var(--ceskia-space-5);
+}
+
+.sg-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--ceskia-space-3) var(--ceskia-space-4);
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-md);
+  min-width: 0;
+
+  &[data-sla='ok'] { border-color: var(--ceskia-accent-success); }
+  &[data-sla='advertencia'] { border-color: var(--ceskia-accent-warning); }
+  &[data-sla='vencido'] { border-color: var(--ceskia-accent-danger); background: var(--ceskia-accent-danger-glow); }
+}
+
+.sg-dato-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--ceskia-text-xs);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ceskia-text-tertiary);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+.sg-dato-valor {
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-dato-extra { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-secondary); }
+
+.sg-link {
+  color: var(--ceskia-accent-primary);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+.sg-mono { font-family: var(--ceskia-font-mono); }
+
+// ─── Secciones ───
+.sg-seccion {
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-lg);
+  padding: var(--ceskia-space-5) var(--ceskia-space-6);
+  margin-bottom: var(--ceskia-space-5);
+  break-inside: avoid;
+
+  h2 {
+    margin: 0 0 var(--ceskia-space-4);
+    font-size: var(--ceskia-text-sm);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+.sg-seccion-cabezal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ceskia-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--ceskia-space-4);
+
+  h2 { margin-bottom: 0; }
+}
+
+.sg-vacio {
+  padding: var(--ceskia-space-4) 0;
+  color: var(--ceskia-text-muted);
+  font-size: var(--ceskia-text-sm);
+}
+
+// ─── Línea de estados estilo courier: 4 hitos con tramo entre ellos ───
+.sg-linea {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.sg-hito {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: var(--ceskia-space-2);
+  min-width: 0;
+}
+
+// El tramo va del hito anterior a este: media celda a la izquierda hasta el punto.
+.sg-hito-tramo {
+  position: absolute;
+  top: calc(var(--ceskia-space-2) + 16px);
+  left: -50%;
+  width: 100%;
+  height: 3px;
+  background: var(--ceskia-border-default);
+  border-radius: 2px;
+
+  &.recorrido { background: var(--ceskia-accent-success); }
+}
+
+.sg-hito:first-child .sg-hito-tramo { display: none; }
+
+.sg-hito-dot {
+  position: relative;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ceskia-surface);
+  border: 2px solid var(--ceskia-border-default);
+  color: var(--ceskia-text-muted);
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.sg-hito.cumplida .sg-hito-dot {
+  background: var(--ceskia-accent-success);
+  border-color: var(--ceskia-accent-success);
+  color: var(--ceskia-base, #fff);
+}
+
+// El hito en curso late y toma el color del SLA
+.sg-hito.actual.pendiente .sg-hito-dot {
+  border-color: var(--ceskia-accent-primary);
+  color: var(--ceskia-accent-primary);
+  box-shadow: 0 0 0 5px var(--ceskia-accent-primary-glow);
+  animation: sg-latido 1.8s ease-in-out infinite;
+}
+.sg-hito.actual.pendiente[data-sla='ok'] .sg-hito-dot { border-color: var(--ceskia-accent-success); color: var(--ceskia-accent-success); box-shadow: 0 0 0 5px var(--ceskia-accent-success-glow); }
+.sg-hito.actual.pendiente[data-sla='advertencia'] .sg-hito-dot { border-color: var(--ceskia-accent-warning); color: var(--ceskia-accent-warning); box-shadow: 0 0 0 5px var(--ceskia-accent-warning-glow); }
+.sg-hito.actual.pendiente[data-sla='vencido'] .sg-hito-dot { border-color: var(--ceskia-accent-danger); color: var(--ceskia-accent-danger); box-shadow: 0 0 0 5px var(--ceskia-accent-danger-glow); }
+
+.sg-hito.actual.cumplida .sg-hito-dot { box-shadow: 0 0 0 5px var(--ceskia-accent-success-glow); }
+
+@keyframes sg-latido {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.sg-hito-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: var(--ceskia-space-2);
+  padding: 0 var(--ceskia-space-1);
+}
+
+.sg-hito-label {
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+}
+.sg-hito.pendiente:not(.actual) .sg-hito-label { color: var(--ceskia-text-muted); font-weight: 400; }
+
+.sg-hito-fecha { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); font-variant-numeric: tabular-nums; }
+
+.sg-hito-dias {
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: var(--ceskia-radius-full);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  background: var(--ceskia-hover);
+  color: var(--ceskia-text-secondary);
+  font-variant-numeric: tabular-nums;
+
+  small { font-weight: 400; opacity: .8; }
+
+  &[data-sla='ok'] { background: var(--ceskia-accent-success-glow); color: var(--ceskia-accent-success); }
+  &[data-sla='advertencia'] { background: var(--ceskia-accent-warning-glow); color: var(--ceskia-accent-warning); }
+  &[data-sla='vencido'] { background: var(--ceskia-accent-danger-glow); color: var(--ceskia-accent-danger); }
+  &.sg-hito-dias-mudo { background: transparent; font-weight: 400; color: var(--ceskia-text-muted); }
+}
+
+// Anulado: el recorrido queda apagado, el aviso de arriba cuenta la historia
+.sg-linea-anulada { opacity: .55; filter: grayscale(.4); }
+
+// En pantallas angostas la línea se vuelve vertical
+@media (max-width: 640px) {
+  .sg-linea { grid-template-columns: 1fr; gap: var(--ceskia-space-2); }
+  .sg-hito { flex-direction: row; align-items: flex-start; text-align: left; gap: var(--ceskia-space-3); padding: var(--ceskia-space-1) 0; }
+  .sg-hito-tramo { top: -14px; left: 16px; width: 3px; height: 18px; }
+  .sg-hito-texto { align-items: flex-start; margin-top: 4px; }
+}
+
+// ─── Acciones del ciclo ───
+.sg-acciones { display: flex; flex-wrap: wrap; gap: var(--ceskia-space-4); }
+
+.sg-accion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  button mat-icon { margin-right: 4px; }
+}
+
+.sg-accion-guia { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); max-width: 260px; }
+
+.sg-anular {
+  margin-top: var(--ceskia-space-4);
+  padding: var(--ceskia-space-4);
+  border: 1px solid var(--ceskia-accent-danger);
+  border-radius: var(--ceskia-radius-md);
+  background: var(--ceskia-accent-danger-glow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ceskia-space-2);
+
+  label { font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--ceskia-accent-danger); font-weight: var(--ceskia-font-semibold); }
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: var(--ceskia-space-2) var(--ceskia-space-3);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: var(--ceskia-radius-sm);
+    background: var(--ceskia-surface);
+    color: var(--ceskia-text-primary);
+    font: inherit;
+    font-size: var(--ceskia-text-sm);
+
+    &:focus { outline: none; border-color: var(--ceskia-accent-danger); }
+  }
+}
+
+.sg-anular-botones { display: flex; justify-content: flex-end; gap: var(--ceskia-space-2); }
+
+// ─── Compartir: QR + link ───
+.sg-compartir-cuerpo {
+  display: flex;
+  gap: var(--ceskia-space-6);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.sg-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-2);
+  background: #ffffff;   // el QR se lee mejor sobre blanco puro, también en tema oscuro
+  border-radius: var(--ceskia-radius-md);
+  border: 1px solid var(--ceskia-border-subtle);
+
+  canvas { display: block; width: 196px; height: 196px; }
+}
+
+.sg-qr-fallo { font-size: var(--ceskia-text-xs); color: var(--ceskia-accent-danger); }
+
+.sg-compartir-texto {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ceskia-space-3);
+
+  p { margin: 0; font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary); line-height: 1.5; }
+}
+
+.sg-link-caja {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-1);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--ceskia-space-2) var(--ceskia-space-3);
+    border: 1px solid var(--ceskia-border-default);
+    border-radius: var(--ceskia-radius-sm);
+    background: var(--ceskia-surface);
+    color: var(--ceskia-text-primary);
+    font-family: var(--ceskia-font-mono);
+    font-size: var(--ceskia-text-xs);
+  }
+}
+
+// ─── Pedido origen ───
+.sg-link-pedido { display: inline-flex; align-items: center; gap: 4px; font-size: var(--ceskia-text-sm); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+
+.sg-pedido-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ceskia-space-3);
+  margin-bottom: var(--ceskia-space-3);
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-secondary);
+
+  b { color: var(--ceskia-text-primary); }
+}
+
+.sg-total { font-family: var(--ceskia-font-mono); font-weight: var(--ceskia-font-semibold); color: var(--ceskia-text-primary); }
+
+.sg-tabla-scroll { overflow-x: auto; }
+
+.sg-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ceskia-text-sm);
+
+  th {
+    text-align: left;
+    font-size: var(--ceskia-text-xs);
+    color: var(--ceskia-text-tertiary);
+    padding: var(--ceskia-space-2);
+    border-bottom: 1px solid var(--ceskia-border-subtle);
+    white-space: nowrap;
+  }
+
+  td { padding: var(--ceskia-space-2); border-bottom: 1px solid var(--ceskia-border-subtle); color: var(--ceskia-text-primary); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--ceskia-font-mono); }
+}
+
+// ─── Bitácora ───
+.sg-bitacora { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ceskia-space-3); }
+
+.sg-obs {
+  padding-left: var(--ceskia-space-4);
+  border-left: 3px solid var(--ceskia-accent-primary);
+}
+
+.sg-obs-meta { display: flex; gap: var(--ceskia-space-3); font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); font-variant-numeric: tabular-nums; }
+.sg-obs-usuario { font-weight: var(--ceskia-font-semibold); color: var(--ceskia-text-secondary); }
+.sg-obs-texto { margin: 2px 0 0; font-size: var(--ceskia-text-sm); color: var(--ceskia-text-primary); white-space: pre-wrap; line-height: 1.5; }
+
+// ─── Papel: recorrido, resumen, pedido y bitácora; nada de botones ni QR salvo si se abrió ───
+@media print {
+  .no-print, .sg-anular { display: none !important; }
+  .sg-hito.actual.pendiente .sg-hito-dot { animation: none; box-shadow: none; }
+  .sg-seccion, .sg-dato { border-color: #d0d0d0; background: #fff; }
+  .sg-linea { grid-template-columns: repeat(4, 1fr); }
+}

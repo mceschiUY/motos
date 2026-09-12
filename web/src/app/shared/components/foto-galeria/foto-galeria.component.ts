@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnChanges, inject, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,11 @@ interface Foto { doc: Documento; src: SafeResourceUrl | null; }
  * Fotos del registro: los Documentos con MIME imagen ya asociados por
  * relacionId+relacionNombre, mostrados como galería con lightbox.
  * Sin fotos, sin sección — la ficha emite el tag siempre y esto se oculta solo.
+ *
+ * Etapa C: opcionalmente deja elegir una foto como PORTADA. Sigue siendo agnóstica al
+ * dominio: recibe cuál está marcada (`portadaId`) y avisa cuál eligieron
+ * (`portadaCambiada`); dónde se guarda eso es problema de la ficha que la usa. Con
+ * `permitirPortada` en false (el default) se comporta exactamente como antes.
  */
 @Component({
   selector: 'app-foto-galeria',
@@ -28,13 +33,21 @@ interface Foto { doc: Documento; src: SafeResourceUrl | null; }
         </div>
         <div class="fg-grilla">
           @for (f of fotos(); track f.doc.id; let i = $index) {
-            <button class="fg-thumb" (click)="abrir(i)" [matTooltip]="f.doc.nombre">
-              @if (f.src) {
-                <img [src]="f.src" [alt]="f.doc.nombre" loading="lazy" />
-              } @else {
-                <mat-icon class="fg-cargando">image</mat-icon>
+            <div class="fg-item" [class.fg-es-portada]="esPortada(f.doc.id)">
+              <button class="fg-thumb" (click)="abrir(i)" [matTooltip]="f.doc.nombre">
+                @if (f.src) {
+                  <img [src]="f.src" [alt]="f.doc.nombre" loading="lazy" />
+                } @else {
+                  <mat-icon class="fg-cargando">image</mat-icon>
+                }
+              </button>
+              @if (permitirPortada) {
+                <button mat-icon-button class="fg-estrella" (click)="marcarPortada(f.doc.id)"
+                        [matTooltip]="esPortada(f.doc.id) ? 'Ya es la portada' : 'Usar como portada'">
+                  <mat-icon>{{ esPortada(f.doc.id) ? 'star' : 'star_border' }}</mat-icon>
+                </button>
               }
-            </button>
+            </div>
           }
         </div>
       </section>
@@ -64,10 +77,15 @@ interface Foto { doc: Documento; src: SafeResourceUrl | null; }
     .fg-cabezal h2 { margin: 0; font-size: var(--ceskia-text-sm); text-transform: uppercase; letter-spacing: .08em; color: var(--ceskia-text-tertiary); }
     .fg-gestionar { color: var(--ceskia-text-tertiary); }
     .fg-grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--ceskia-space-3); }
-    .fg-thumb { position: relative; aspect-ratio: 4 / 3; border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-md); overflow: hidden; padding: 0; background: var(--ceskia-surface); cursor: zoom-in; display: flex; align-items: center; justify-content: center; }
+    .fg-item { position: relative; }
+    .fg-thumb { position: relative; width: 100%; aspect-ratio: 4 / 3; border: 1px solid var(--ceskia-border-subtle); border-radius: var(--ceskia-radius-md); overflow: hidden; padding: 0; background: var(--ceskia-surface); cursor: zoom-in; display: flex; align-items: center; justify-content: center; }
     .fg-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s ease; }
     .fg-thumb:hover img { transform: scale(1.04); }
     .fg-cargando { color: var(--ceskia-text-muted); }
+    .fg-item.fg-es-portada .fg-thumb { border-color: var(--ceskia-accent-primary); box-shadow: 0 0 0 1px var(--ceskia-accent-primary); }
+    .fg-estrella { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; background: var(--ceskia-elevated); color: var(--ceskia-text-tertiary); }
+    .fg-estrella mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .fg-item.fg-es-portada .fg-estrella { color: var(--ceskia-accent-primary); }
     .fg-lightbox { position: fixed; inset: 0; z-index: 1200; background: rgba(6, 10, 18, .85); display: flex; align-items: center; justify-content: center; }
     .fg-marco { max-width: 88vw; max-height: 88vh; display: flex; flex-direction: column; align-items: center; gap: var(--ceskia-space-2); }
     .fg-marco img { max-width: 88vw; max-height: 80vh; object-fit: contain; border-radius: var(--ceskia-radius-md); }
@@ -78,7 +96,7 @@ interface Foto { doc: Documento; src: SafeResourceUrl | null; }
     .fg-prev { position: absolute; left: 16px; }
     .fg-next { position: absolute; right: 16px; }
     @media print {
-      .fg-lightbox, .fg-gestionar { display: none !important; }
+      .fg-lightbox, .fg-gestionar, .fg-estrella { display: none !important; }
       .fg-seccion { break-inside: avoid; }
     }
   `]
@@ -90,6 +108,12 @@ export class FotoGaleriaComponent implements OnChanges {
 
   @Input({ required: true }) relacionId: string | number = '';
   @Input({ required: true }) relacionNombre = '';
+  /** Etapa C: id del documento que hoy es la portada (se pinta con estrella y borde). */
+  @Input() portadaId: number | null = null;
+  /** Etapa C: muestra la estrella para elegir portada. Sin esto, es la galería de siempre. */
+  @Input() permitirPortada = false;
+  /** Etapa C: id del documento elegido como portada. Guardarlo es tarea de quien la usa. */
+  @Output() portadaCambiada = new EventEmitter<number>();
 
   readonly fotos = signal<Foto[]>([]);
   readonly abierta = signal<number | null>(null);
@@ -128,6 +152,13 @@ export class FotoGaleriaComponent implements OnChanges {
 
   abrir(i: number): void { this.abierta.set(i); }
   cerrar(): void { this.abierta.set(null); }
+
+  esPortada(id: number): boolean { return this.portadaId != null && Number(this.portadaId) === id; }
+
+  marcarPortada(id: number): void {
+    if (this.esPortada(id)) { return; }
+    this.portadaCambiada.emit(id);
+  }
 
   mover(delta: number): void {
     const total = this.fotos().length;

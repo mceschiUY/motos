@@ -1,0 +1,254 @@
+<div class="ficha-view sku-view">
+
+  @if (isLoading()) {
+    <div class="sku-cargando"><mat-spinner diameter="36"></mat-spinner><span>Cargando el SKU…</span></div>
+  } @else if (!ficha()) {
+    <div class="sku-vacio">
+      <mat-icon>qr_code_2</mat-icon>
+      <h2>SKU no encontrado</h2>
+      <p>La variante #{{ id }} no existe o fue eliminada.</p>
+      <button mat-stroked-button (click)="volver()"><mat-icon>arrow_back</mat-icon> Volver al catálogo</button>
+    </div>
+  } @else {
+
+    <!-- ═══ Encabezado ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver al catálogo del producto"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo sku-titulo">
+        <h1>{{ ficha()!.sku }}</h1>
+        <span class="sku-subtitulo">Ficha de SKU</span>
+      </div>
+      <div class="ficha-acciones sku-acciones">
+        <button mat-flat-button color="primary" (click)="agregarAlPedido()" matTooltip="Armar un pedido con este SKU">
+          <mat-icon>add_shopping_cart</mat-icon> Agregar al pedido
+        </button>
+        <button mat-stroked-button (click)="registrarMovimiento()" matTooltip="Entrada, salida, ajuste o transferencia">
+          <mat-icon>swap_vert</mat-icon> Registrar movimiento
+        </button>
+        <button mat-icon-button (click)="editarDatos()" matTooltip="Editar datos del SKU (precio, costo, código de barras)"><mat-icon>edit</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ Qué es: portada + identidad + precio ═══ -->
+    <section class="sku-cabecera">
+      <div class="sku-portada">
+        @if (foto()) {
+          <img [src]="foto()" [alt]="ficha()!.productoNombre" />
+        } @else {
+          <div class="sku-sin-foto"><mat-icon>photo_camera</mat-icon><span>Sin foto</span></div>
+        }
+      </div>
+
+      <div class="sku-identidad">
+        <a class="sku-producto" (click)="volver()" matTooltip="Ver el catálogo del producto">
+          {{ ficha()!.productoNombre }}
+          <mat-icon>chevron_right</mat-icon>
+        </a>
+        <span class="sku-producto-sub">{{ ficha()!.marcaDisplay || 'Sin marca' }} · {{ ficha()!.categoriaDisplay || 'Sin categoría' }} · {{ ficha()!.productoCodigo }}</span>
+
+        <div class="sku-chips">
+          <span class="sku-chip sku-chip-mono"><mat-icon>qr_code_2</mat-icon> {{ ficha()!.sku }}</span>
+          <span class="sku-chip"><mat-icon>straighten</mat-icon> Talla {{ ficha()!.tallaDisplay || 'única' }}</span>
+          <span class="sku-chip">
+            @if (ficha()!.colorHex) { <i class="sku-muestra" [style.background]="ficha()!.colorHex"></i> } @else { <mat-icon>palette</mat-icon> }
+            {{ ficha()!.colorDisplay || 'Color único' }}
+          </span>
+          @if (ficha()!.codigoBarras) {
+            <span class="sku-chip sku-chip-mono"><mat-icon>barcode</mat-icon> {{ ficha()!.codigoBarras }}</span>
+          }
+          <span class="sku-chip" [class.sku-chip-activo]="ficha()!.activo" [class.sku-chip-inactivo]="!ficha()!.activo">
+            <mat-icon>{{ ficha()!.activo ? 'check_circle' : 'block' }}</mat-icon> {{ ficha()!.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <div class="sku-precios">
+          <div class="sku-precio-grande">
+            @if (ficha()!.precioListaUsd > 0) {
+              <small>precio de lista</small> {{ formatoUsd(ficha()!.precioListaUsd) }}
+            } @else {
+              <small>sin precio de lista</small>
+            }
+          </div>
+          <div class="sku-precio-datos">
+            <div class="sku-dato"><span>Costo estándar</span><b>{{ formatoUsd(ficha()!.costoEstandarUsd) }}</b></div>
+            <div class="sku-dato"><span>Margen</span>
+              <b [class.sku-margen-negativo]="ficha()!.margenUsd < 0">
+                {{ formatoUsd(ficha()!.margenUsd) }}
+                @if (ficha()!.costoEstandarUsd > 0) { <em>({{ formatoNumero(ficha()!.margenPorcentaje, 1) }}%)</em> }
+              </b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Tira de KPI ═══ -->
+    <div class="header-stats sku-kpis">
+      <div class="stat-item" [class.stat-alerta]="stockEnAlerta()">
+        <div class="stat-icon"><mat-icon>{{ iconoSemaforo() }}</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatoNumero(ficha()!.stockTotal) }}</span>
+          <span class="stat-label">{{ etiquetaSemaforo() }}</span>
+        </div>
+      </div>
+      <div class="stat-item" [class.stat-alerta]="ficha()!.disponibleNeto < 0">
+        <div class="stat-icon"><mat-icon>lock_clock</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatoNumero(ficha()!.comprometido) }}</span>
+          <span class="stat-label">Comprometido · {{ formatoNumero(ficha()!.disponibleNeto) }} neto</span>
+        </div>
+      </div>
+      <div class="stat-item" [class.stat-alerta]="coberturaCritica()">
+        <div class="stat-icon"><mat-icon>hourglass_bottom</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">
+            @if (ficha()!.coberturaDias != null) { {{ formatoNumero(ficha()!.coberturaDias, 0) }} d } @else { — }
+          </span>
+          <span class="stat-label">{{ textoCobertura() }} · {{ formatoNumero(ficha()!.unidadesVendidas30d) }} u en 30 d</span>
+        </div>
+      </div>
+      <div class="stat-item" [class.stat-alerta]="ficha()!.margenUsd < 0">
+        <div class="stat-icon"><mat-icon>trending_up</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatoUsd(ficha()!.margenUsd) }}</span>
+          <span class="stat-label">Margen{{ ficha()!.costoEstandarUsd > 0 ? ' · ' + formatoNumero(ficha()!.margenPorcentaje, 1) + '%' : ' · sin costo' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Dónde está + quién lo pidió ═══ -->
+    <div class="sku-grid">
+      <section>
+        <h2>Stock por depósito</h2>
+        @if (ficha()!.stockPorDeposito.length === 0) {
+          <div class="sku-nada">Este SKU nunca entró a ningún depósito.</div>
+        } @else {
+          <table class="rel-tabla sku-tabla">
+            <thead><tr><th>Depósito</th><th class="num">Saldo</th></tr></thead>
+            <tbody>
+              @for (d of ficha()!.stockPorDeposito; track d.depositoId) {
+                <tr class="sin-link">
+                  <td>{{ d.depositoNombre || ('Depósito #' + d.depositoId) }}</td>
+                  <td class="num" [class.sku-negativo]="d.saldo < 0" [class.sku-cero]="d.saldo === 0">{{ formatoNumero(d.saldo) }}</td>
+                </tr>
+              }
+              <tr class="sku-total sin-link">
+                <td>Total</td>
+                <td class="num" [class.sku-negativo]="ficha()!.stockTotal < 0">{{ formatoNumero(ficha()!.stockTotal) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <section>
+        <h2>Pedidos abiertos que lo incluyen</h2>
+        @if (ficha()!.pedidosAbiertos.length === 0) {
+          <div class="sku-nada">Ningún pedido abierto lleva este SKU.</div>
+        } @else {
+          <table class="rel-tabla sku-tabla">
+            <thead><tr><th>Pedido</th><th>Cliente</th><th>Estado</th><th class="num">Cant.</th><th></th></tr></thead>
+            <tbody>
+              @for (p of ficha()!.pedidosAbiertos; track p.pedidoId) {
+                <tr (click)="verPedido(p.pedidoId)" matTooltip="Ver el pedido">
+                  <td class="sku-mono">{{ p.numero || ('#' + p.pedidoId) }}<small>{{ p.fecha | date:'dd/MM/yyyy' }}</small></td>
+                  <td>{{ p.clienteNombre || '—' }}</td>
+                  <td><span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span></td>
+                  <td class="num">{{ formatoNumero(p.cantidad) }}</td>
+                  <td><mat-icon class="rel-ir">chevron_right</mat-icon></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    </div>
+
+    <!-- ═══ Cómo se movió: Kardex con saldo corrido ═══ -->
+    <section>
+      <div class="sku-seccion-cabezal">
+        <h2>Kardex</h2>
+        <span class="sku-seccion-nota">{{ ficha()!.kardex.length }} movimientos · saldo corrido sobre todos los depósitos</span>
+      </div>
+
+      @if (ficha()!.kardex.length === 0) {
+        <div class="sku-nada">
+          Todavía no hay movimientos. <a (click)="registrarMovimiento()">Registrá la primera entrada</a>.
+        </div>
+      } @else {
+        <ol class="kardex">
+          @for (m of ficha()!.kardex; track m.movimientoId) {
+            <li class="mov" [id]="'mov-' + m.movimientoId" [class.mov-resaltado]="m.movimientoId === movimientoId()" [attr.data-tipo]="m.tipo">
+              <span class="mov-dot"></span>
+              <div class="mov-cuerpo">
+                <div class="mov-linea1">
+                  <span class="mov-fecha">{{ m.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="enum-pill" [attr.data-valor]="m.tipo">{{ m.tipo }}</span>
+                  <span class="mov-cantidad" [ngClass]="claseDelta(m)">
+                    {{ cantidadConSigno(m) }}
+                    @if (m.tipo === 'transferencia' && m.depositoDestinoId != null) { <mat-icon>sync_alt</mat-icon> }
+                  </span>
+                  <span class="mov-saldo" [class.sku-negativo]="m.saldoAcumulado < 0">saldo <b>{{ formatoNumero(m.saldoAcumulado) }}</b></span>
+                </div>
+                <div class="mov-linea2">
+                  <span class="mov-deposito">
+                    <mat-icon>warehouse</mat-icon>
+                    {{ m.depositoNombre || ('Depósito #' + m.depositoId) }}
+                    @if (m.tipo === 'transferencia' && m.depositoDestinoId != null) {
+                      <mat-icon class="mov-flecha">arrow_forward</mat-icon> {{ m.depositoDestinoNombre || ('Depósito #' + m.depositoDestinoId) }}
+                    }
+                  </span>
+                  @if (m.documentoOrigen) {
+                    @if (m.pedidoId != null) {
+                      <a class="mov-doc mov-doc-link" (click)="verPedido(m.pedidoId)" matTooltip="Ver el pedido">
+                        <mat-icon>receipt_long</mat-icon> {{ m.documentoOrigen }}
+                      </a>
+                    } @else {
+                      <span class="mov-doc"><mat-icon>description</mat-icon> {{ m.documentoOrigen }}</span>
+                    }
+                  }
+                  @if (m.costoUnitario != null && m.costoUnitario > 0) {
+                    <span class="mov-costo">a {{ formatoUsd(m.costoUnitario) }} c/u</span>
+                  }
+                  @if (m.motivo) { <span class="mov-motivo">{{ m.motivo }}</span> }
+                  @if (m.usuario) { <span class="mov-usuario">{{ m.usuario }}</span> }
+                </div>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <!-- ═══ Cuánto valió: historial de precios ═══ -->
+    <section>
+      <h2>Historial de precios</h2>
+      @if (precios().length === 0) {
+        <div class="sku-nada">Sin cambios de precio ni de costo registrados.</div>
+      } @else {
+        <ol class="precios">
+          @for (p of precios(); track p.id) {
+            <li class="precio" [attr.data-campo]="p.campo">
+              <span class="precio-dot"></span>
+              <div class="precio-cuerpo">
+                <div class="mov-linea1">
+                  <span class="mov-fecha">{{ p.fecha | date:'dd/MM/yyyy' }}</span>
+                  <span class="precio-campo">{{ etiquetaCampoPrecio(p.campo) }}</span>
+                  <span class="precio-valores">
+                    <s>{{ formatoUsd(p.valorAnterior) }}</s>
+                    <mat-icon>arrow_forward</mat-icon>
+                    <b>{{ formatoUsd(p.valorNuevo) }}</b>
+                  </span>
+                  <span class="precio-dif" [class.mov-positivo]="p.diferenciaUsd > 0" [class.mov-negativo]="p.diferenciaUsd < 0">
+                    {{ p.diferenciaUsd > 0 ? '+' : '' }}{{ formatoNumero(p.diferenciaPorcentaje, 1) }}%
+                  </span>
+                </div>
+                @if (p.usuario) { <div class="mov-linea2"><span class="mov-usuario">{{ p.usuario }}</span></div> }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</div>

@@ -62,6 +62,12 @@ export class ProductoFormComponent extends GeneratedFormBase<Producto> {
       categoriaId: [this.item?.categoriaId || 0, [Validators.required]],
       genero: [this.item?.genero || 'unisex', [Validators.required]],
       descripcion: [this.item?.descripcion || ''],
+      // Etapa C — catálogo premium. imagenPrincipalId no tiene UI acá (la portada se elige
+      // desde la galería de la ficha), pero viaja en el form para que editar no la borre.
+      fichaTecnica: [this.item?.fichaTecnica || ''],
+      destacado: [this.item?.destacado ?? false],
+      novedad: [this.item?.novedad ?? false],
+      imagenPrincipalId: [this.item?.imagenPrincipalId ?? null],
       temporada: [this.item?.temporada || ''],
       material: [this.item?.material || ''],
       pesoGramos: [this.item?.pesoGramos ?? null],

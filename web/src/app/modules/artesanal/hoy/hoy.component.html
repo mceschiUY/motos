@@ -1,0 +1,233 @@
+<div class="kosmos-page hoy">
+
+  <!-- ═══ Cabecera: saludo + fecha larga + subtítulo del negocio ═══ -->
+  <header class="hoy-head">
+    <div class="hoy-titulo">
+      <p class="hoy-saludo">{{ saludo }} · {{ config.sitioNombre() }}</p>
+      <h1 class="hoy-fecha">{{ fechaLarga }}</h1>
+      <p class="hoy-sub">Un día en la distribuidora: lo que hay que despachar, visitar y reponer, y cómo va el mes.</p>
+    </div>
+    <div class="hoy-acciones-head">
+      @if (actualizado(); as t) {
+        <span class="hoy-actualizado" matTooltip="Se actualiza solo cada minuto">
+          <mat-icon>sync</mat-icon> {{ t | date:'HH:mm' }}
+        </span>
+      }
+      <a class="hoy-boton" routerLink="/pedidos/nuevo"><mat-icon>add_shopping_cart</mat-icon><span>Nuevo pedido</span></a>
+      <a class="hoy-boton secundario" routerLink="/pantalla" matTooltip="Modo pantalla para la TV"><mat-icon>tv</mat-icon></a>
+    </div>
+  </header>
+
+  @if (error() && !datos()) {
+    <div class="card hoy-error">
+      <mat-icon>cloud_off</mat-icon>
+      <p>No se pudo cargar el centro de control. <a (click)="cargar()">Reintentar</a></p>
+    </div>
+  }
+
+  <!-- ═══ KPIs del día (linkeables) ═══ -->
+  <section class="kpis">
+    <a class="kpi" routerLink="/pedido" [attr.data-acento]="(kpis()?.pedidosADespachar ?? 0) > 0 ? 'warning' : 'success'">
+      <div class="kpi-icono"><mat-icon>local_shipping</mat-icon></div>
+      <div class="kpi-cuerpo">
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? kpis()!.pedidosADespachar : '—' }}</span>
+        <span class="kpi-label">Pedidos a despachar</span>
+        <span class="kpi-sub">{{ kpis() ? (kpis()!.pedidosNuevosHoy + (kpis()!.pedidosNuevosHoy === 1 ? ' pedido nuevo hoy' : ' pedidos nuevos hoy')) : '' }}</span>
+      </div>
+    </a>
+
+    <a class="kpi" routerLink="/agenda" data-acento="primary">
+      <div class="kpi-icono"><mat-icon>route</mat-icon></div>
+      <div class="kpi-cuerpo">
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? kpis()!.visitasHoy : '—' }}</span>
+        <span class="kpi-label">Visitas hoy</span>
+        <span class="kpi-sub">{{ (kpis()?.visitasHoy ?? 0) > 0 ? 'paradas en la agenda del día' : 'nada agendado para hoy' }}</span>
+      </div>
+    </a>
+
+    <a class="kpi" routerLink="/envio"
+       [attr.data-acento]="(kpis()?.enviosSlaVencidos ?? 0) > 0 ? 'danger' : (kpis()?.enviosFueraSla ?? 0) > 0 ? 'warning' : 'success'">
+      <div class="kpi-icono"><mat-icon>{{ (kpis()?.enviosFueraSla ?? 0) > 0 ? 'timer' : 'verified' }}</mat-icon></div>
+      <div class="kpi-cuerpo">
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? kpis()!.enviosFueraSla : '—' }}</span>
+        <span class="kpi-label">Envíos fuera de SLA</span>
+        <span class="kpi-sub">{{ subSla() }}</span>
+      </div>
+    </a>
+
+    <a class="kpi" routerLink="/comisiones" [attr.data-acento]="acentoVentas()">
+      <div class="kpi-icono"><mat-icon>payments</mat-icon></div>
+      <div class="kpi-cuerpo">
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? 'US$ ' + formato(kpis()!.ventasMesUsd) : '—' }}</span>
+        <span class="kpi-label">Ventas del mes</span>
+        <span class="kpi-sub">{{ variacionTexto() }}</span>
+      </div>
+    </a>
+
+    <a class="kpi" routerLink="/existencias" [attr.data-acento]="acentoStock()">
+      <div class="kpi-icono"><mat-icon>inventory_2</mat-icon></div>
+      <div class="kpi-cuerpo">
+        <span class="kpi-valor tnum">{{ cargado() && kpis() ? (kpis()!.skuStockBajo + kpis()!.skuStockNegativo) : '—' }}</span>
+        <span class="kpi-label">SKU con stock bajo</span>
+        <span class="kpi-sub">{{ subStock() }}</span>
+      </div>
+    </a>
+  </section>
+
+  <!-- ═══ Grilla principal ═══ -->
+  <div class="grilla">
+
+    <!-- Izquierda: el feed -->
+    <section class="card feed col-izq">
+      <div class="card-head">
+        <h2><mat-icon>checklist</mat-icon> Qué hacer hoy</h2>
+        @if (acciones().length > 0) {
+          <span class="card-contador tnum">{{ acciones().length }} {{ acciones().length === 1 ? 'acción' : 'acciones' }}</span>
+        }
+      </div>
+
+      @if (!cargado()) {
+        <div class="feed-lista">
+          @for (r of skeletonRows; track $index) {
+            <div class="feed-item esqueleto">
+              <span class="feed-icono"></span>
+              <div class="feed-texto"><span class="linea ancha"></span><span class="linea"></span></div>
+            </div>
+          }
+        </div>
+      } @else if (acciones().length === 0) {
+        <div class="feed-vacio">
+          <mat-icon>verified</mat-icon>
+          <p><strong>Todo en orden.</strong> No hay envíos atrasados, pedidos esperando ni stock por reponer.</p>
+        </div>
+      } @else {
+        <div class="feed-lista">
+          @for (a of acciones(); track trackAccion($index, a)) {
+            <div class="feed-item" [attr.data-acento]="a.acento" (click)="ir(a)" role="link" tabindex="0" (keydown.enter)="ir(a)">
+              <span class="feed-icono"><mat-icon>{{ a.icono }}</mat-icon></span>
+              <div class="feed-texto">
+                <span class="feed-titulo">{{ a.titulo }}</span>
+                <span class="feed-detalle">{{ a.detalle }}</span>
+              </div>
+              <span class="feed-meta">
+                <span class="enum-pill" [attr.data-valor]="a.tipo">{{ a.tipo.split('_').join(' ') }}</span>
+                @if (cuando(a.fecha); as c) { <span class="feed-cuando">{{ c }}</span> }
+              </span>
+              <mat-icon class="feed-flecha">chevron_right</mat-icon>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Centro: pipeline + equipo -->
+    <div class="col-centro">
+      <section class="card pipeline">
+        <div class="card-head">
+          <h2><mat-icon>receipt_long</mat-icon> Pedidos del mes</h2>
+          <a class="card-link" routerLink="/pedido">abrir pedidos <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        <div class="pipe-total">
+          <span class="pipe-total-valor tnum">US$ {{ pipelineTotal() | number:'1.2-2' }}</span>
+          <span class="pipe-total-label">{{ pipelineCantidad() }} {{ pipelineCantidad() === 1 ? 'pedido' : 'pedidos' }} · sin anulados</span>
+        </div>
+        <div class="pipe-lista">
+          @for (p of pipeline(); track p.estado) {
+            <a class="pipe-fila" routerLink="/pedido" [queryParams]="{ estado: p.estado }">
+              <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
+              <span class="pipe-barra"><i [class]="'pipe-fill estado-' + estadoIndice(p.estado)" [style.width.%]="pctPipeline(p)"></i></span>
+              <span class="pipe-cant tnum">{{ p.cantidad }}</span>
+              <span class="pipe-monto tnum">US$ {{ p.totalUsd | number:'1.0-0' }}</span>
+            </a>
+          }
+          @if (cargado() && pipeline().length === 0) {
+            <p class="vacio">Sin pedidos este mes.</p>
+          }
+        </div>
+      </section>
+
+      <section class="card equipo">
+        <div class="card-head">
+          <h2><mat-icon>groups</mat-icon> Equipo</h2>
+          <a class="card-link" routerLink="/comisiones">abrir comisiones <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        @if (cargado() && vendedores().length === 0) {
+          <p class="vacio">No hay vendedores activos.</p>
+        }
+        <div class="eq-lista">
+          @for (v of vendedores(); track v.id) {
+            <a class="eq-fila" [routerLink]="['/vendedor', v.id]" [attr.data-semaforo]="semaforoMeta(v)">
+              <div class="eq-cabecera">
+                <span class="eq-nombre">{{ v.nombre }}</span>
+                <span class="eq-zona">{{ v.zona || '' }}</span>
+                <span class="eq-avance tnum">
+                  @if (v.objetivoUsd > 0) { {{ v.avancePorcentaje | number:'1.0-0' }} % } @else { sin meta }
+                </span>
+              </div>
+              <span class="eq-barra"><i class="eq-fill" [style.width.%]="pctMeta(v)"></i></span>
+              <div class="eq-pie">
+                <span class="tnum">vendió <strong>US$ {{ v.vendidoMesUsd | number:'1.0-0' }}</strong>@if (v.objetivoUsd > 0) { de US$ {{ v.objetivoUsd | number:'1.0-0' }}}</span>
+                <span class="tnum">comisión <strong>US$ {{ v.comisionMesUsd | number:'1.2-2' }}</strong></span>
+                <span class="tnum">{{ v.visitasMes }} {{ v.visitasMes === 1 ? 'visita' : 'visitas' }}</span>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Derecha: top productos, stock por depósito, recién pasó -->
+    <div class="col-der">
+      <section class="card top">
+        <div class="card-head">
+          <h2><mat-icon>star</mat-icon> Top productos</h2>
+          <a class="card-link" routerLink="/catalogo">abrir catálogo <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        @if (cargado() && topProductos().length === 0) {
+          <p class="vacio">Todavía no se vendió nada este mes.</p>
+        }
+        <div class="top-lista">
+          @for (p of topProductos(); track p.productoId; let i = $index) {
+            <a class="top-fila" [routerLink]="['/catalogo', p.productoId]">
+              <span class="top-pos tnum">{{ i + 1 }}</span>
+              <div class="top-texto">
+                <span class="top-nombre">{{ p.nombre }}</span>
+                <span class="top-marca">{{ p.marca || '' }} · {{ p.unidadesMes | number:'1.0-0' }} u.</span>
+                <span class="top-barra"><i [style.width.%]="pctTop(p.totalUsd)"></i></span>
+              </div>
+              <span class="top-monto tnum">US$ {{ p.totalUsd | number:'1.0-0' }}</span>
+            </a>
+          }
+        </div>
+      </section>
+
+      <section class="card depositos">
+        <div class="card-head">
+          <h2><mat-icon>warehouse</mat-icon> Stock por depósito</h2>
+          <a class="card-link" routerLink="/existencias">abrir existencias <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        <div class="dep-lista">
+          @for (d of stockPorDeposito(); track d.depositoId) {
+            <a class="dep-fila" routerLink="/existencias">
+              <span class="dep-nombre">{{ d.nombre }}</span>
+              <span class="dep-barra"><i [style.width.%]="pctStock(d.unidades)"></i></span>
+              <span class="dep-unid tnum" [class.negativo]="d.unidades < 0">{{ formato(d.unidades) }}</span>
+            </a>
+          }
+          @if (cargado() && stockPorDeposito().length > 0) {
+            <div class="dep-total tnum">{{ formato(stockTotal()) }} unidades en total</div>
+          }
+        </div>
+      </section>
+
+      <section class="card reciente">
+        <div class="card-head">
+          <h2><mat-icon>history</mat-icon> Recién pasó</h2>
+          <a class="card-link" routerLink="/auditoria">abrir auditoría <mat-icon>arrow_forward</mat-icon></a>
+        </div>
+        <app-actividad-reciente [limite]="8"></app-actividad-reciente>
+      </section>
+    </div>
+
+  </div>
+</div>

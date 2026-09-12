@@ -1,0 +1,290 @@
+// Ficha comercial (artesanal, solo lectura): hereda la piel de las fichas generadas
+// (.ficha-view, .ficha-header, .ficha-acciones y todo el @media print que oculta botones).
+@use 'generated/entity-ficha' as *;
+
+.fc-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-8);
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+}
+
+.fc-subtitulo {
+  display: block;
+  font-size: var(--ceskia-text-sm);
+  color: var(--ceskia-text-tertiary);
+}
+
+// ─── Cabecera: portada grande + resumen comercial ───
+.fc-cabecera {
+  display: grid;
+  grid-template-columns: minmax(240px, 380px) 1fr;
+  gap: var(--ceskia-space-6);
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-lg);
+  padding: var(--ceskia-space-5) var(--ceskia-space-6);
+  margin-bottom: var(--ceskia-space-5);
+
+  @media (max-width: 860px) { grid-template-columns: 1fr; }
+}
+
+.fc-portada {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.fc-sin-foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  color: var(--ceskia-text-muted);
+  font-size: var(--ceskia-text-xs);
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+}
+
+.fc-etiquetas {
+  position: absolute;
+  top: var(--ceskia-space-2);
+  left: var(--ceskia-space-2);
+  display: flex;
+  gap: var(--ceskia-space-1);
+}
+
+.cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: var(--ceskia-radius-sm);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+.cat-pill-nuevo { background: var(--ceskia-accent-primary-glow); color: var(--ceskia-accent-primary); }
+.cat-pill-destacado { background: var(--ceskia-accent-primary); color: var(--ceskia-base); }
+
+.fc-resumen { display: flex; flex-direction: column; gap: var(--ceskia-space-3); }
+
+.fc-precio-grande {
+  font-family: var(--ceskia-font-mono);
+  font-size: 2rem;
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  line-height: 1;
+
+  small {
+    font-family: inherit;
+    font-size: var(--ceskia-text-sm);
+    font-weight: 400;
+    color: var(--ceskia-text-tertiary);
+    margin-right: var(--ceskia-space-1);
+  }
+}
+
+.fc-chips { display: flex; flex-wrap: wrap; gap: var(--ceskia-space-2); }
+
+.fc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--ceskia-radius-sm);
+  background: var(--ceskia-surface);
+  border: 1px solid var(--ceskia-border-subtle);
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-secondary);
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--ceskia-text-tertiary); }
+
+  &.fc-chip-margen {
+    background: var(--ceskia-accent-primary-glow);
+    border-color: transparent;
+    color: var(--ceskia-accent-primary);
+    mat-icon { color: inherit; }
+  }
+}
+
+.fc-alerta {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  padding: var(--ceskia-space-2) var(--ceskia-space-3);
+  border-radius: var(--ceskia-radius-sm);
+  background: var(--ceskia-accent-danger-glow);
+  color: var(--ceskia-accent-danger);
+  font-size: var(--ceskia-text-sm);
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.fc-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--ceskia-space-3);
+}
+
+.fc-dato {
+  display: flex;
+  flex-direction: column;
+
+  span { font-size: var(--ceskia-text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--ceskia-text-tertiary); }
+  b { font-size: var(--ceskia-text-sm); font-weight: var(--ceskia-font-semibold); color: var(--ceskia-text-primary); }
+}
+
+.fc-descripcion {
+  margin: 0;
+  font-size: var(--ceskia-text-sm);
+  line-height: 1.6;
+  color: var(--ceskia-text-secondary);
+}
+
+// ─── Secciones ───
+.fc-seccion {
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-lg);
+  padding: var(--ceskia-space-5) var(--ceskia-space-6);
+  margin-bottom: var(--ceskia-space-5);
+  break-inside: avoid;
+
+  h2 {
+    margin: 0 0 var(--ceskia-space-4);
+    font-size: var(--ceskia-text-sm);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ceskia-text-tertiary);
+  }
+}
+
+.fc-seccion-cabezal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ceskia-space-3);
+  flex-wrap: wrap;
+
+  h2 { margin-bottom: 0; }
+}
+
+.fc-deposito {
+  min-width: 200px;
+  ::ng-deep .mat-mdc-text-field-wrapper { height: 40px; }
+  ::ng-deep .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; min-height: 40px; }
+  ::ng-deep .mat-mdc-floating-label { top: 20px; }
+  ::ng-deep .mdc-notched-outline__notch { max-width: calc(100% - 16px); }
+}
+
+.fc-vacio {
+  padding: var(--ceskia-space-6);
+  text-align: center;
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+}
+
+// ─── Matriz talla × color ───
+.fc-matriz-scroll { overflow-x: auto; margin-top: var(--ceskia-space-4); }
+
+.fc-matriz {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ceskia-text-sm);
+
+  th, td {
+    border: 1px solid var(--ceskia-border-subtle);
+    padding: var(--ceskia-space-2);
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  thead th {
+    background: var(--ceskia-surface);
+    font-weight: var(--ceskia-font-semibold);
+    color: var(--ceskia-text-secondary);
+    white-space: nowrap;
+  }
+
+  .fc-esquina { text-align: left; color: var(--ceskia-text-tertiary); font-weight: 400; }
+  .fc-talla { background: var(--ceskia-surface); text-align: left; white-space: nowrap; color: var(--ceskia-text-primary); }
+}
+
+.fc-color { display: inline-flex; align-items: center; gap: 6px; }
+
+.fc-muestra {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--ceskia-border-default);
+  display: inline-block;
+}
+
+.fc-celda {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 110px;
+}
+
+.fc-celda-stock {
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  font-family: var(--ceskia-font-mono);
+}
+
+.fc-celda-precio { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-secondary); font-family: var(--ceskia-font-mono); }
+.fc-celda-sku { font-size: var(--ceskia-text-xs); color: var(--ceskia-text-muted); cursor: help; }
+.fc-celda-nula { color: var(--ceskia-text-muted); }
+
+.fc-celda-agotada .fc-celda-stock { color: var(--ceskia-accent-danger); }
+.fc-celda-baja .fc-celda-stock { color: var(--ceskia-accent-info); }
+
+.fc-celda-acciones {
+  display: flex;
+  gap: 0;
+  opacity: 0;
+  transition: opacity var(--ceskia-transition-fast);
+
+  ::ng-deep .mat-mdc-icon-button { width: 30px; height: 30px; padding: 0; }
+  mat-icon { font-size: 17px; width: 17px; height: 17px; }
+}
+
+.fc-matriz td:hover .fc-celda-acciones { opacity: 1; }
+
+.fc-nota {
+  margin: var(--ceskia-space-3) 0 0;
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-tertiary);
+}
+
+.fc-tecnica {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: var(--ceskia-text-sm);
+  line-height: 1.6;
+  color: var(--ceskia-text-secondary);
+}
+
+// El papel es para el cliente: la galería y los botones de la matriz no van.
+@media print {
+  .fc-galeria, .fc-celda-acciones, .fc-deposito { display: none !important; }
+  .fc-cabecera, .fc-seccion { border-color: #d0d0d0; }
+}

@@ -24,6 +24,11 @@ SHELLS se pisan. Editar preferentemente en las zonas que la regen jamás toca:
 Shells regenerables (evitar ediciones a mano): `*Handler.cs` de Commands,
 `Application/Common/Generated/*`, `web/src/app/modules/generated/*`.
 
+> **Costo de contexto:** los `*-list.component.ts` de `modules/generated/` pesan ~32 KB
+> (~8k tokens) cada uno y son casi idénticos entre sí. NO leerlos enteros: usar Grep para el
+> símbolo puntual, o leer UNO solo como molde al crear una entidad nueva. Misma regla para
+> `Scripts/Seed_Dominio_Motos.sql` (51 KB) y `web/src/styles.scss` (50 KB).
+
 ## Patrón: agregar una entidad (6 capas)
 
 1. **Domain** `Domain/Agregates/<Plural>/<Entidad>.cs` — agregado con factory `Crear`/`Modificar`.
@@ -51,6 +56,10 @@ dotnet run --project src/ApiMotos     # https://localhost:7100 (http :5100), swa
 cd web && npm start                   # http://localhost:4210, apunta a https://localhost:7100/api
 ```
 Login de desarrollo: `pablo` / `pablo` (bypass solo en Development, `LoginHandler.cs`).
+Requisitos: **runtime .NET 8** (con solo .NET 10 instalado, la app compila pero no arranca) y un
+motor SQL. `appsettings.Development.json` apunta a **LocalDB** (`(localdb)\MSSQLLocalDB`, el que
+instala Visual Studio); si tenés SQL Server Express, cambiá `Server` por `localhost\SQLEXPRESS`.
+Solo afecta a Development: Docker y CI usan `appsettings.json`.
 `DbBootstrap` (solo Development) crea la BD con EF y aplica en orden `FK_*.sql`, `Cfg_*.sql` y
 `Seed_*.sql` (drift = ALTER ADD, nunca DROP). En Docker lo hace `Scripts/init-db.sh` con los
 mismos pases más `Core_Schema.sql` y `PC_*.sql`.
@@ -59,7 +68,7 @@ mismos pases más `Core_Schema.sql` y `PC_*.sql`.
 con IF NOT EXISTS, catálogo/Kardex y clientes/envíos solo si la tabla cabecera está vacía, anclado
 a HOY, nunca borra. Para vaciar el dominio y re-sembrar en el próximo arranque:
 ```bash
-sqlcmd -S "localhost\SQLEXPRESS" -E -d Motos -C -i src/ApiMotos/Scripts/Limpiar_Datos_Dominio.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d Motos -C -i src/ApiMotos/Scripts/Limpiar_Datos_Dominio.sql
 ```
 (conserva seguridad, configuración y auditoría). Los seeds NO viven en los `PC_*.sql`.
 

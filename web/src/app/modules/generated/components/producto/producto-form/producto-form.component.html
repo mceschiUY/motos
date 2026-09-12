@@ -91,6 +91,16 @@
         </mat-form-field>
       </div>
 
+      <!-- FichaTecnica Field (Etapa C: se muestra en la ficha comercial del catálogo) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Ficha técnica</mat-label>
+          <textarea matInput formControlName="fichaTecnica" rows="6"
+                    placeholder="Peso, materiales, certificaciones, talle recomendado…"></textarea>
+          <mat-icon matPrefix>description</mat-icon>
+        </mat-form-field>
+      </div>
+
       <!-- Temporada Field -->
       <div class="form-field-wrapper">
         <mat-form-field appearance="outline" class="form-field">
@@ -166,6 +176,19 @@
         </mat-slide-toggle>
       </div>
       }
+
+      <!-- Destacado / Novedad (Etapa C: ordenan y etiquetan las cards del catálogo) -->
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="destacado" color="primary">
+          Destacado en el catálogo
+        </mat-slide-toggle>
+      </div>
+
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle formControlName="novedad" color="primary">
+          Novedad ("Nuevo")
+        </mat-slide-toggle>
+      </div>
 
       <!-- Activo -->
       <div class="form-toggle-wrapper">

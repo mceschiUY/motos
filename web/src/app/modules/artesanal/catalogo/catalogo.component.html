@@ -1,0 +1,140 @@
+<div class="kosmos-page catalogo-page">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon"><mat-icon>storefront</mat-icon></div>
+        <div class="header-text">
+          <h1 class="page-title">Catálogo</h1>
+          <p class="page-subtitle">{{ cards().length }} productos · precios en US$</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>star</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ destacados() }}</span>
+            <span class="stat-label">Destacados</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>fiber_new</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ novedades() }}</span>
+            <span class="stat-label">Novedades</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon"><mat-icon>photo_library</mat-icon></div>
+          <div class="stat-content">
+            <span class="stat-value">{{ conFoto() }}</span>
+            <span class="stat-label">Con foto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT CARD -->
+  <div class="content-card">
+
+    <!-- SMART TOOLBAR: la búsqueda y los filtros los resuelve el endpoint -->
+    <div class="smart-toolbar">
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text" class="search-input" placeholder="Buscar producto, código o marca..."
+               [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" (keyup.enter)="cargar()">
+        @if (busqueda()) {
+          <button class="search-clear" (click)="busqueda.set(''); cargar()"><mat-icon>close</mat-icon></button>
+        }
+      </div>
+
+      <div class="filtros">
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>Marca</mat-label>
+          <mat-select [ngModel]="marcaId()" (ngModelChange)="marcaId.set($event); cargar()">
+            <mat-option [value]="null">Todas</mat-option>
+            @for (m of marcas(); track m.id) {
+              <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>sell</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filtro-field" subscriptSizing="dynamic">
+          <mat-label>Categoría</mat-label>
+          <mat-select [ngModel]="categoriaId()" (ngModelChange)="categoriaId.set($event); cargar()">
+            <mat-option [value]="null">Todas</mat-option>
+            @for (c of categorias(); track c.id) {
+              <mat-option [value]="c.id">{{ c.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>category</mat-icon>
+        </mat-form-field>
+
+        @if (hayFiltros()) {
+          <button mat-icon-button class="toolbar-btn" (click)="limpiarFiltros()" matTooltip="Quitar filtros">
+            <mat-icon>filter_alt_off</mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="toolbar-actions">
+        <button mat-icon-button class="toolbar-btn" (click)="cargar()" matTooltip="Actualizar">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="catalogo-cargando">
+        <mat-spinner diameter="36"></mat-spinner>
+        <span>Cargando catálogo…</span>
+      </div>
+    } @else if (cards().length === 0) {
+      <div class="empty-state">
+        <mat-icon>storefront</mat-icon>
+        <h3>Sin productos</h3>
+        <p>
+          @if (hayFiltros()) { Ningún producto coincide con los filtros. }
+          @else { Todavía no hay productos activos en el catálogo. }
+        </p>
+      </div>
+    } @else {
+      <div class="catalogo-grilla">
+        @for (c of cards(); track c.item.id) {
+          <button class="cat-card" (click)="abrir(c.item)">
+            <div class="cat-foto">
+              @if (c.foto) {
+                <img [src]="c.foto" [alt]="c.item.nombre" loading="lazy" />
+              } @else {
+                <span class="cat-iniciales">{{ iniciales(c.item) }}</span>
+              }
+              <div class="cat-etiquetas">
+                @if (c.item.novedad) { <span class="cat-pill cat-pill-nuevo">Nuevo</span> }
+                @if (c.item.destacado) { <span class="cat-pill cat-pill-destacado"><mat-icon>star</mat-icon></span> }
+              </div>
+            </div>
+            <div class="cat-cuerpo">
+              <span class="cat-marca">{{ c.item.marcaDisplay }} · {{ c.item.categoriaDisplay }}</span>
+              <span class="cat-nombre">{{ c.item.nombre }}</span>
+              <div class="cat-pie">
+                <span class="cat-precio">
+                  @if (c.item.precioDesdeUsd > 0) {
+                    <small>desde</small> US$ {{ c.item.precioDesdeUsd | number:'1.2-2' }}
+                  } @else {
+                    <small>sin precio</small>
+                  }
+                </span>
+                <span class="cat-stock" [class.cat-agotado]="c.item.unidades <= 0">
+                  {{ c.item.unidades | number:'1.0-0' }} u · {{ c.item.skus }} SKU
+                </span>
+              </div>
+            </div>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

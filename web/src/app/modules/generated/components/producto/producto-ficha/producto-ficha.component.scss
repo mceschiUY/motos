@@ -1,1 +1,10 @@
 ﻿@use 'generated/entity-ficha' as *;
+
+// Etapa C: la ficha técnica es markdown simple; se respetan los saltos de línea tal cual.
+.ficha-tecnica-texto {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--ceskia-text-secondary);
+  font-size: var(--ceskia-text-sm);
+  line-height: 1.6;
+}

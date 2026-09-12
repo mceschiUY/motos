@@ -25,6 +25,9 @@
 -- y uno anulado) con sus líneas a precio de lista, el stock que salió del depósito por
 -- los despachados/entregados, el enlace con los envíos ya sembrados y las visitas que
 -- terminaron en pedido (para que la tasa de cierre y las comisiones muestren algo).
+-- Etapa C (sección 15): catálogo premium — ficha técnica en 4 productos, 2 destacados y
+-- 2 novedades, una foto de portada SVG por cada uno de esos 4 (para que la grilla del
+-- catálogo no se vea vacía) y 2 cambios de precio/costo en el historial.
 -- NOTA: el esquema real lo crea EF con columnas NOT NULL más estrictas que los
 -- PC_*.sql (Marca.Pais, Color.CodigoHex, Cliente.Telefono/DireccionEntrega,
 -- Envio.Fecha*/MotivoAnulacion). Por eso se completan siempre todas las columnas
@@ -577,4 +580,135 @@ BEGIN
 END
 ELSE
     PRINT 'Seed de dominio: ya hay pedidos, se omite.';
+GO
+
+-- ============================================================================
+-- 15. Etapa C — catálogo premium (plan §3.7 / §4.5 / §4.7): ficha técnica,
+--     destacados y novedades, foto de portada e historial de precios.
+--     * Enriquecimientos de productos: ISNULL por columna, nunca pisan lo editado.
+--     * Fotos: SVG livianos (~1 KB) para que el catálogo no se vea vacío en la demo.
+--       Se insertan SOLO si todavía no hay documentos de Producto, y se guardan como
+--       VARCHAR->VARBINARY (ASCII puro a propósito: sin tildes, para no depender del
+--       collation de la base al convertir).
+--     * Historial de precios: solo si la tabla está vacía. En producción lo llena
+--       VarianteHooks en cada PUT; acá se siembran 2 cambios para que el timeline
+--       de la ficha de Variante y el margen de la ficha comercial muestren algo.
+-- ============================================================================
+UPDATE p SET
+      p.FichaTecnica = ISNULL(p.FichaTecnica, x.FichaTecnica)
+    , p.Destacado    = ISNULL(p.Destacado, x.Destacado)
+    , p.Novedad      = ISNULL(p.Novedad, x.Novedad)
+FROM PC_PRODUCTOS p
+JOIN (VALUES
+    (N'SHO-NXR2', CAST(N'**Casco integral premium de competición.**
+
+- Calota en fibra AIM (multicompuesto de fibras orgánicas y resina).
+- Peso: 1.350 g (talla M, +/- 50 g).
+- Homologación ECE 22.06. Doble anillo en D.
+- Ventilación de 6 entradas y 4 salidas, todas regulables con guante puesto.
+- Interior desmontable y lavable, tratamiento antibacterial.
+- Pinlock EVO incluido; visor CWR-F2 con Pinlock preinstalado.
+- **Talle recomendado:** medir el contorno de la cabeza 2 cm por encima de las cejas.' AS NVARCHAR(MAX)), CAST(1 AS BIT), CAST(0 AS BIT)),
+
+    (N'ALP-TGPR3', N'**Campera textil ventilada, uso urbano y ruta en verano.**
+
+- Chasis en poliéster 600D con paneles de malla en pecho, espalda y mangas.
+- Protecciones CE nivel 1 en hombros y codos (bolsillo para espaldera opcional).
+- Refuerzos en zonas de impacto y costuras de seguridad en toda la estructura.
+- Ajuste de cintura y puños; cuello forrado en neopreno.
+- Peso: 1.800 g. Certificación prEN 17092.
+- **Talle recomendado:** entallada; quien dude entre dos talles, llevar la mayor.', CAST(1 AS BIT), CAST(0 AS BIT)),
+
+    (N'LS2-FF906', N'**Modular con mentonera abatible 180 grados.**
+
+- Calota en policarbonato KPA, 3 tamaños de calota.
+- Doble homologación P/J: se puede circular con la mentonera arriba.
+- Peso: 1.700 g. Visera interna solar retráctil.
+- Sistema de cierre micrométrico y Pinlock incluido.
+- Preparado para intercomunicador (alojamiento de parlantes).
+- **Talle recomendado:** el modular calza algo más justo que el integral de la misma talla.', CAST(0 AS BIT), CAST(1 AS BIT)),
+
+    (N'BEL-MX9', N'**Casco off-road con tecnología MIPS.**
+
+- MIPS: capa deslizante que reduce la energía rotacional en impactos oblicuos.
+- Calota en policarbonato, forro Velocity Flow con canales de ventilación.
+- Peso: 1.450 g. Visera ajustable y desmontable.
+- Preparado para gafas: apertura ampliada y goma de sujeción trasera.
+- Homologación ECE 22.06.
+- **Talle recomendado:** dejar lugar para las gafas; no apretar sobre las sienes.', CAST(0 AS BIT), CAST(1 AS BIT))
+) AS x(Codigo, FichaTecnica, Destacado, Novedad) ON p.Codigo = x.Codigo;
+GO
+
+-- 15.1 Fotos de portada. SVG en ASCII puro (sin tildes) para que CONVERT no dependa del
+--      collation; el front las pide en base64 y arma un data-URL, igual que cualquier foto
+--      subida a mano. Bloque atomico: si ya hay documentos de Producto, no toca nada.
+IF NOT EXISTS (SELECT 1 FROM PC_DOCUMENTOS WHERE relacionnombre = N'Producto')
+BEGIN
+    DECLARE @svgCasco VARCHAR(MAX) = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="@C1"/><stop offset="1" stop-color="@C2"/></linearGradient></defs><rect width="400" height="300" fill="url(#f)"/><g transform="translate(200,150)"><path d="M-95 18a95 88 0 0 1 190 0v24a18 18 0 0 1-18 18h-54l-15 22h-69a34 34 0 0 1-34-34z" fill="#0f151d" opacity=".92"/><path d="M-70 4a72 66 0 0 1 140 8c0 10-8 16-18 16h-104c-13 0-20-10-18-24z" fill="#e9eff7" opacity=".88"/><path d="M-95 42h60v18h-60z" fill="#0b1017" opacity=".35"/></g><text x="200" y="272" font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="600" fill="#ffffff" opacity=".92" text-anchor="middle">@TXT</text></svg>';
+    DECLARE @svgCampera VARCHAR(MAX) = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="@C1"/><stop offset="1" stop-color="@C2"/></linearGradient></defs><rect width="400" height="300" fill="url(#f)"/><g transform="translate(200,140)"><path d="M-34-74h14l20 16 20-16h14l46 26-20 44-18-11v83h-84v-83l-18 11-20-44z" fill="#0f151d" opacity=".92"/><path d="M0-58l14 14-14 100-14-100z" fill="#e9eff7" opacity=".75"/><path d="M-42 34h84v10h-84z" fill="#e9eff7" opacity=".35"/></g><text x="200" y="272" font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="600" fill="#ffffff" opacity=".92" text-anchor="middle">@TXT</text></svg>';
+
+    INSERT INTO PC_DOCUMENTOS (nombre, extension, contenido, mimetype, fechacarga, relacionid, relacionnombre)
+    SELECT x.Nombre, N'.svg',
+           CONVERT(VARBINARY(MAX), REPLACE(REPLACE(REPLACE(x.Plantilla, '@C1', x.C1), '@C2', x.C2), '@TXT', x.Texto)),
+           N'image/svg+xml', GETDATE(), p.Id, N'Producto'
+    FROM PC_PRODUCTOS p
+    JOIN (VALUES
+        (N'SHO-NXR2',  N'shoei-nxr2',      @svgCasco,   '#1b2a4a', '#0b1220', 'SHOEI NXR2'),
+        (N'LS2-FF906', N'ls2-ff906',       @svgCasco,   '#123543', '#08151b', 'LS2 FF906 ADVANT'),
+        (N'BEL-MX9',   N'bell-mx9',        @svgCasco,   '#4a2a12', '#1b0f06', 'BELL MX-9 MIPS'),
+        (N'ALP-TGPR3', N'alpinestars-tgp', @svgCampera, '#3a1220', '#160709', 'ALPINESTARS T-GP PLUS R V3')
+    ) AS x(Codigo, Nombre, Plantilla, C1, C2, Texto) ON p.Codigo = x.Codigo;
+
+    -- La portada es la unica foto que tiene cada uno de esos productos.
+    UPDATE p SET p.ImagenPrincipalId = d.id
+    FROM PC_PRODUCTOS p
+    JOIN PC_DOCUMENTOS d ON d.relacionid = p.Id AND d.relacionnombre = N'Producto'
+    WHERE p.ImagenPrincipalId IS NULL;
+
+    PRINT 'Seed de dominio: fotos de portada (SVG) sembradas para 4 productos.';
+END
+ELSE
+    PRINT 'Seed de dominio: ya hay documentos de Producto, se omiten las fotos.';
+GO
+
+-- 15.2 Historial de precios. Dos cambios dentro del mes en curso (mismo criterio que los
+--      pedidos de la Etapa B: comision y meta se liquidan por mes, sembrar fuera del mes
+--      deja las pantallas vacias). En produccion estas filas las escribe VarianteHooks.
+-- IFs anidados y no un AND: T-SQL no garantiza corto-circuito, y si la tabla todavia no
+-- existiera el NOT EXISTS se evaluaria igual.
+IF OBJECT_ID('PC_PRECIO_HISTORIAL', 'U') IS NOT NULL
+BEGIN
+IF NOT EXISTS (SELECT 1 FROM PC_PRECIO_HISTORIAL)
+BEGIN
+    DECLARE @inicioMes DATE = DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1);
+    DECLARE @hoyPh DATE = CAST(GETDATE() AS DATE);
+    -- Hacia atras, pero sin salirse del mes en curso: si hoy es dia 2, ambos caen el dia 1.
+    DECLARE @fPrecio DATETIME2 = CAST(IIF(DATEADD(DAY, -6, @hoyPh) < @inicioMes, @inicioMes, DATEADD(DAY, -6, @hoyPh)) AS DATETIME2);
+    DECLARE @fCosto  DATETIME2 = CAST(IIF(DATEADD(DAY, -12, @hoyPh) < @inicioMes, @inicioMes, DATEADD(DAY, -12, @hoyPh)) AS DATETIME2);
+
+    -- Suba de precio del Shoei (el destacado): +8% hace unos dias.
+    INSERT INTO PC_PRECIO_HISTORIAL (VarianteId, Campo, ValorAnterior, ValorNuevo, Fecha, Usuario)
+    SELECT TOP 1 v.Id, N'precio',
+           ROUND(v.PrecioLista / 1.08, 2), v.PrecioLista,
+           @fPrecio, N'pablo'
+    FROM PC_VARIANTES v
+    JOIN PC_PRODUCTOS p ON p.Id = v.ProductoId
+    WHERE p.Codigo = N'SHO-NXR2'
+    ORDER BY v.Id;
+
+    -- Suba de costo de la campera (llego un embarque mas caro): +12%.
+    INSERT INTO PC_PRECIO_HISTORIAL (VarianteId, Campo, ValorAnterior, ValorNuevo, Fecha, Usuario)
+    SELECT TOP 1 v.Id, N'costo',
+           ROUND(v.CostoEstandar / 1.12, 2), v.CostoEstandar,
+           @fCosto, N'pablo'
+    FROM PC_VARIANTES v
+    JOIN PC_PRODUCTOS p ON p.Id = v.ProductoId
+    WHERE p.Codigo = N'ALP-TGPR3' AND v.CostoEstandar > 0
+    ORDER BY v.Id;
+
+    PRINT 'Seed de dominio: historial de precios sembrado (2 cambios).';
+END
+ELSE
+    PRINT 'Seed de dominio: ya hay historial de precios, se omite.';
+END
 GO

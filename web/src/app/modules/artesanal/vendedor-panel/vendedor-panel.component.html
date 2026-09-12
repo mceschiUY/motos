@@ -1,0 +1,258 @@
+<div class="kosmos-page vendedor-panel">
+
+  @if (isLoading()) {
+    <div class="panel-cargando"><mat-spinner diameter="36"></mat-spinner><span>Armando el panel…</span></div>
+  } @else if (notFound() || !panel()) {
+    <div class="panel-cargando panel-vacio">
+      <mat-icon>person_off</mat-icon>
+      <h3>Vendedor no encontrado</h3>
+      <p>El vendedor #{{ vendedorId }} no existe o fue eliminado.</p>
+      <button mat-stroked-button (click)="volver()"><mat-icon>arrow_back</mat-icon> Volver a vendedores</button>
+    </div>
+  } @else {
+
+    <!-- 1. ENCABEZADO -->
+    <header class="page-header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="header-icon"><mat-icon>badge</mat-icon></div>
+          <div class="header-text">
+            <h1 class="page-title">
+              {{ vendedor()!.nombre }}
+              @if (vendedor()!.zona) { <span class="chip-zona"><mat-icon>place</mat-icon>{{ vendedor()!.zona }}</span> }
+              @if (!vendedor()!.activo) { <span class="enum-pill" data-valor="inactivo">inactivo</span> }
+            </h1>
+            <p class="page-subtitle">
+              Comisión {{ vendedor()!.comisionPorcentaje | number:'1.0-2' }} %
+              @if (rankingLabel(); as r) { · <b class="ranking" matTooltip="Por vendido (entregado) del mes entre vendedores activos">{{ r }}</b> este mes }
+              @if (vendedor()!.telefono) { · <a class="contacto" [href]="'tel:' + vendedor()!.telefono">{{ vendedor()!.telefono }}</a> }
+              @if (vendedor()!.email) { · <a class="contacto" [href]="'mailto:' + vendedor()!.email">{{ vendedor()!.email }}</a> }
+            </p>
+          </div>
+        </div>
+        <div class="header-acciones">
+          <button mat-stroked-button (click)="verAgenda()"><mat-icon>event_available</mat-icon> Ver agenda</button>
+          <button mat-flat-button color="primary" (click)="editar()"><mat-icon>edit</mat-icon> Editar datos</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. META DEL MES -->
+    <section class="meta-card" [attr.data-semaforo]="semaforoSimulado()">
+      <div class="meta-head">
+        <div>
+          <span class="meta-titulo">Meta {{ avance()?.periodo || (hoy | date:'yyyy-MM') }}</span>
+          <span class="meta-sub">
+            US$ {{ vendidoSimulado() | number:'1.0-0' }} de
+            {{ objetivo() ? ('US$ ' + (objetivo() | number:'1.0-0')) : 'meta sin cargar' }}
+            @if (extraUsd() > 0) { <em>(incluye US$ {{ extraUsd() | number:'1.0-0' }} simulados)</em> }
+          </span>
+        </div>
+        <div class="meta-semaforo">
+          <span class="semaforo-luz" [attr.data-semaforo]="semaforoSimulado()"></span>
+          <span class="semaforo-texto">{{ etiquetaSemaforo(semaforoSimulado()) }}</span>
+          <span class="meta-pct">{{ porcentajeSimulado() }}%</span>
+        </div>
+      </div>
+
+      <div class="barra-meta" role="progressbar" [attr.aria-valuenow]="porcentajeSimulado()" aria-valuemin="0" aria-valuemax="100">
+        <div class="barra-real" [style.width.%]="porcentajeReal()"></div>
+        @if (extraUsd() > 0) {
+          <div class="barra-extra" [style.left.%]="porcentajeReal()" [style.width.%]="porcentajeSimulado() - porcentajeReal()"></div>
+        }
+        @if (objetivo() > 0) {
+          <div class="marca-hoy" [style.left.%]="esperadoHoy() / objetivo() * 100" matTooltip="Lo esperado a la fecha si el mes fuera parejo"></div>
+        }
+      </div>
+      @if (objetivo() > 0) {
+        <div class="meta-leyenda">
+          <span>Esperado a hoy: <b>US$ {{ esperadoHoy() | number:'1.0-0' }}</b></span>
+          <span>Falta: <b>US$ {{ faltaParaMeta() | number:'1.0-0' }}</b></span>
+        </div>
+      }
+
+      <div class="meta-comisiones">
+        <div class="comision">
+          <span class="comision-label">Comisión sellada</span>
+          <span class="comision-valor">US$ {{ comisionSimulada() | number:'1.2-2' }}</span>
+          <span class="comision-sub">sobre pedidos entregados del mes@if (extraUsd() > 0) { + lo simulado }</span>
+        </div>
+        <div class="comision proyectada">
+          <span class="comision-label">Proyectada</span>
+          <span class="comision-valor">+ US$ {{ panel()!.comisionProyectadaUsd | number:'1.2-2' }}</span>
+          <span class="comision-sub">si entrega lo que tiene abierto (US$ {{ panel()!.pendienteEntregaUsd | number:'1.0-0' }})</span>
+        </div>
+        <div class="comision total">
+          <span class="comision-label">Podría cobrar</span>
+          <span class="comision-valor">US$ {{ (comisionSimulada() + panel()!.comisionProyectadaUsd) | number:'1.2-2' }}</span>
+          <span class="comision-sub"><a (click)="verComisiones()">ver liquidación</a></span>
+        </div>
+      </div>
+
+      <div class="simulador">
+        <label for="extra">¿Y si vende <b>US$ {{ extraUsd() | number:'1.0-0' }}</b> más?</label>
+        <input id="extra" type="range" min="0" [max]="maxExtra()" step="100" [value]="extraUsd()" (input)="onExtraChange($any($event.target).value)">
+        <span class="simulador-hint">
+          @if (extraUsd() > 0) {
+            Llegaría al {{ porcentajeSimulado() }}% y cobraría US$ {{ comisionSimulada() | number:'1.2-2' }} de comisión.
+          } @else {
+            Mové el control: recalcula el avance y la comisión al {{ porcentajeComision() | number:'1.0-2' }} %. Solo simula, no guarda nada.
+          }
+        </span>
+      </div>
+    </section>
+
+    <!-- 3. KPI -->
+    <div class="kpis">
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>storefront</mat-icon></div>
+        <div class="stat-content"><span class="stat-value">{{ avance()?.visitas ?? 0 }}</span><span class="stat-label">Visitas del mes</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>task_alt</mat-icon></div>
+        <div class="stat-content"><span class="stat-value">{{ ((avance()?.tasaCierre ?? 0) * 100) | number:'1.0-0' }}%</span><span class="stat-label">Tasa de cierre</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>groups</mat-icon></div>
+        <div class="stat-content"><span class="stat-value">{{ avance()?.clientesAsignados ?? clientes().length }}</span><span class="stat-label">Clientes asignados</span></div>
+      </div>
+      <div class="stat-item" [class.stat-alerta]="(avance()?.clientesSinVisitar30d ?? clientesRojos()) > 0">
+        <div class="stat-icon"><mat-icon>person_off</mat-icon></div>
+        <div class="stat-content"><span class="stat-value">{{ avance()?.clientesSinVisitar30d ?? clientesRojos() }}</span><span class="stat-label">Sin visitar +30 d</span></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>receipt_long</mat-icon></div>
+        <div class="stat-content"><span class="stat-value">{{ panel()!.pedidosAbiertos.length }}</span><span class="stat-label">Pedidos abiertos</span></div>
+      </div>
+    </div>
+
+    <div class="panel-grid">
+
+      <!-- 4. VENTAS POR SEMANA -->
+      <section class="card">
+        <header class="card-head">
+          <h2><mat-icon>bar_chart</mat-icon> Ventas por semana</h2>
+          <span class="card-sub">últimas 8 semanas · US$ {{ totalSemanas() | number:'1.0-0' }} colocados</span>
+        </header>
+        @if (totalSemanas() === 0) {
+          <div class="card-vacio">Sin pedidos en las últimas 8 semanas.</div>
+        } @else {
+          <div class="grafico">
+            @for (b of barras(); track b.semanaInicio) {
+              <div class="columna" [class.actual]="b.esActual" [matTooltip]="'Semana del ' + b.label + ': US$ ' + (b.totalUsd | number:'1.0-0') + ' · ' + b.pedidos + ' pedido' + (b.pedidos === 1 ? '' : 's')">
+                <span class="columna-valor">@if (b.totalUsd > 0) { {{ b.totalUsd | number:'1.0-0' }} }</span>
+                <div class="columna-pista"><div class="columna-barra" [style.height.%]="b.altura"></div></div>
+                <span class="columna-label">{{ b.label }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- 5. ESTA SEMANA -->
+      <section class="card">
+        <header class="card-head">
+          <h2><mat-icon>event_available</mat-icon> Esta semana</h2>
+          <span class="card-sub">{{ planificadas() }} por visitar</span>
+          <button mat-stroked-button class="card-btn" (click)="registrarVisita()"><mat-icon>add_task</mat-icon> Registrar visita</button>
+        </header>
+        @if (gruposAgenda().length === 0) {
+          <div class="card-vacio">Nada agendado de acá a 7 días. Registrá una visita y fijá cuándo volver.</div>
+        } @else {
+          @for (g of gruposAgenda(); track g.fecha) {
+            <div class="dia" [class.hoy]="g.esHoy">
+              <div class="dia-head"><h3>{{ g.label }}</h3><span class="dia-count">{{ g.paradas.length }}</span></div>
+              @for (p of g.paradas; track p.actividadId + '-' + p.tipo) {
+                <div class="parada" [class.realizada]="p.tipo === 'realizada'">
+                  <mat-icon class="parada-icono">{{ iconoTipo(p.tipoActividad) }}</mat-icon>
+                  <div class="parada-info">
+                    <a class="parada-cliente" (click)="verCliente(p.clienteId)">{{ p.clienteDisplay }}</a>
+                    <div class="parada-sub">
+                      <span class="enum-pill" [attr.data-valor]="p.tipo === 'planificada' ? 'reprogramar' : p.resultado">
+                        {{ p.tipo === 'planificada' ? 'Volver' : etiquetaResultado(p.resultado) }}
+                      </span>
+                      @if (p.ciudad) { <span>· {{ p.ciudad }}</span> }
+                      @if (p.notas) { <span class="notas">· {{ p.notas }}</span> }
+                    </div>
+                  </div>
+                  <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(p.clienteId)"><mat-icon>add_task</mat-icon></button>
+                </div>
+              }
+            </div>
+          }
+        }
+      </section>
+
+      <!-- 6. MIS CLIENTES -->
+      <section class="card card-ancha">
+        <header class="card-head">
+          <h2><mat-icon>groups</mat-icon> Mis clientes</h2>
+          <span class="card-sub">{{ clientes().length }} en cartera · US$ {{ totalCarteraAnio() | number:'1.0-0' }} en el año@if (clientesRojos() > 0) { · <b class="rojo">{{ clientesRojos() }} sin visitar</b> }</span>
+        </header>
+        @if (clientes().length === 0) {
+          <div class="card-vacio">Este vendedor no tiene clientes asignados.</div>
+        } @else {
+          <div class="tabla-scroll">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Salud</th><th>Cliente</th><th>Ciudad</th>
+                  <th class="num">Sin visita</th><th>Último pedido</th>
+                  <th class="num">Pedidos año</th><th class="num">Total año</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of clientes(); track c.id) {
+                  <tr (click)="verCliente(c.id)">
+                    <td><span class="salud" [attr.data-semaforo]="c.semaforo"><i></i>{{ etiquetaSalud(c.semaforo) }}</span></td>
+                    <td>
+                      <span class="cliente-nombre">{{ c.nombre }}</span>
+                      @if (c.tipo) { <span class="enum-pill" [attr.data-valor]="c.tipo">{{ c.tipo }}</span> }
+                    </td>
+                    <td>{{ c.ciudad || '—' }}</td>
+                    <td class="num" [class.rojo]="c.semaforo === 'rojo'">{{ diasSinVisitaLabel(c) }}</td>
+                    <td>{{ c.ultimoPedidoFecha ? (c.ultimoPedidoFecha | date:'dd/MM/yy') : '—' }}</td>
+                    <td class="num">{{ c.pedidosAnio }}</td>
+                    <td class="num">US$ {{ c.totalAnioUsd | number:'1.2-2' }}</td>
+                    <td class="acciones" (click)="$event.stopPropagation()">
+                      <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(c.id)"><mat-icon>add_task</mat-icon></button>
+                      <button mat-icon-button class="action-btn edit" matTooltip="Nuevo pedido" (click)="nuevoPedido(c.id)"><mat-icon>add_shopping_cart</mat-icon></button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <!-- 7. PEDIDOS ABIERTOS -->
+      <section class="card card-ancha">
+        <header class="card-head">
+          <h2><mat-icon>receipt_long</mat-icon> Pedidos abiertos</h2>
+          <span class="card-sub">{{ panel()!.pedidosAbiertos.length }} en curso · US$ {{ totalAbiertos() | number:'1.0-0' }}</span>
+          <button mat-stroked-button class="card-btn" (click)="nuevoPedido()"><mat-icon>add_shopping_cart</mat-icon> Nuevo pedido</button>
+        </header>
+        @if (panel()!.pedidosAbiertos.length === 0) {
+          <div class="card-vacio">No hay pedidos en curso: todo entregado o todavía nada armado.</div>
+        } @else {
+          <div class="pedidos">
+            @for (p of panel()!.pedidosAbiertos; track p.id) {
+              <div class="pedido" (click)="verPedido(p.id)">
+                <div class="pedido-num">{{ p.numero || ('#' + p.id) }}</div>
+                <div class="pedido-info">
+                  <span class="pedido-cliente">{{ p.clienteNombre || '—' }}</span>
+                  <span class="pedido-fecha">{{ p.fecha | date:'dd/MM/yy' }}</span>
+                </div>
+                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
+                <span class="pedido-total">US$ {{ p.totalUsd | number:'1.2-2' }}</span>
+                <mat-icon class="pedido-ir">chevron_right</mat-icon>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+    </div>
+  }
+</div>

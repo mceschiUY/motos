@@ -86,6 +86,28 @@
       }
     </section>
 
+    <!-- ═══ Historial de precios (Etapa C): lo escribe VarianteHooks en cada cambio ═══ -->
+    @if (precios().length > 0) {
+      <section class="ficha-historia">
+        <h2>Historial de precios</h2>
+        <div class="historia-linea">
+          @for (p of precios(); track p.id) {
+            <div class="evento">
+              <span class="evento-dot"></span>
+              <span class="evento-que">
+                {{ etiquetaCampo(p.campo) }}: US$ {{ p.valorAnterior | number:'1.2-2' }} → US$ {{ p.valorNuevo | number:'1.2-2' }}
+                <b class="precio-delta" [class.baja]="p.diferenciaUsd < 0">
+                  {{ p.diferenciaUsd > 0 ? '+' : '' }}{{ p.diferenciaPorcentaje | number:'1.0-1' }}%
+                </b>
+              </span>
+              <span class="evento-quien">{{ p.usuario || 'sistema' }}</span>
+              <span class="evento-fecha">{{ p.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
     <!-- ═══ Historia (auditoría) ═══ -->
     @if (historia().length > 0) {
       <section class="ficha-historia">

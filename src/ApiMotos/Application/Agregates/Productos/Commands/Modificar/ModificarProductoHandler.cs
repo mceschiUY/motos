@@ -12,7 +12,8 @@ namespace ApiMotos.Application.Agregates.Productos.Commands.Modificar
                 (actual, comando) => actual.Modificar(
                     comando.Codigo, comando.Nombre, comando.MarcaId, comando.CategoriaId, comando.Descripcion,
                     comando.Genero, comando.Temporada, comando.Material, comando.PesoGramos, comando.TipoCasco,
-                    comando.Homologacion, comando.HomologacionVigente, comando.FechaVencHomologacion, comando.Activo))
+                    comando.Homologacion, comando.HomologacionVigente, comando.FechaVencHomologacion, comando.Activo,
+                    comando.Destacado, comando.Novedad, comando.FichaTecnica, comando.ImagenPrincipalId))
         {
         }
     }

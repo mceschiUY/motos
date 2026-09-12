@@ -25,12 +25,13 @@
       "PowerShell(git log*)"
     ],
     "deny": [
-      "Read(./web/package-lock.json)",
-      "Read(./src/ApiMotos/bin/**)",
-      "Read(./src/ApiMotos/obj/**)",
-      "Read(./web/node_modules/**)",
+      "Read(./**/bin/**)",
+      "Read(./**/obj/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./**/package-lock.json)",
       "Read(./web/.angular/**)",
-      "Read(./web/dist/**)"
+      "Read(./web/dist/**)",
+      "Read(./.git/**)"
     ]
   }
 }

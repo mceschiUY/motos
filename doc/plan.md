@@ -185,8 +185,10 @@ Vendedor 1───N Cliente (VendedorId, nullable)        Producto ─── Do
 - Extender `Seed_Dominio_Motos.sql`: ~~3 vendedores (uno vinculado a `pablo`), clientes con
   tipo/ciudad/vendedor, 25 actividades con próximas acciones~~ (hecho en Etapa A), ~~12 pedidos en
   distintos estados enlazados a los envíos ya sembrados~~ (hecho en Etapa B), ~~metas del mes~~ y
-  ~~coordenadas de los 8 clientes~~ (Etapa A). **Queda para C/E**: fotos de muestra para 4 productos,
-  2 destacados y 2 novedades, y 2 cambios de precio históricos.
+  ~~coordenadas de los 8 clientes~~ (Etapa A), ~~fotos de muestra para 4 productos, 2 destacados
+  y 2 novedades, y 2 cambios de precio históricos~~ (sección 15, Etapa C: las fotos son SVG
+  generados de ~1 KB, ASCII puro, para que la grilla del catálogo no se vea vacía sin engordar
+  el repo). **Queda para E**: nada del seed; solo los reportes programados y `doc/demo.md`.
 
 ### 4.8 Extras que suman a la demo (aprobados 2026-09-07)
 - **Ruta del día con mapa** (artesanal, dentro de `/agenda`): las visitas planificadas de hoy ordenadas por ciudad y ubicadas en el componente `mini-mapa` existente. Requiere `Latitud`/`Longitud` en Cliente (se cargan a mano o desde el celular con "usar mi ubicación" al registrar la visita). Muestra al vendedor a dónde ir y a la gerencia dónde está cada uno.
@@ -275,22 +277,129 @@ curso** (conservando el orden del relato). Comisión y meta se liquidan por mes:
 con offsets de 24 días dejaba los entregados en el mes anterior y la pantalla de comisiones vacía.
 
 ### Etapa C — Catálogo premium
-- [ ] Producto: `Destacado`, `Novedad`, `FichaTecnica`, `ImagenPrincipalId` + subida de fotos por Documentos.
-- [ ] Ficha comercial de producto con matriz talla × color, existencias y precio USD.
-- [ ] Catálogo navegable con cards y "Agregar al pedido".
-- [ ] Impresión de ficha con membrete.
-- [ ] Historial de precios: `PC_PRECIO_HISTORIAL` llenada por `VarianteHooks` + timeline en ficha de Variante + margen USD y % en la ficha comercial.
+- [x] **Producto**: 4 columnas nuevas nullable (`Destacado`, `Novedad`, `FichaTecnica`,
+  `ImagenPrincipalId`) en las 6 capas, con `PC_PRODUCTOS.sql` pasado al estilo idempotente de
+  `PC_CLIENTES.sql` (ALTER ADD por columna). La subida de fotos ya existía (`app-foto-galeria`
+  sobre `PC_DOCUMENTOS`): lo que se agregó es **elegir la portada** con una estrella en la
+  miniatura — `foto-galeria` recibe `portadaId` + `permitirPortada` y emite `portadaCambiada`,
+  sin conocer el dominio; la ficha de Producto es la que guarda.
+- [x] **Ficha comercial** (`/catalogo/:id`, artesanal): foto grande, ficha técnica, matriz
+  talla × color con existencias por depósito, precio USD y margen (USD y %) por SKU, y
+  "Agregar al pedido" que abre `/pedidos/nuevo?varianteId=N` con el SKU ya en el carrito.
+  La matriz arranca de `PC_VARIANTES` con LEFT JOIN al Kardex: el `HAVING <> 0` de
+  `ExistenciasQuery` se habría comido justo las celdas agotadas.
+- [x] **Catálogo navegable** (`/catalogo`, artesanal): cards con foto, precio "desde",
+  stock y SKU, destacados primero, etiqueta "Nuevo", buscador y filtros por marca y categoría
+  (el filtro por categoría incluye las hijas). Las fotos viajan en base64 por
+  `/api/Documentos/{id}`: `download/{id}` está bajo `[Authorize]` y un `<img src>` no lleva
+  el JWT del interceptor.
+- [x] **Impresión** de la ficha comercial con el membrete existente y `@media print` (oculta
+  galería, filtro de depósito y botones de la matriz).
+- [x] **Historial de precios**: `PC_PRECIO_HISTORIAL` (tabla + FK, sin CRUD) que llena
+  `VarianteHooks` — valores viejos capturados en `AntesDeModificar`, filas escritas en
+  `DespuesDeModificar`, una por campo que cambió. Se lee por
+  `GET /api/artesanal/variante/{id}/precios` y se ve como timeline en la ficha de Variante;
+  el margen USD y % está en la ficha comercial.
 
-### Etapa D — Centro de control
-- [ ] Endpoint artesanal `centro-control`.
-- [ ] Sala de control como home + modo pantalla.
-- [ ] Umbral de stock bajo y días sin visita en Configuración del sitio.
-- [ ] Alertas de stock bajo y clientes sin visitar: consultas artesanales + tarjetas rojas en la sala + avance de metas por vendedor.
+**Nota del hook**: el usuario del historial sale del claim `Name` del JWT (como
+`GET /api/Vendedor/mio`) y no de `ICurrentUserService`: en Development ese servicio es el mock
+y devuelve `dev_user`, y el timeline tiene que mostrar quién tocó el precio.
+
+**Arreglo al pasar**: `Limpiar_Datos_Dominio.sql` no borraba `PC_PEDIDOS` ni
+`PC_PEDIDO_LINEAS` (quedó pendiente de la Etapa B) — con `PC_PEDIDOS.EnvioId` apuntando a
+`PC_ENVIOS`, el `DELETE FROM PC_ENVIOS` fallaba por FK. Se agregaron en el orden correcto
+junto con `PC_PRECIO_HISTORIAL`.
+
+Verificado el 2026-09-09 contra la base local (LocalDB) por API: catálogo con 10 productos,
+2 destacados primero, 2 novedades y 4 con portada; el buscador `?q=shoei` devuelve el SKU
+esperado. Ficha comercial del Shoei: 8 SKU en la matriz, margen 690 − 380 = US$ 310 (81,58 %);
+**filtrada por el depósito Showroom Centro deja 6 celdas en cero visibles**, que es justo lo que
+el `HAVING <> 0` de `ExistenciasQuery` habría ocultado. El hook de precios escribe una fila al
+cambiar el precio (690 → 725, +5,07 %, usuario `pablo` del JWT), **no** escribe nada si el PUT
+manda el mismo valor, y escribe dos filas si cambian precio y costo a la vez. El PUT de Producto
+con `imagenPrincipalId` (lo que hace la estrella de la galería) cambia la portada sin pisar el
+resto. Segundo arranque: el seed rellenó la ficha técnica que se había borrado a mano y no
+duplicó ni documentos ni historial — la sección 15 es idempotente. Las 4 portadas SVG pesan
+3 KB en total. `dotnet build` y `ng build --configuration development` en verde.
+
+**Falta**: el recorrido por pantalla (`/catalogo`, `/catalogo/:id`, impresión y estrella de
+portada) no se probó en el navegador; el front está verificado solo por compilación.
+
+### Etapa D — Escenas: el sitio se navega por relato, no por tablas (2026-09-12)
+Replanteo aprobado por Pablo: el problema no era cómo se veían los ABM sino **qué** se veía
+(fichas como `/movimientostock/1` que no dicen nada, 25 entradas de menú). Sin tocar `core/`
+ni el generador. Dos capas: arriba las **escenas** artesanales que cuentan un día en la
+distribuidora y se enlazan entre sí; abajo los CRUD generados, plegados en el grupo
+**Administración** del menú. Truco: las rutas artesanales van antes de `GENERATED_ROUTES`
+en `app.routes.ts`, así `cliente/:id`, `vendedor/:id`, `variante/:id`, `movimientostock/:id`
+y `envio/:id` caen en la escena sin tocar el registry. Guion en `doc/demo.md`.
+- [x] **Menú de relato** (`generated-menu.registry.ts`): Hoy · Catálogo (Catálogo, Existencias)
+  · Vender (Agenda, Nuevo pedido, Pedidos, Clientes) · Despachar (Envíos) · Equipo (Vendedores,
+  Actividades, Comisiones) · Administración (plegado). Ctrl+K: Producto abre `/catalogo/:id`;
+  Línea de pedido, Observación, Meta, Movimiento y Parámetro SLA quedan `oculta`
+  (`generated-search.registry.ts` + filtro en `header-search`). El layout navega paths con
+  barra (`pedidos/nuevo`) y titula las escenas sin menú.
+- [x] **Rol de vista** (`layout/rol-vista.service.ts`): Gerencia / Vendedor / Depósito en el
+  cabezal. Filtra grupos del menú, oculta "Sistema" y cambia el inicio (Hoy / Agenda / Kanban
+  de pedidos). Presentación, no seguridad; vive en `localStorage`.
+- [x] **Hoy** (`/`, `modules/artesanal/hoy`, `GET api/artesanal/centro-control`): feed de
+  acciones por urgencia (SLA vencido/advertencia, pedidos a despachar, stock bajo/negativo,
+  metas rezagadas, clientes sin visitar), 5 KPI con acento, pipeline del mes, equipo con
+  metas, top productos, stock por depósito y actividad reciente. Umbral de stock bajo:
+  `stock.umbral_bajo` de Configuración si existe, si no 3. El home genérico quedó en
+  `/inicio-generico`. Modo TV **no** se tocó (sigue con los slides genéricos).
+- [x] **Ficha de SKU** (`/variante/:id`, `modules/artesanal/sku`, `GET api/artesanal/sku/{id}`):
+  stock por depósito, comprometido, cobertura en días, margen, Kardex con saldo corrido y
+  `PED-000n` clickeable, pedidos abiertos, historial de precios; "Registrar movimiento" y
+  "Editar datos" abren los forms generados como diálogo. `/movimientostock/:id` redirige a
+  la ficha con el movimiento resaltado.
+- [x] **Cliente 360** (`/cliente/:id`, `modules/artesanal/cliente360`,
+  `GET api/artesanal/cliente/{id}/360`): identidad, semáforo con motivo, KPI, línea de tiempo
+  única (actividades + pedidos + envíos), top productos, mapa, "Registrar visita", "Nuevo
+  pedido" (`/pedidos/nuevo?clienteId=N`), "Editar datos", WhatsApp.
+- [x] **Panel del vendedor** (`/vendedor/:id`, `modules/artesanal/vendedor-panel`,
+  `GET api/artesanal/vendedor/{id}/panel` + los existentes `avance` y `agenda`): ranking,
+  meta con "esperado a hoy", comisión sellada y proyectada, slider "¿y si vende más?",
+  ventas por semana, esta semana, mis clientes con semáforo, pedidos abiertos.
+- [x] **Seguimiento del envío** (`/envio/:id`, `modules/artesanal/seguimiento`,
+  `GET api/artesanal/envio/{id}/seguimiento`): línea de estados con SLA por etapa
+  (`PC_PARAMETROSLAS`: umbral/límite desde la fecha de la etapa actual), pedido origen,
+  bitácora, acciones del ciclo, impresión, link público + **QR** (`qrcode`, nueva dependencia
+  en `web/package.json`). **Público** `/seguimiento/:codigo` sin login ni layout sobre
+  `GET api/publico/seguimiento/{codigo}` (`[AllowAnonymous]`; sin precios, totales,
+  teléfonos ni usuarios).
+- [x] **Kanban por defecto en Pedidos** y **form de Cliente completo**: ver "shells tocados".
+- [ ] Umbral de stock bajo y días sin visita como claves de Configuración del sitio (hoy el
+  home lee `stock.umbral_bajo` si existe; la clave no está en `Cfg_ConfiguracionSitio.sql`).
+- [ ] Modo pantalla con los KPI y el feed de Hoy.
+
+**Shells generados tocados** (la regen los pisa; rehacer si se regenera):
+`pedido-list.component.ts` (`loadViewMode` cae a `kanban` en vez de `table`);
+`cliente-form.component.{ts,html}` (tipo, ciudad, contacto, email, vendedor, notas,
+latitud/longitud plegados: el backend ya los aceptaba desde la Etapa A, el form no los exponía);
+`generated-menu.registry.ts` y `generated-search.registry.ts` (campo `oculta`);
+`header-search.component.ts` (filtra `oculta`). Fuera de shells: `armado-pedido` acepta
+`?clienteId=`, `agenda.model.ts` suma `comisionUsd`.
+
+Verificado el 2026-09-12 contra la base local por API con el seed: `centro-control` devuelve
+12 acciones (4 envíos con SLA vencido, 1 SKU negativo, 2 pedidos preparados, 3 SKU con 2
+unidades, 1 confirmado, 1 cliente sin visita hace 47 días), pipeline de 11 pedidos, 3
+vendedores con meta; `cliente/2/360` (Casa Bike Salto) semáforo verde con 8 hitos en la línea
+de tiempo; `vendedor/1/panel` ranking 2 de 3 y 8 semanas; `envio/11/seguimiento` SLA
+`vencido` (14 días en facturación, límite 4); `publico/seguimiento/MT-2026-0111` responde
+200 sin token y sin teléfono. `dotnet build` y `ng build --configuration development` en verde.
+**Falta**: el recorrido por pantalla de las escenas no se probó en el navegador (sin
+herramienta de browser en la sesión); el front está verificado por compilación y por los
+endpoints que consume.
 
 ### Etapa E — Pulido de demo
-- [ ] Seed extendido (vendedores, actividades, pedidos, fotos, metas, coordenadas, historial de precios).
-- [ ] Reportes programados "Stock bajo" y "Clientes sin visitar" sobre las mismas consultas de las alertas.
-- [ ] Recorrido de demo documentado en `doc/demo.md` (guion de 10 minutos siguiendo la historia de la sección 2).
+- [x] Seed extendido: hecho en A, B y C; no se agregó volumen en D (los offsets actuales ya
+  dan material para cada escena: PED-0007/0008 preparados, MT-2026-0111 fuera de SLA, SKU con
+  2 unidades y uno negativo, 1 visita hoy).
+- [x] Recorrido de demo documentado en `doc/demo.md` (guion de 10 minutos, 6 escenas).
+- [ ] Reportes programados "Stock bajo" y "Clientes sin visitar" sobre las mismas consultas de
+  las alertas. **Ojo**: los reportes programados se guardan pero no hay scheduler que los
+  ejecute (no existe `IHostedService` ni envío de email en el repo); no mostrarlos en la demo.
 - [ ] Reportes programados de ejemplo: "Ventas del mes por vendedor" y "Stock bajo".
 
 Estimación relativa: A y C son chicas (maestras + pantallas); B es la mediana (Hooks con reglas); D es artesanal pura. Se puede demostrar algo útil al cerrar A + B.

@@ -87,6 +87,12 @@ namespace ApiMotos.Infrastructure.Agregates.Productos.Persistence
             builder.Property(e => e.Homologacion).HasColumnName("Homologacion").HasMaxLength(20);
             builder.Property(e => e.HomologacionVigente).HasColumnName("HomologacionVigente");
             builder.Property(e => e.FechaVencHomologacion).HasColumnName("FechaVencHomologacion").HasColumnType("date");
+            // Etapa C (plan §3.7): catálogo premium, todas nullable. En bases existentes las
+            // agrega DbBootstrap (ALTER ADD ... NULL); en Docker, el bloque ELSE de PC_PRODUCTOS.sql.
+            builder.Property(e => e.Destacado).HasColumnName("Destacado");
+            builder.Property(e => e.Novedad).HasColumnName("Novedad");
+            builder.Property(e => e.FichaTecnica).HasColumnName("FichaTecnica");
+            builder.Property(e => e.ImagenPrincipalId).HasColumnName("ImagenPrincipalId");
             builder.Property(e => e.Activo).HasColumnName("Activo");
             builder.HasIndex(e => e.Codigo).IsUnique();
             builder.HasOne<ApiMotos.Domain.Agregates.Marcas.Marca>().WithMany()
@@ -532,6 +538,35 @@ namespace ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence
                 .HasForeignKey(e => e.VarianteId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_PC_PEDIDO_LINEAS_VarianteId");
+        }
+    }
+}
+
+// Etapa C (plan §3.8) — zona MANUAL dentro de un archivo generado: PrecioHistorial no sale de
+// Forja (no tiene CRUD). Si alguna vez se regenera este archivo, hay que reponer este bloque.
+namespace ApiMotos.Infrastructure.Agregates.PreciosHistorial.Persistence
+{
+    using ApiMotos.Domain.Agregates.PreciosHistorial;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+    public class PrecioHistorialMap : IEntityTypeConfiguration<PrecioHistorial>
+    {
+        public void Configure(EntityTypeBuilder<PrecioHistorial> builder)
+        {
+            builder.ToTable("PC_PRECIO_HISTORIAL");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.VarianteId).HasColumnName("VarianteId").IsRequired();
+            builder.Property(e => e.Campo).HasColumnName("Campo").IsRequired().HasMaxLength(10);
+            builder.Property(e => e.ValorAnterior).HasColumnName("ValorAnterior").HasColumnType("decimal(18,4)");
+            builder.Property(e => e.ValorNuevo).HasColumnName("ValorNuevo").HasColumnType("decimal(18,4)");
+            builder.Property(e => e.Fecha).HasColumnName("Fecha");
+            builder.Property(e => e.Usuario).HasColumnName("Usuario").HasMaxLength(80);
+            builder.HasIndex(e => e.VarianteId);
+            builder.HasOne<ApiMotos.Domain.Agregates.Variantes.Variante>().WithMany()
+                .HasForeignKey(e => e.VarianteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_PC_PRECIO_HISTORIAL_VarianteId");
         }
     }
 }

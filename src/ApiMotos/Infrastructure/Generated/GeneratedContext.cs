@@ -28,6 +28,8 @@
         public DbSet<ApiMotos.Domain.Agregates.Metas.Meta> Metas { get; set; }
         public DbSet<ApiMotos.Domain.Agregates.Pedidos.Pedido> Pedidos { get; set; }
         public DbSet<ApiMotos.Domain.Agregates.PedidoLineas.PedidoLinea> PedidoLineas { get; set; }
+        // Etapa C (plan §3.8): historial de precios. Sin CRUD: lo escribe VarianteHooks.
+        public DbSet<ApiMotos.Domain.Agregates.PreciosHistorial.PrecioHistorial> PreciosHistorial { get; set; }
         // </KOSMOS:DBSETS>
 
         public GeneratedContext(IConfiguration configuration, DbContextOptions<GeneratedContext> options) : base(configuration, options)
@@ -65,6 +67,7 @@
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Metas.Persistence.MetaMap());
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.Pedidos.Persistence.PedidoMap());
             modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence.PedidoLineaMap());
+            modelBuilder.ApplyConfiguration(new ApiMotos.Infrastructure.Agregates.PreciosHistorial.Persistence.PrecioHistorialMap());
             // </KOSMOS:CONFIGS>
         }
     }

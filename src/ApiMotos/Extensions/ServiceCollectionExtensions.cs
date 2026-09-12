@@ -101,6 +101,8 @@ namespace ApiMotos.Extensions
             services.AddScoped<ApiMotos.Domain.Agregates.Pedidos.IPedidoRepositorio, ApiMotos.Infrastructure.Agregates.Pedidos.Persistence.PedidoRepositorio>();
             services.AddScoped<ApiMotos.Application.Agregates.PedidoLineas.PedidoLineaHooks>();
             services.AddScoped<ApiMotos.Domain.Agregates.PedidoLineas.IPedidoLineaRepositorio, ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence.PedidoLineaRepositorio>();
+            // Etapa C (plan §3.8): historial de precios. Solo repositorio — no tiene Hooks propios.
+            services.AddScoped<ApiMotos.Domain.Agregates.PreciosHistorial.IPrecioHistorialRepositorio, ApiMotos.Infrastructure.Agregates.PreciosHistorial.Persistence.PrecioHistorialRepositorio>();
             // </KOSMOS:REPOS>
             return services;
         }

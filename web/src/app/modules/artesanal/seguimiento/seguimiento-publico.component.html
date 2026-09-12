@@ -1,0 +1,131 @@
+<div class="sp-pagina">
+
+  <!-- Marca: logo/nombre del sitio (configuración pública, sin token) -->
+  <header class="sp-marca">
+    @if (siteConfig.sitioLogoUrl()) {
+      <img class="sp-logo" [src]="siteConfig.sitioLogoUrl()" [alt]="siteConfig.sitioNombre()" />
+    } @else {
+      <span class="sp-logo-icono"><mat-icon>local_shipping</mat-icon></span>
+    }
+    <div class="sp-marca-texto">
+      <span class="sp-sitio">{{ siteConfig.empresaNombre() || siteConfig.sitioNombre() || 'Seguimiento de envío' }}</span>
+      <span class="sp-subtitulo">Seguimiento de envío</span>
+    </div>
+  </header>
+
+  <main class="sp-cuerpo">
+
+    @if (isLoading()) {
+      <div class="sp-cargando"><mat-spinner diameter="36"></mat-spinner><span>Buscando tu envío…</span></div>
+    } @else if (!datos()) {
+
+      <!-- Sin resultado: buscador por código -->
+      <section class="sp-tarjeta sp-buscar">
+        <mat-icon class="sp-buscar-icono">{{ errorRed() ? 'cloud_off' : 'search_off' }}</mat-icon>
+        @if (errorRed()) {
+          <h1>No pudimos consultar el envío</h1>
+          <p>Hubo un problema de conexión. Probá de nuevo en unos segundos.</p>
+        } @else if (codigo) {
+          <h1>No encontramos el envío <b>{{ codigo }}</b></h1>
+          <p>Revisá el código de rastreo que figura en tu comprobante o en el mensaje que te enviamos.</p>
+        } @else {
+          <h1>Seguí tu envío</h1>
+          <p>Ingresá el código de rastreo que figura en tu comprobante.</p>
+        }
+        <form class="sp-form" (ngSubmit)="buscar()">
+          <input type="text" name="codigo" [(ngModel)]="codigoBuscado" placeholder="Código de rastreo" autocomplete="off" autocapitalize="characters" />
+          <button mat-flat-button color="primary" type="submit" [disabled]="!codigoBuscado.trim()">Buscar</button>
+        </form>
+      </section>
+
+    } @else {
+
+      <!-- ═══ Cabecera del envío ═══ -->
+      <section class="sp-tarjeta sp-cabecera" [attr.data-estado]="d.estado">
+        <span class="sp-codigo-label">Código de rastreo</span>
+        <span class="sp-codigo">{{ d.codigoRastreo }}</span>
+        <h1 class="sp-titular">{{ titular() }}</h1>
+        <div class="sp-chips">
+          <span class="enum-pill" [attr.data-valor]="d.estado">{{ d.estadoLabel }}</span>
+          @if (d.agencia.nombre) { <span class="sp-chip"><mat-icon>local_shipping</mat-icon> {{ d.agencia.nombre }}</span> }
+          @if (d.cliente.ciudad) { <span class="sp-chip"><mat-icon>place</mat-icon> {{ d.cliente.ciudad }}</span> }
+        </div>
+        @if (d.estado === 'anulado' && d.motivoAnulacion) {
+          <p class="sp-motivo">Motivo: {{ d.motivoAnulacion }}</p>
+        }
+      </section>
+
+      <!-- ═══ Recorrido ═══ -->
+      <section class="sp-tarjeta">
+        <h2>Recorrido</h2>
+        <ol class="sp-linea" [class.sp-linea-anulada]="d.estado === 'anulado'">
+          @for (e of d.etapas; track e.clave; let i = $index) {
+            <li class="sp-hito" [class.cumplida]="e.cumplida" [class.actual]="e.actual" [class.pendiente]="!e.cumplida">
+              <div class="sp-hito-tramo" [class.recorrido]="e.cumplida && i > 0"></div>
+              <div class="sp-hito-dot">
+                <mat-icon>{{ e.cumplida ? 'check' : (e.actual ? 'more_horiz' : 'radio_button_unchecked') }}</mat-icon>
+              </div>
+              <div class="sp-hito-texto">
+                <span class="sp-hito-label">{{ e.label }}</span>
+                @if (e.fecha) {
+                  <span class="sp-hito-fecha">{{ e.fecha | date:'dd/MM/yyyy' }}</span>
+                } @else if (e.actual && !e.cumplida) {
+                  <span class="sp-hito-fecha">en curso{{ e.diasTranscurridos != null && e.diasTranscurridos > 0 ? ' · ' + textoDias(e) : '' }}</span>
+                } @else {
+                  <span class="sp-hito-fecha">pendiente</span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <!-- ═══ Qué contiene ═══ -->
+      @if (d.pedido; as p) {
+        <section class="sp-tarjeta">
+          <h2>Tu pedido {{ p.numero ? '· ' + p.numero : '' }}</h2>
+          @if (p.lineas.length === 0) {
+            <p class="sp-vacio">Sin detalle de artículos.</p>
+          } @else {
+            <ul class="sp-lineas">
+              @for (l of p.lineas; track l.varianteId + '-' + $index) {
+                <li class="sp-item">
+                  <div class="sp-item-texto">
+                    <span class="sp-item-nombre">{{ l.productoNombre || l.sku || 'Artículo' }}</span>
+                    <span class="sp-item-detalle">
+                      @if (l.talla) { Talla {{ l.talla }} }
+                      @if (l.talla && l.color) { · }
+                      @if (l.color) { {{ l.color }} }
+                    </span>
+                  </div>
+                  <span class="sp-item-cant">× {{ l.cantidad | number:'1.0-0' }}</span>
+                </li>
+              }
+            </ul>
+            <p class="sp-nota">{{ unidades() | number:'1.0-0' }} {{ unidades() === 1 ? 'unidad' : 'unidades' }} en total</p>
+          }
+        </section>
+      }
+
+      <!-- ═══ Novedades ═══ -->
+      @if (d.observaciones.length > 0) {
+        <section class="sp-tarjeta">
+          <h2>Novedades</h2>
+          <ul class="sp-novedades">
+            @for (o of d.observaciones; track o.id) {
+              <li class="sp-novedad">
+                <span class="sp-novedad-fecha">{{ o.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span>
+                <p class="sp-novedad-texto">{{ o.texto }}</p>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <footer class="sp-pie">
+        <span>Actualizado {{ actualizadoHace() }}</span>
+        <button mat-button (click)="cargar()"><mat-icon>refresh</mat-icon> Actualizar</button>
+      </footer>
+    }
+  </main>
+</div>

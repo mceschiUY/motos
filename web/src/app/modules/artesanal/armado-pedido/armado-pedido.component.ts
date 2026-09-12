@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,6 +68,7 @@ export class ArmadoPedidoComponent implements OnInit {
   private readonly pedidoService = inject(PedidoService);
   private readonly lineaService = inject(PedidoLineaService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly clientes = signal<Cliente[]>([]);
@@ -120,7 +121,7 @@ export class ArmadoPedidoComponent implements OnInit {
   ngOnInit(): void {
     this.cargando.set(true);
     this.clienteService.getAll().subscribe({
-      next: (d: Cliente[]) => this.clientes.set(d),
+      next: (d: Cliente[]) => { this.clientes.set(d); this.precargarCliente(); },
       error: (e: unknown) => console.error('[ArmadoPedido] clientes:', e),
     });
     this.vendedorService.getAll().subscribe({
@@ -140,7 +141,7 @@ export class ArmadoPedidoComponent implements OnInit {
       error: (e: unknown) => console.error('[ArmadoPedido] agencias:', e),
     });
     this.varianteService.getAll().subscribe({
-      next: (d: Variante[]) => { this.variantes.set(d); this.cargando.set(false); },
+      next: (d: Variante[]) => { this.variantes.set(d); this.cargando.set(false); this.precargarSku(); },
       error: (e: unknown) => { console.error('[ArmadoPedido] variantes:', e); this.cargando.set(false); },
     });
     // El vendedor logueado arranca elegido (es el que va a estar armando el pedido).
@@ -148,6 +149,37 @@ export class ArmadoPedidoComponent implements OnInit {
       next: (v: Vendedor | null) => { if (v) { this.vendedorId.set(v.id); } },
       error: () => { /* el usuario no es vendedor: se elige a mano */ },
     });
+  }
+
+  /**
+   * Etapa C: "Agregar al pedido" de la ficha comercial llega como `?varianteId=N` y deja
+   * ese SKU en el carrito. Corre recién con las variantes cargadas, que es de donde sale
+   * el precio de lista; el stock lo completa después `refrescarDisponibles()`.
+   */
+  private precargarSku(): void {
+    const id = Number(this.route.snapshot.queryParamMap.get('varianteId'));
+    if (!id) { return; }
+    const variante = this.variantes().find(v => v.id === id);
+    if (!variante) {
+      this.snackBar.open('No se encontró el SKU que venía del catálogo', 'Cerrar', { duration: 4000 });
+      return;
+    }
+    this.agregar(variante, this.saldoPorVariante().get(id) ?? 0);
+  }
+
+  /**
+   * "Nuevo pedido" de la escena Cliente 360 llega como `?clienteId=N` y deja ese cliente
+   * elegido (mismo mecanismo que `?varianteId=`). Corre recién con los clientes cargados
+   * y pasa por onClienteChange para que también se proponga su vendedor.
+   */
+  private precargarCliente(): void {
+    const id = Number(this.route.snapshot.queryParamMap.get('clienteId'));
+    if (!id || this.clienteId() != null) { return; }
+    if (!this.clientes().some(c => c.id === id)) {
+      this.snackBar.open('No se encontró el cliente que venía de la ficha', 'Cerrar', { duration: 4000 });
+      return;
+    }
+    this.onClienteChange(id);
   }
 
   /** Al elegir cliente, se propone su vendedor asignado. */

@@ -1,1 +1,10 @@
 ﻿@use 'generated/entity-ficha' as *;
+
+// Etapa C: la variación del historial de precios, en verde si subió y en rojo si bajó.
+.precio-delta {
+  margin-left: var(--ceskia-space-2);
+  color: var(--ceskia-accent-primary);
+  font-weight: var(--ceskia-font-semibold);
+
+  &.baja { color: var(--ceskia-accent-danger); }
+}

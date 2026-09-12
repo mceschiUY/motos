@@ -2,7 +2,7 @@
   <!-- Sidebar -->
   <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
     <!-- Logo -->
-    <div class="sidebar-logo" (click)="navigateTo('')" (keydown.enter)="navigateTo('')" role="button" tabindex="0" aria-label="Ir al inicio" style="cursor: pointer;">
+    <div class="sidebar-logo" (click)="irAlInicio()" (keydown.enter)="irAlInicio()" role="button" tabindex="0" aria-label="Ir al inicio" style="cursor: pointer;">
       <div class="logo-container">
         <!-- Logo del cliente si está configurado; si no, marca por defecto.
              El logo del cliente es APAISADO y con fondo blanco: expandido va en placa
@@ -40,11 +40,11 @@
           class="nav-item"
           role="button"
           tabindex="0"
-          aria-label="Inicio"
-          [class.active]="isActiveRoute('')"
-          (click)="navigateTo('')"
-          (keydown.enter)="navigateTo('')"
-          [matTooltip]="sidebarCollapsed() ? 'Inicio' : ''"
+          [attr.aria-label]="rolVista.info().inicioLabel"
+          [class.active]="isActiveRoute(rolVista.info().inicio)"
+          (click)="irAlInicio()"
+          (keydown.enter)="irAlInicio()"
+          [matTooltip]="sidebarCollapsed() ? rolVista.info().inicioLabel : ''"
           matTooltipPosition="right"
           matRipple
           [matRippleColor]="'var(--ceskia-accent-primary-glow)'"
@@ -52,13 +52,13 @@
           <div class="nav-item-icon">
             <mat-icon>home</mat-icon>
           </div>
-          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">Inicio</span>
+          <span class="nav-item-label" *ngIf="!sidebarCollapsed()">{{ rolVista.info().inicioLabel }}</span>
         </a>
       </div>
 
       <!-- Grupos por constelacion -->
       @if (hasGroups) {
-        @for (group of menuGroups; track group.label) {
+        @for (group of menuGroups(); track group.label) {
           <div class="nav-section">
             <a
               class="nav-item has-children"
@@ -128,8 +128,8 @@
         </div>
       }
 
-      <!-- Seccion Seguridad -->
-      <div class="nav-section seguridad-section">
+      <!-- Seccion Seguridad (solo para el rol de vista Gerencia) -->
+      <div class="nav-section seguridad-section" [hidden]="!muestraSistema()">
         <span class="nav-section-title" *ngIf="!sidebarCollapsed()">Sistema</span>
         <div class="nav-section-divider" *ngIf="sidebarCollapsed()"></div>
 
@@ -265,7 +265,7 @@
              cabezal principal — las vistas ya no gastan una fila en su breadcrumb. -->
         <nav class="header-breadcrumb" aria-label="Ruta de navegación">
           <a class="hb-home" role="button" tabindex="0" aria-label="Ir al inicio"
-             (click)="navigateTo('')" (keydown.enter)="navigateTo('')" matTooltip="Inicio">
+             (click)="irAlInicio()" (keydown.enter)="irAlInicio()" matTooltip="Inicio">
             <mat-icon>home</mat-icon>
           </a>
           @for (p of rastro(); track p.label; let last = $last) {
@@ -289,6 +289,25 @@
             <span class="campanita-dot"></span>
           }
         </button>
+
+        <!-- Rol de VISTA (Gerencia / Vendedor / Depósito): presentación, no seguridad.
+             Cambia el menú y el inicio para contar la demo desde cada silla. -->
+        <button mat-icon-button [matMenuTriggerFor]="rolMenu" class="tool-btn rol-btn"
+                [matTooltip]="'Vista: ' + rolVista.info().label">
+          <mat-icon>{{ rolVista.info().icon }}</mat-icon>
+        </button>
+        <mat-menu #rolMenu="matMenu" xPosition="before">
+          <div class="hu-menu-head">
+            <span class="hu-menu-nombre">Ver el sitio como</span>
+            <span class="hu-menu-rol">Cambia el menú y el inicio</span>
+          </div>
+          @for (r of rolVista.roles; track r.clave) {
+            <button mat-menu-item (click)="cambiarRol(r.clave)">
+              <mat-icon>{{ rolVista.rol() === r.clave ? 'check' : r.icon }}</mat-icon>
+              <span>{{ r.label }}</span>
+            </button>
+          }
+        </mat-menu>
 
         <!-- Modo pantalla (TV de la oficina) — herramienta del motor -->
         @if (herramientasZas) {

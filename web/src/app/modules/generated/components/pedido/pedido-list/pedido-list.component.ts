@@ -442,7 +442,8 @@ export class PedidoListComponent implements OnInit, OnDestroy {
     if (artesanales.length > 0) {
       return ('artesanal:' + artesanales[0].key) as ViewMode;
     }
-    return 'table' as ViewMode;
+    // Ajuste del sitio (plan escenas 2026-09-12, anotado en doc/plan.md): el pedido arranca en kanban.
+    return 'kanban' as ViewMode;
   }
 
   setViewMode(mode: string): void {

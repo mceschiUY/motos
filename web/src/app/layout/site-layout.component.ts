@@ -18,6 +18,7 @@ import { AlchemyLensComponent } from './components/alchemy-lens/alchemy-lens.com
 import { HeaderSearchComponent } from '../shared/components/global-search/header-search.component';
 import { AsistenteVozComponent } from '../shared/components/asistente-voz/asistente-voz.component';
 import { environment } from '../../environments/environment';
+import { RolVista, RolVistaService } from './rol-vista.service';
 
 interface SystemMenuItem {
   path: string;
@@ -25,6 +26,12 @@ interface SystemMenuItem {
   icon: string;
   children?: { path: string; label: string; icon: string }[];
 }
+
+// Escenas que no figuran en el sidebar pero tienen ruta propia: solo para el título y el rastro.
+const ESCENAS_SIN_MENU: GeneratedMenuItem[] = [
+  { path: 'seguimiento', label: 'Seguimiento del envío', icon: 'local_shipping' },
+  { path: 'inicio-generico', label: 'Resumen por entidad', icon: 'dashboard' },
+];
 
 @Component({
   selector: 'app-site-layout',
@@ -70,12 +77,32 @@ export class SiteLayoutComponent {
    *  jamás se muestra en el cabezal (pedido Pablo 2026-09-06). */
   currentPageSufijo = signal<string>('');
   seguridadExpanded = signal(false);
-  expandedGroups = signal<Set<string>>(new Set());
+  // Los grupos del relato arrancan abiertos; "Administración" (maestros) queda plegado.
+  expandedGroups = signal<Set<string>>(new Set(GENERATED_MENU_GROUPS.filter(g => g.label !== 'Administración').map(g => g.label)));
 
   // El registry trae un HOME_ITEM (path '') para el buscador global; acá se filtra
   // porque el sidebar ya tiene su "Inicio" fijo — sin esto aparecían dos Inicios.
   menuItems: GeneratedMenuItem[] = GENERATED_MENU_ITEMS.filter(i => i.path !== '');
-  menuGroups: GeneratedMenuGroup[] = GENERATED_MENU_GROUPS;
+
+  /** Rol de VISTA (Gerencia / Vendedor / Depósito): filtra los grupos del menú y elige el
+   *  inicio. Es presentación para la demo, no seguridad (ver rol-vista.service.ts). */
+  rolVista = inject(RolVistaService);
+  readonly menuGroups = computed<GeneratedMenuGroup[]>(() => {
+    const paths = this.rolVista.info().paths;
+    if (!paths) return GENERATED_MENU_GROUPS;
+    return GENERATED_MENU_GROUPS
+      .map(g => ({ ...g, items: g.items.filter(i => paths.includes(i.path)) }))
+      .filter(g => g.items.length > 0);
+  });
+  readonly muestraSistema = computed(() => this.rolVista.info().sistema);
+
+  cambiarRol(rol: RolVista): void {
+    this.rolVista.cambiar(rol);
+    this.navigateTo(this.rolVista.info().inicio);
+  }
+
+  /** Inicio del rol: Hoy para gerencia, la agenda para el vendedor, el kanban para depósito. */
+  irAlInicio(): void { this.navigateTo(this.rolVista.info().inicio); }
 
   /** Rastro para el cabezal (casita → grupo → página): derivado de la ruta y el
    *  menú. Reemplaza al breadcrumb por vista, que ocupaba una fila entera. */
@@ -83,7 +110,7 @@ export class SiteLayoutComponent {
     const ruta = this.currentRoute();
     if (!ruta) return [] as { label: string }[];
     const partes: { label: string }[] = [];
-    const grupo = this.menuGroups.find(g => g.items.some(i => i.path === ruta));
+    const grupo = GENERATED_MENU_GROUPS.find(g => g.items.some(i => i.path === ruta));
     if (grupo) partes.push({ label: grupo.label });
     const item = this.menuItems.find(i => i.path === ruta)
       ?? this.seguridadMenu.children?.find(c => c.path === ruta);
@@ -176,7 +203,12 @@ export class SiteLayoutComponent {
     const base = esId && segments.length > 1 ? segments[segments.length - 2] : lastSegment;
     this.currentPageSufijo.set(esId ? 'Detalle' : '');
 
-    const menuItem = this.menuItems.find(item => item.path === base);
+    // Primero el path completo (pedidos/nuevo), después el último segmento (pedido) y por
+    // último las escenas sin entrada en el menú (seguimiento/:codigo).
+    const rutaLogica = (esId ? segments.slice(0, -1) : segments).join('/');
+    const menuItem = this.menuItems.find(item => item.path === rutaLogica)
+      ?? this.menuItems.find(item => item.path === base)
+      ?? ESCENAS_SIN_MENU.find(item => item.path === rutaLogica || item.path === segments[0]);
 
     if (menuItem) {
       this.currentPageTitle.set(menuItem.label);
@@ -195,7 +227,9 @@ export class SiteLayoutComponent {
 
   navigateTo(path: string): void {
     this.currentRoute.set(path);
-    this.router.navigate(['/', path]);
+    // Un path del menú puede tener varios segmentos (pedidos/nuevo): se navega por
+    // segmentos para que el router no codifique la barra.
+    this.router.navigate(['/', ...path.split('/').filter(Boolean)]);
   }
 
   isActiveRoute(path: string): boolean {

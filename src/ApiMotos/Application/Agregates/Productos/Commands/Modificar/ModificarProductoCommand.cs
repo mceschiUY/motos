@@ -19,7 +19,12 @@ namespace ApiMotos.Application.Agregates.Productos.Commands.Modificar
         string? Homologacion,
         bool? HomologacionVigente,
         DateTime? FechaVencHomologacion,
-        bool Activo) : ICommand<Result<int>>, IAuditableRequest
+        bool Activo,
+        // Etapa C (plan §3.7) — catálogo premium. Opcionales: los payloads existentes siguen valiendo.
+        bool? Destacado = null,
+        bool? Novedad = null,
+        string? FichaTecnica = null,
+        int? ImagenPrincipalId = null) : ICommand<Result<int>>, IAuditableRequest
     {
         public string GetEntityType() => "Producto";
         public string? GetEntityId() => Id.ToString();

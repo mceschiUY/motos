@@ -52,6 +52,117 @@
         }
       </div>
 
+      <!-- Tipo Field (enum, Etapa A) -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Tipo</mat-label>
+          <mat-select formControlName="tipo">
+            <mat-option [value]="null">—</mat-option>
+            @for (t of tipos; track t) {
+              <mat-option [value]="t">{{ etiquetasTipo[t] }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>storefront</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Ciudad Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Ciudad</mat-label>
+          <input matInput type="text" formControlName="ciudad">
+          <mat-icon matPrefix>location_city</mat-icon>
+        </mat-form-field>
+        @if (isFieldValid('ciudad')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Contacto Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Contacto</mat-label>
+          <input matInput type="text" formControlName="contacto" placeholder="Con quién hablar en la tienda">
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+        @if (isFieldValid('contacto')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Email Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email">
+          <mat-icon matPrefix>mail</mat-icon>
+          @if (form.get('email')?.touched && form.get('email')?.invalid) {
+            <mat-error>{{ getErrorMessage('email') }}</mat-error>
+          }
+        </mat-form-field>
+        @if (isFieldValid('email')) {
+          <div class="field-check"><mat-icon>check</mat-icon></div>
+        }
+      </div>
+
+      <!-- Vendedor Field (FK) -->
+      <div class="form-field-wrapper" [class.fk-oculto-contexto]="esFkContexto('vendedorId')">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Vendedor asignado</mat-label>
+          <mat-select formControlName="vendedorId">
+            <mat-option [value]="null">Sin vendedor</mat-option>
+            @for (option of vendedores(); track option.id) {
+              <mat-option [value]="option.id">{{ etiquetaOpcion(option, 'nombre') }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Notas Field -->
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Notas</mat-label>
+          <textarea matInput formControlName="notas" rows="3" placeholder="Horarios, preferencias, cómo llegar…"></textarea>
+          <mat-icon matPrefix>notes</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <!-- Plegado: ubicación (latitud / longitud para el mapa de la agenda y del cliente 360) -->
+      <div class="form-toggle-wrapper">
+        <button mat-button type="button" (click)="ubicacion.set(!ubicacion())">
+          <mat-icon>{{ ubicacion() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          {{ ubicacion() ? 'Ocultar ubicación' : 'Ubicación (latitud, longitud)' }}
+        </button>
+      </div>
+
+      @if (ubicacion()) {
+        <!-- Latitud Field -->
+        <div class="form-field-wrapper">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Latitud</mat-label>
+            <input matInput type="number" step="0.000001" formControlName="latitud" placeholder="-34.9011">
+            <mat-icon matPrefix>place</mat-icon>
+            @if (form.get('latitud')?.touched && form.get('latitud')?.invalid) {
+              <mat-error>{{ getErrorMessage('latitud') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Longitud Field -->
+        <div class="form-field-wrapper">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Longitud</mat-label>
+            <input matInput type="number" step="0.000001" formControlName="longitud" placeholder="-56.1645">
+            <mat-icon matPrefix>place</mat-icon>
+            @if (form.get('longitud')?.touched && form.get('longitud')?.invalid) {
+              <mat-error>{{ getErrorMessage('longitud') }}</mat-error>
+            }
+            <mat-hint>Se ven en el mapa de la agenda y del cliente 360</mat-hint>
+          </mat-form-field>
+        </div>
+      }
+
     </form>
   </mat-dialog-content>
   <!-- Actions -->

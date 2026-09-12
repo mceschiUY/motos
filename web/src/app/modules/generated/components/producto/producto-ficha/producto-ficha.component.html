@@ -15,6 +15,7 @@
         <h1>{{ titulo() }}</h1>
       </div>
       <div class="ficha-acciones">
+        <button mat-icon-button (click)="verFichaComercial()" matTooltip="Ficha comercial (catálogo)"><mat-icon>storefront</mat-icon></button>
         <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir / guardar PDF"><mat-icon>picture_as_pdf</mat-icon></button>
         <button mat-icon-button (click)="documentos()" matTooltip="Documentos"><mat-icon>folder</mat-icon></button>
         <button mat-icon-button (click)="editar()" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
@@ -49,8 +50,19 @@
       </div>
     </section>
 
+    <!-- ═══ Ficha técnica (Etapa C): lo que se lee en la ficha comercial y en el papel ═══ -->
+    @if (fichaTecnica()) {
+      <section class="ficha-datos">
+        <h2>Ficha técnica</h2>
+        <p class="ficha-tecnica-texto">{{ fichaTecnica() }}</p>
+      </section>
+    }
+
     <!-- ═══ Fotos: los Documentos con imagen del registro; sin fotos, sin sección ═══ -->
-    <app-foto-galeria [relacionId]="id" relacionNombre="Producto"></app-foto-galeria>
+    <!-- La estrella elige la portada del catálogo (Etapa C) -->
+    <app-foto-galeria [relacionId]="id" relacionNombre="Producto"
+                      [portadaId]="portadaId()" [permitirPortada]="true"
+                      (portadaCambiada)="marcarPortada($event)"></app-foto-galeria>
 
     <!-- ═══ Relacionados ═══ -->
     <section class="ficha-relacionados">

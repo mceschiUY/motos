@@ -316,3 +316,18 @@ namespace ApiMotos.Infrastructure.Agregates.PedidoLineas.Persistence
         public Task<List<PedidoLinea>> GetPedidoLineasAsync(Spec<PedidoLinea> specification, int skip, int take) => GetBySpecAsync(specification, skip, take);
     }
 }
+
+// Etapa C (plan §3.8) — manual: PrecioHistorial no tiene CRUD generado, solo lo escribe VarianteHooks.
+namespace ApiMotos.Infrastructure.Agregates.PreciosHistorial.Persistence
+{
+    using NSpecifications;
+    using ApiMotos.Domain.Agregates.PreciosHistorial;
+    using ApiMotos.Infrastructure.Common;
+
+    public class PrecioHistorialRepositorio : GenericRepository<PrecioHistorial>, IPrecioHistorialRepositorio
+    {
+        public PrecioHistorialRepositorio(ApiMotos.Infrastructure.Generated.GeneratedContext pContexto) : base(pContexto) { }
+
+        public Task<List<PrecioHistorial>> GetPreciosHistorialAsync(Spec<PrecioHistorial> specification) => GetBySpecAsync(specification);
+    }
+}

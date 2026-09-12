@@ -1,0 +1,161 @@
+<div class="ficha-view ficha-comercial">
+
+  <!-- Membrete: solo existe en papel (PDF con marca), igual que en las fichas generadas -->
+  <app-membrete-impresion [titulo]="ficha()?.nombre || 'Ficha comercial'" tipo="Ficha comercial"></app-membrete-impresion>
+
+  @if (isLoading()) {
+    <div class="fc-cargando"><mat-spinner diameter="36"></mat-spinner><span>Cargando ficha…</span></div>
+  } @else if (!ficha()) {
+    <div class="fc-cargando">
+      No se encontró el producto
+      <button mat-button (click)="volver()">← Volver al catálogo</button>
+    </div>
+  } @else {
+
+    <!-- ═══ Encabezado ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver al catálogo"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo">
+        <h1>{{ ficha()!.nombre }}</h1>
+        <span class="fc-subtitulo">{{ ficha()!.marcaDisplay }} · {{ ficha()!.categoriaDisplay }} · {{ ficha()!.codigo }}</span>
+      </div>
+      <div class="ficha-acciones">
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir para el cliente"><mat-icon>print</mat-icon></button>
+        <button mat-icon-button (click)="editarProducto()" matTooltip="Ficha del producto (editar)"><mat-icon>edit</mat-icon></button>
+      </div>
+    </header>
+
+    <!-- ═══ Portada + datos comerciales ═══ -->
+    <section class="fc-cabecera">
+      <div class="fc-portada">
+        @if (foto()) {
+          <img [src]="foto()" [alt]="ficha()!.nombre" />
+        } @else {
+          <div class="fc-sin-foto"><mat-icon>photo_camera</mat-icon><span>Sin foto de portada</span></div>
+        }
+        <div class="fc-etiquetas">
+          @if (ficha()!.novedad) { <span class="cat-pill cat-pill-nuevo">Nuevo</span> }
+          @if (ficha()!.destacado) { <span class="cat-pill cat-pill-destacado"><mat-icon>star</mat-icon> Destacado</span> }
+        </div>
+      </div>
+
+      <div class="fc-resumen">
+        <div class="fc-precio-grande">
+          @if (ficha()!.precioDesdeUsd > 0) {
+            <small>desde</small> US$ {{ ficha()!.precioDesdeUsd | number:'1.2-2' }}
+          } @else {
+            <small>sin precio de lista</small>
+          }
+        </div>
+
+        <div class="fc-chips">
+          <span class="fc-chip"><mat-icon>qr_code_2</mat-icon> {{ ficha()!.variantes.length }} SKU</span>
+          <span class="fc-chip"><mat-icon>inventory_2</mat-icon> {{ ficha()!.unidadesTotales | number:'1.0-0' }} unidades</span>
+          <span class="fc-chip"><mat-icon>check_circle</mat-icon> {{ skusConStock() }} con stock</span>
+          @if (ficha()!.margenPromedioPorcentaje > 0) {
+            <span class="fc-chip fc-chip-margen"><mat-icon>trending_up</mat-icon> margen {{ ficha()!.margenPromedioPorcentaje | number:'1.0-1' }}%</span>
+          }
+        </div>
+
+        @if (homologacionVencida()) {
+          <div class="fc-alerta">
+            <mat-icon>warning</mat-icon>
+            Homologación vencida{{ ficha()!.fechaVencHomologacion ? ' el ' + (ficha()!.fechaVencHomologacion | date:'dd/MM/yyyy') : '' }} — no vender.
+          </div>
+        }
+
+        <div class="fc-datos">
+          @if (ficha()!.genero) { <div class="fc-dato"><span>Género</span><b>{{ ficha()!.genero }}</b></div> }
+          @if (ficha()!.material) { <div class="fc-dato"><span>Material</span><b>{{ ficha()!.material }}</b></div> }
+          @if (ficha()!.pesoGramos) { <div class="fc-dato"><span>Peso</span><b>{{ ficha()!.pesoGramos | number:'1.0-0' }} g</b></div> }
+          @if (ficha()!.temporada) { <div class="fc-dato"><span>Temporada</span><b>{{ ficha()!.temporada }}</b></div> }
+          @if (ficha()!.tipoCasco) { <div class="fc-dato"><span>Tipo</span><b>{{ ficha()!.tipoCasco }}</b></div> }
+          @if (ficha()!.homologacion) { <div class="fc-dato"><span>Homologación</span><b>{{ ficha()!.homologacion }}</b></div> }
+        </div>
+
+        @if (ficha()!.descripcion) {
+          <p class="fc-descripcion">{{ ficha()!.descripcion }}</p>
+        }
+      </div>
+    </section>
+
+    <!-- ═══ Matriz talla × color ═══ -->
+    <section class="fc-seccion">
+      <div class="fc-seccion-cabezal">
+        <h2>Disponibilidad y precios</h2>
+        <mat-form-field appearance="outline" class="fc-deposito" subscriptSizing="dynamic">
+          <mat-label>Depósito</mat-label>
+          <mat-select [ngModel]="depositoId()" (ngModelChange)="onDepositoChange($event)">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (d of depositos(); track d.id) {
+              <mat-option [value]="d.id">{{ d.nombre }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>warehouse</mat-icon>
+        </mat-form-field>
+      </div>
+
+      @if (ficha()!.variantes.length === 0) {
+        <div class="fc-vacio">Este producto todavía no tiene variantes (SKU) cargadas.</div>
+      } @else {
+        <div class="fc-matriz-scroll">
+          <table class="fc-matriz">
+            <thead>
+              <tr>
+                <th class="fc-esquina">Talla \ Color</th>
+                @for (c of columnas(); track c.colorId) {
+                  <th>
+                    <span class="fc-color">
+                      @if (c.colorHex) { <i class="fc-muestra" [style.background]="c.colorHex"></i> }
+                      {{ c.colorDisplay }}
+                    </span>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of filas(); track f.tallaId) {
+                <tr>
+                  <th class="fc-talla">{{ f.tallaDisplay }}</th>
+                  @for (celda of f.celdas; track $index) {
+                    <td>
+                      @if (celda) {
+                        <div class="fc-celda" [class.fc-celda-agotada]="celda.disponible <= 0" [class.fc-celda-baja]="celda.disponible > 0 && celda.disponible <= 3">
+                          <span class="fc-celda-stock">{{ celda.disponible | number:'1.0-0' }} u</span>
+                          <span class="fc-celda-precio">US$ {{ celda.precioListaUsd | number:'1.2-2' }}</span>
+                          <span class="fc-celda-sku" [matTooltip]="'Margen US$ ' + (celda.margenUsd | number:'1.2-2') + ' (' + (celda.margenPorcentaje | number:'1.0-1') + '%)'">{{ celda.sku }}</span>
+                          <div class="fc-celda-acciones">
+                            <button mat-icon-button (click)="agregarAlPedido(celda)" matTooltip="Agregar al pedido"><mat-icon>add_shopping_cart</mat-icon></button>
+                            <button mat-icon-button (click)="verVariante(celda)" matTooltip="Ver el SKU"><mat-icon>chevron_right</mat-icon></button>
+                          </div>
+                        </div>
+                      } @else {
+                        <span class="fc-celda-nula">—</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="fc-nota">
+          Las celdas vacías son combinaciones que no existen como SKU. Los precios son de lista, en dólares.
+        </p>
+      }
+    </section>
+
+    <!-- ═══ Ficha técnica ═══ -->
+    @if (ficha()!.fichaTecnica) {
+      <section class="fc-seccion">
+        <h2>Ficha técnica</h2>
+        <p class="fc-tecnica">{{ ficha()!.fichaTecnica }}</p>
+      </section>
+    }
+
+    <!-- ═══ Resto de las fotos (no sale en papel para no gastar tinta) ═══ -->
+    <div class="fc-galeria">
+      <app-foto-galeria [relacionId]="productoId" relacionNombre="Producto" [portadaId]="ficha()!.imagenPrincipalId"></app-foto-galeria>
+    </div>
+  }
+</div>

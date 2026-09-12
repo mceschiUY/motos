@@ -94,6 +94,31 @@ export class ProductoFichaComponent implements OnInit, OnDestroy {
     this.router.navigate(['/documento'], { queryParams: { relacionId: this.id, relacionNombre: 'Producto' } });
   }
 
+  // ═══ Etapa C: catálogo premium ═══
+
+  /** La hoja que se le muestra (o imprime) al cliente: matriz talla × color, precios y stock. */
+  verFichaComercial(): void { this.router.navigate(['/catalogo', this.id]); }
+
+  fichaTecnica(): string { return (this.item() as any)?.fichaTecnica || ''; }
+
+  portadaId(): number | null { return (this.item() as any)?.imagenPrincipalId ?? null; }
+
+  /**
+   * La galería avisa qué foto eligieron; acá se guarda. Va el item entero y no solo el campo:
+   * el PUT viaja como ModificarProductoCommand y los campos que falten se guardarían en null.
+   */
+  marcarPortada(documentoId: number): void {
+    const actual = this.item() as any;
+    if (!actual) { return; }
+    this.service.update(String(this.id), { ...actual, imagenPrincipalId: documentoId }).subscribe({
+      next: () => {
+        this.item.set({ ...actual, imagenPrincipalId: documentoId });
+        this.snackBar.open('Portada actualizada', 'OK', { duration: 2500 });
+      },
+      error: () => this.snackBar.open('No se pudo guardar la portada', 'Cerrar', { duration: 4000 })
+    });
+  }
+
   // PDF con marca: el navegador imprime; el membrete y el @media print hacen el resto
   imprimir(): void { window.print(); }
 

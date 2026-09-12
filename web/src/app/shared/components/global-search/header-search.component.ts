@@ -121,7 +121,8 @@ export class HeaderSearchComponent {
 
   private readonly campo = viewChild<ElementRef<HTMLInputElement>>('campo');
 
-  readonly entidades = BUSQUEDA_ENTIDADES;
+  // Sin las entidades marcadas `oculta` (hijas o de configuración): no son escena del relato.
+  readonly entidades = BUSQUEDA_ENTIDADES.filter(e => !e.oculta);
   readonly abierto = signal(false);
   readonly texto = signal('');
   readonly buscando = signal(false);

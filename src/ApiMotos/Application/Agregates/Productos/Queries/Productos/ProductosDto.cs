@@ -19,5 +19,10 @@ namespace ApiMotos.Application.Agregates.Productos.Queries.Productos
         public bool? HomologacionVigente { get; set; }
         public DateTime? FechaVencHomologacion { get; set; }
         public bool Activo { get; set; }
+        // Etapa C (plan §3.7): catálogo premium. El SQL del handler es SELECT e.*, alcanza con declararlas acá.
+        public bool? Destacado { get; set; }
+        public bool? Novedad { get; set; }
+        public string? FichaTecnica { get; set; }
+        public int? ImagenPrincipalId { get; set; }
     }
 }

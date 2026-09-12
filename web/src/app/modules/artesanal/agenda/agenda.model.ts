@@ -24,6 +24,8 @@ export interface AvanceVendedor {
   periodo: string;
   objetivoUsd: number;
   vendidoUsd: number;
+  /** Comisión sellada en el período (suma de ComisionUsd de los pedidos entregados). */
+  comisionUsd: number;
   actividades: number;
   visitas: number;
   conPedido: number;

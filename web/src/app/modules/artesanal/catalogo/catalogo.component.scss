@@ -1,0 +1,160 @@
+// Catálogo comercial (artesanal, solo lectura): misma piel que las listas generadas,
+// con una grilla de cards con foto en lugar de la tabla.
+@use 'generated/entity-list' as *;
+
+// Filtros server-side en la toolbar, entre la búsqueda y las acciones.
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: var(--ceskia-space-2);
+  flex-wrap: wrap;
+
+  .filtro-field {
+    min-width: 200px;
+    // Compactar el outline de Material a la altura de la toolbar
+    ::ng-deep .mat-mdc-text-field-wrapper { height: 40px; }
+    ::ng-deep .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; min-height: 40px; }
+    ::ng-deep .mat-mdc-floating-label { top: 20px; }
+    ::ng-deep .mdc-notched-outline__notch { max-width: calc(100% - 16px); }
+  }
+}
+
+.catalogo-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ceskia-space-3);
+  padding: var(--ceskia-space-8);
+  color: var(--ceskia-text-tertiary);
+  font-size: var(--ceskia-text-sm);
+}
+
+.catalogo-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ceskia-space-4);
+  padding: var(--ceskia-space-4);
+}
+
+.cat-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  overflow: hidden;
+  background: var(--ceskia-elevated);
+  border: 1px solid var(--ceskia-border-subtle);
+  border-radius: var(--ceskia-radius-lg);
+  cursor: pointer;
+  transition: border-color var(--ceskia-transition-fast), transform var(--ceskia-transition-fast);
+
+  &:hover {
+    border-color: var(--ceskia-accent-primary);
+    transform: translateY(-2px);
+  }
+}
+
+.cat-foto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--ceskia-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.cat-iniciales {
+  font-size: 2rem;
+  font-weight: var(--ceskia-font-semibold);
+  letter-spacing: .06em;
+  color: var(--ceskia-text-muted);
+}
+
+.cat-etiquetas {
+  position: absolute;
+  top: var(--ceskia-space-2);
+  left: var(--ceskia-space-2);
+  display: flex;
+  gap: var(--ceskia-space-1);
+}
+
+.cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: var(--ceskia-radius-sm);
+  font-size: var(--ceskia-text-xs);
+  font-weight: var(--ceskia-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.cat-pill-nuevo {
+  background: var(--ceskia-accent-primary-glow);
+  color: var(--ceskia-accent-primary);
+}
+
+.cat-pill-destacado {
+  background: var(--ceskia-accent-primary);
+  color: var(--ceskia-base);
+  padding: 2px 4px;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+.cat-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ceskia-space-1);
+  padding: var(--ceskia-space-3) var(--ceskia-space-4) var(--ceskia-space-4);
+}
+
+.cat-marca {
+  font-size: var(--ceskia-text-xs);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ceskia-text-tertiary);
+}
+
+.cat-nombre {
+  font-size: var(--ceskia-text-sm);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  line-height: 1.35;
+  min-height: 2.7em;
+}
+
+.cat-pie {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ceskia-space-2);
+  margin-top: var(--ceskia-space-2);
+}
+
+.cat-precio {
+  font-size: var(--ceskia-text-lg);
+  font-weight: var(--ceskia-font-semibold);
+  color: var(--ceskia-text-primary);
+  font-family: var(--ceskia-font-mono);
+
+  small {
+    font-family: inherit;
+    font-size: var(--ceskia-text-xs);
+    font-weight: 400;
+    color: var(--ceskia-text-tertiary);
+    margin-right: 2px;
+  }
+}
+
+.cat-stock {
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-tertiary);
+  white-space: nowrap;
+
+  &.cat-agotado { color: var(--ceskia-accent-danger); }
+}

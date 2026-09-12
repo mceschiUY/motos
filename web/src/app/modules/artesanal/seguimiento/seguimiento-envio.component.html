@@ -1,0 +1,226 @@
+<div class="ficha-view seguimiento">
+
+  <!-- Membrete: solo existe en papel, igual que en las fichas generadas -->
+  <app-membrete-impresion [titulo]="'Envío ' + (datos()?.codigoRastreo || '')" tipo="Seguimiento de envío"></app-membrete-impresion>
+
+  @if (isLoading()) {
+    <div class="sg-cargando"><mat-spinner diameter="36"></mat-spinner><span>Cargando seguimiento…</span></div>
+  } @else if (noEncontrado() || !datos()) {
+    <div class="sg-cargando">
+      No se encontró el envío
+      <button mat-button (click)="volver()">← Volver a envíos</button>
+    </div>
+  } @else {
+    <!-- ═══ Encabezado ═══ -->
+    <header class="ficha-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver a envíos" class="no-print"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo sg-titulo">
+        <h1>Envío <span class="sg-codigo">{{ d.codigoRastreo }}</span></h1>
+        <span class="enum-pill" [attr.data-valor]="d.estado">{{ d.estadoLabel }}</span>
+        @if (d.slaGlobal) {
+          <span class="sg-sla-pill" [attr.data-sla]="d.slaGlobal" [matTooltip]="'SLA de la etapa en curso: ' + labelSla(d.slaGlobal)">
+            <mat-icon>{{ d.slaGlobal === 'ok' ? 'check' : d.slaGlobal === 'advertencia' ? 'schedule' : 'error' }}</mat-icon>
+            {{ labelSla(d.slaGlobal) }}
+          </span>
+        }
+      </div>
+      <div class="ficha-acciones no-print">
+        <button mat-icon-button (click)="agregarObservacion()" matTooltip="Agregar observación"><mat-icon>post_add</mat-icon></button>
+        <button mat-icon-button (click)="alternarCompartir()" [class.sg-activo]="compartiendo()" matTooltip="Compartir seguimiento (link y QR)"><mat-icon>qr_code_2</mat-icon></button>
+        <button mat-icon-button (click)="imprimir()" matTooltip="Imprimir"><mat-icon>print</mat-icon></button>
+      </div>
+    </header>
+
+    @if (d.estado === 'anulado') {
+      <div class="sg-alerta sg-alerta-danger">
+        <mat-icon>cancel</mat-icon>
+        <span><b>Envío anulado.</b> {{ d.motivoAnulacion ? 'Motivo: ' + d.motivoAnulacion : 'Sin motivo registrado.' }}</span>
+      </div>
+    }
+
+    <!-- ═══ Resumen: cliente, destino, agencia, etapa en curso ═══ -->
+    <section class="sg-resumen">
+      <div class="sg-dato">
+        <span class="sg-dato-label"><mat-icon>storefront</mat-icon> Cliente</span>
+        <a class="sg-dato-valor sg-link" [routerLink]="['/cliente', d.cliente.id]">{{ d.cliente.nombre || '—' }}</a>
+        @if (d.cliente.telefono) { <span class="sg-dato-extra">{{ d.cliente.telefono }}</span> }
+      </div>
+      <div class="sg-dato">
+        <span class="sg-dato-label"><mat-icon>place</mat-icon> Destino</span>
+        <span class="sg-dato-valor">{{ d.cliente.ciudad || '—' }}</span>
+        @if (d.cliente.direccionEntrega) { <span class="sg-dato-extra">{{ d.cliente.direccionEntrega }}</span> }
+      </div>
+      <div class="sg-dato">
+        <span class="sg-dato-label"><mat-icon>local_shipping</mat-icon> Agencia</span>
+        <a class="sg-dato-valor sg-link" [routerLink]="['/agencia', d.agencia.id]">{{ d.agencia.nombre || '—' }}</a>
+      </div>
+      <div class="sg-dato" [attr.data-sla]="etapaEnCurso()?.estadoSla">
+        <span class="sg-dato-label"><mat-icon>timer</mat-icon> Etapa en curso</span>
+        @if (etapaEnCurso(); as e) {
+          <span class="sg-dato-valor">Hacia {{ e.label | lowercase }} · {{ textoDias(e) }}</span>
+          @if (e.limiteDias != null) {
+            <span class="sg-dato-extra">aviso a los {{ e.umbralDias }} días · límite {{ e.limiteDias }} días</span>
+          }
+        } @else {
+          <span class="sg-dato-valor">{{ d.estado === 'entregado' ? 'Ciclo cerrado' : 'Sin etapa pendiente' }}</span>
+        }
+      </div>
+    </section>
+
+    <!-- ═══ Línea de estados estilo courier ═══ -->
+    <section class="sg-seccion">
+      <h2>Recorrido</h2>
+      <ol class="sg-linea" [class.sg-linea-anulada]="d.estado === 'anulado'">
+        @for (e of d.etapas; track e.clave; let i = $index) {
+          <li class="sg-hito" [class.cumplida]="e.cumplida" [class.actual]="e.actual" [class.pendiente]="!e.cumplida" [attr.data-sla]="e.estadoSla">
+            <div class="sg-hito-tramo" [class.recorrido]="e.cumplida && i > 0"></div>
+            <div class="sg-hito-dot">
+              <mat-icon>{{ e.cumplida ? 'check' : (e.actual ? 'more_horiz' : 'radio_button_unchecked') }}</mat-icon>
+            </div>
+            <div class="sg-hito-texto">
+              <span class="sg-hito-label">{{ e.label }}</span>
+              @if (e.fecha) {
+                <span class="sg-hito-fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+              } @else if (e.actual && !e.cumplida) {
+                <span class="sg-hito-fecha">en curso</span>
+              } @else {
+                <span class="sg-hito-fecha">pendiente</span>
+              }
+              @if (e.diasTranscurridos != null) {
+                <span class="sg-hito-dias" [attr.data-sla]="e.estadoSla" [matTooltip]="e.limiteDias != null ? 'Aviso a los ' + e.umbralDias + ' días · límite ' + e.limiteDias + ' días' : ''">
+                  {{ textoDias(e) }}@if (e.limiteDias != null) { <small> / {{ e.limiteDias }}</small> }
+                </span>
+              } @else if (!e.cumplida && e.limiteDias != null) {
+                <span class="sg-hito-dias sg-hito-dias-mudo">límite {{ e.limiteDias }} días</span>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- ═══ Acciones del ciclo (según el estado actual) ═══ -->
+    @if (!cerrado()) {
+      <section class="sg-seccion no-print">
+        <h2>Próximo paso</h2>
+        <div class="sg-acciones">
+          @for (a of accionesPosibles(); track a.destino) {
+            <div class="sg-accion">
+              <button mat-flat-button [color]="a.peligro ? 'warn' : 'primary'" [disabled]="ejecutando() || anulando()" (click)="ejecutar(a)">
+                <mat-icon>{{ a.icon }}</mat-icon> {{ a.label }}
+              </button>
+              <span class="sg-accion-guia">{{ a.guia }}</span>
+            </div>
+          }
+        </div>
+
+        @if (anulando()) {
+          <div class="sg-anular">
+            <label for="sg-motivo">Motivo de anulación</label>
+            <textarea id="sg-motivo" rows="2" [(ngModel)]="motivoAnulacion" maxlength="250" placeholder="Por qué se anula este envío"></textarea>
+            <div class="sg-anular-botones">
+              <button mat-button (click)="cancelarAnulacion()" [disabled]="ejecutando()">Cancelar</button>
+              <button mat-flat-button color="warn" (click)="confirmarAnulacion()" [disabled]="ejecutando() || !motivoAnulacion.trim()">
+                <mat-icon>cancel</mat-icon> Anular envío
+              </button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ═══ Compartir: link público + QR ═══ -->
+    @if (compartiendo()) {
+      <section class="sg-seccion sg-compartir">
+        <h2>Compartir seguimiento</h2>
+        <div class="sg-compartir-cuerpo">
+          <div class="sg-qr">
+            <canvas #qrCanvas width="196" height="196" aria-label="QR del seguimiento"></canvas>
+            @if (qrFallo()) { <span class="sg-qr-fallo">No se pudo dibujar el QR</span> }
+          </div>
+          <div class="sg-compartir-texto">
+            <p>El cliente ve dónde está su pedido sin entrar al sistema: recorrido, agencia y qué contiene. Sin precios ni datos internos.</p>
+            <div class="sg-link-caja">
+              <input type="text" readonly [value]="linkPublico()" (focus)="$any($event.target).select()" />
+              <button mat-icon-button (click)="copiarLink()" matTooltip="Copiar link" class="no-print"><mat-icon>content_copy</mat-icon></button>
+              <button mat-icon-button (click)="abrirLink()" matTooltip="Abrir en otra pestaña" class="no-print"><mat-icon>open_in_new</mat-icon></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ═══ Pedido origen ═══ -->
+    <section class="sg-seccion">
+      <div class="sg-seccion-cabezal">
+        <h2>Pedido origen</h2>
+        @if (d.pedido; as p) {
+          <a class="sg-link sg-link-pedido no-print" [routerLink]="['/pedido', p.id]">
+            {{ p.numero || ('#' + p.id) }} <mat-icon>open_in_new</mat-icon>
+          </a>
+        }
+      </div>
+      @if (d.pedido; as p) {
+        <div class="sg-pedido-meta">
+          <span><b>{{ p.numero || ('#' + p.id) }}</b> · {{ p.fecha | date:'dd/MM/yyyy' }}</span>
+          @if (p.estado) { <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span> }
+          @if (p.vendedorNombre) { <span>Vendedor: {{ p.vendedorNombre }}</span> }
+          <span>{{ unidades() | number:'1.0-0' }} unidades</span>
+          @if (p.totalUsd != null) { <span class="sg-total">Total US$ {{ p.totalUsd | number:'1.2-2' }}</span> }
+        </div>
+        @if (p.lineas.length === 0) {
+          <div class="sg-vacio">El pedido no tiene líneas.</div>
+        } @else {
+          <div class="sg-tabla-scroll">
+            <table class="sg-tabla">
+              <thead>
+                <tr>
+                  <th>SKU</th><th>Producto</th><th>Talla</th><th>Color</th>
+                  <th class="num">Cant.</th><th class="num">Precio US$</th><th class="num">Subtotal US$</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (l of p.lineas; track l.varianteId + '-' + $index) {
+                  <tr>
+                    <td><a class="sg-link sg-mono" [routerLink]="['/variante', l.varianteId]">{{ l.sku || ('#' + l.varianteId) }}</a></td>
+                    <td>{{ l.productoNombre || '—' }}</td>
+                    <td>{{ l.talla || '—' }}</td>
+                    <td>{{ l.color || '—' }}</td>
+                    <td class="num">{{ l.cantidad | number:'1.0-0' }}</td>
+                    <td class="num">{{ l.precioUnitarioUsd != null ? (l.precioUnitarioUsd | number:'1.2-2') : '—' }}</td>
+                    <td class="num">{{ l.subtotalUsd != null ? (l.subtotalUsd | number:'1.2-2') : '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      } @else {
+        <div class="sg-vacio">Este envío no está vinculado a un pedido (envío suelto).</div>
+      }
+    </section>
+
+    <!-- ═══ Bitácora ═══ -->
+    <section class="sg-seccion">
+      <div class="sg-seccion-cabezal">
+        <h2>Bitácora</h2>
+        <button mat-stroked-button (click)="agregarObservacion()" class="no-print"><mat-icon>post_add</mat-icon> Agregar observación</button>
+      </div>
+      @if (d.observaciones.length === 0) {
+        <div class="sg-vacio">Todavía no hay observaciones.</div>
+      } @else {
+        <ul class="sg-bitacora">
+          @for (o of d.observaciones; track o.id) {
+            <li class="sg-obs">
+              <div class="sg-obs-meta">
+                <span class="sg-obs-fecha">{{ o.fechaHora | date:'dd/MM/yyyy HH:mm' }}</span>
+                @if (o.usuario) { <span class="sg-obs-usuario">{{ o.usuario }}</span> }
+              </div>
+              <p class="sg-obs-texto">{{ o.texto }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

@@ -1,0 +1,256 @@
+<div class="ficha-view cliente360">
+
+  @if (isLoading()) {
+    <div class="c360-cargando"><mat-spinner diameter="36"></mat-spinner><span>Cargando cliente…</span></div>
+  } @else if (!cliente()) {
+    <div class="c360-cargando c360-vacio">
+      <mat-icon>person_off</mat-icon>
+      <span>Cliente no encontrado</span>
+      <button mat-button (click)="volver()">← Volver a clientes</button>
+    </div>
+  } @else {
+
+    <!-- ═══ Encabezado: identidad + acciones ═══ -->
+    <header class="ficha-header c360-header">
+      <button mat-icon-button (click)="volver()" matTooltip="Volver a clientes"><mat-icon>arrow_back</mat-icon></button>
+      <div class="ficha-titulo c360-titulo">
+        <h1>{{ cliente()!.nombre }}</h1>
+        <span class="enum-pill" [attr.data-valor]="cliente()!.tipo">{{ etiquetaTipoCliente(cliente()!.tipo) }}</span>
+      </div>
+      <div class="ficha-acciones c360-acciones">
+        <button mat-flat-button color="primary" (click)="registrarVisita()">
+          <mat-icon>add_task</mat-icon> Registrar visita
+        </button>
+        <button mat-stroked-button (click)="nuevoPedido()">
+          <mat-icon>add_shopping_cart</mat-icon> Nuevo pedido
+        </button>
+        <button mat-stroked-button (click)="editarDatos()">
+          <mat-icon>edit</mat-icon> Editar datos
+        </button>
+        @if (whatsappUrl(); as wa) {
+          <a mat-stroked-button class="c360-wa" [href]="wa" target="_blank" rel="noopener">
+            <mat-icon>chat</mat-icon> WhatsApp
+          </a>
+        }
+      </div>
+    </header>
+
+    <!-- ═══ Identidad + semáforo ═══ -->
+    <section class="c360-identidad" [attr.data-semaforo]="cliente()!.semaforo">
+      <div class="c360-datos">
+        <div class="c360-dato">
+          <mat-icon>location_city</mat-icon>
+          <div>
+            <span>Ciudad</span>
+            <b>{{ cliente()!.ciudad || '—' }}</b>
+            @if (cliente()!.direccionEntrega) { <small>{{ cliente()!.direccionEntrega }}</small> }
+          </div>
+        </div>
+        <div class="c360-dato">
+          <mat-icon>person</mat-icon>
+          <div>
+            <span>Contacto</span>
+            <b>{{ cliente()!.contacto || '—' }}</b>
+            @if (cliente()!.telefono) {
+              <small>
+                @if (whatsappUrl(); as wa) {
+                  <a [href]="wa" target="_blank" rel="noopener" matTooltip="Abrir WhatsApp">{{ cliente()!.telefono }}</a>
+                } @else {
+                  {{ cliente()!.telefono }}
+                }
+              </small>
+            }
+            @if (cliente()!.email) {
+              <small><a [href]="'mailto:' + cliente()!.email">{{ cliente()!.email }}</a></small>
+            }
+          </div>
+        </div>
+        <div class="c360-dato">
+          <mat-icon>badge</mat-icon>
+          <div>
+            <span>Vendedor asignado</span>
+            @if (cliente()!.vendedorId != null) {
+              <b><a [routerLink]="['/vendedor', cliente()!.vendedorId]">{{ cliente()!.vendedorNombre }}</a></b>
+              @if (cliente()!.vendedorTelefono) {
+                <small>
+                  @if (whatsappVendedorUrl(); as wa) {
+                    <a [href]="wa" target="_blank" rel="noopener">{{ cliente()!.vendedorTelefono }}</a>
+                  } @else {
+                    {{ cliente()!.vendedorTelefono }}
+                  }
+                </small>
+              }
+            } @else {
+              <b class="c360-muted">Sin vendedor</b>
+            }
+          </div>
+        </div>
+        @if (cliente()!.notas) {
+          <div class="c360-dato c360-notas">
+            <mat-icon>sticky_note_2</mat-icon>
+            <div>
+              <span>Notas</span>
+              <p>{{ cliente()!.notas }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="c360-semaforo">
+        <mat-icon>{{ iconoSemaforo(cliente()!.semaforo) }}</mat-icon>
+        <div>
+          <b>{{ cliente()!.semaforo === 'verde' ? 'Relación al día' : cliente()!.semaforo === 'amarillo' ? 'Atención' : 'Cliente descuidado' }}</b>
+          <span>{{ cliente()!.motivoSemaforo }}</span>
+          @if (cliente()!.ultimaActividadFecha) {
+            <small>
+              Último contacto: {{ etiquetaTipoActividad(cliente()!.ultimaActividadTipo) }}
+              el {{ cliente()!.ultimaActividadFecha | date:'dd/MM/yyyy' }}
+              @if (cliente()!.ultimaActividadResultado) { · {{ etiquetaEstado(cliente()!.ultimaActividadResultado) }} }
+            </small>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Tira de KPI ═══ -->
+    <div class="header-stats c360-kpis">
+      <div class="stat-item" [class.stat-alerta]="cliente()!.diasSinVisita == null || cliente()!.diasSinVisita! > 30">
+        <div class="stat-icon"><mat-icon>event_busy</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cliente()!.diasSinVisita == null ? '—' : cliente()!.diasSinVisita }}</span>
+          <span class="stat-label">Días sin visita</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>receipt_long</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cliente()!.pedidosAnio }} <small>/ US$ {{ cliente()!.totalAnioUsd | number:'1.2-2' }}</small></span>
+          <span class="stat-label">Pedidos del año</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><mat-icon>payments</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">US$ {{ cliente()!.ticketPromedioUsd | number:'1.2-2' }}</span>
+          <span class="stat-label">Ticket promedio</span>
+        </div>
+      </div>
+      <div class="stat-item" [class.stat-info]="cliente()!.pedidosAbiertos > 0">
+        <div class="stat-icon"><mat-icon>pending_actions</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cliente()!.pedidosAbiertos }}</span>
+          <span class="stat-label">Pedidos abiertos</span>
+        </div>
+      </div>
+      <div class="stat-item" [class.stat-info]="cliente()!.enviosEnCurso > 0">
+        <div class="stat-icon"><mat-icon>local_shipping</mat-icon></div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cliente()!.enviosEnCurso }}</span>
+          <span class="stat-label">Envíos en curso</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Cuerpo: línea de tiempo | panel lateral ═══ -->
+    <div class="c360-cuerpo">
+
+      <!-- Izquierda: línea de tiempo unificada -->
+      <section class="c360-seccion c360-timeline">
+        <h2>Línea de tiempo</h2>
+        @if (cliente()!.timeline.length === 0) {
+          <div class="c360-vacio-seccion">Todavía no hay actividades, pedidos ni envíos con este cliente.</div>
+        } @else {
+          <ol class="c360-lista">
+            @for (item of cliente()!.timeline; track item.tipo + item.id) {
+              <li class="c360-item" [attr.data-tipo]="item.tipo" (click)="irA(item)" [matTooltip]="'Abrir ' + item.titulo">
+                <div class="c360-item-icono"><mat-icon>{{ iconoTimeline(item.tipo) }}</mat-icon></div>
+                <div class="c360-item-cuerpo">
+                  <div class="c360-item-cabezal">
+                    <b>{{ item.titulo }}</b>
+                    @if (item.estado) {
+                      <span class="enum-pill" [attr.data-valor]="item.estado">{{ etiquetaEstado(item.estado) }}</span>
+                    }
+                  </div>
+                  @if (item.detalle) { <p>{{ item.detalle }}</p> }
+                </div>
+                <time class="c360-item-fecha">{{ item.fecha | date:'dd/MM/yyyy' }}</time>
+                <mat-icon class="c360-item-ir">chevron_right</mat-icon>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+
+      <!-- Derecha: qué hago ahora -->
+      <aside class="c360-lateral">
+
+        <section class="c360-seccion c360-proxima" [class.c360-proxima-hay]="cliente()!.proximaAccion">
+          <h2>Próxima acción</h2>
+          @if (cliente()!.proximaAccion) {
+            <div class="c360-proxima-fecha">
+              <mat-icon>event_upcoming</mat-icon>
+              <div>
+                <b>{{ proximaAccionLabel() }}</b>
+                <span>{{ cliente()!.proximaAccion | date:'EEEE d MMMM' }}</span>
+              </div>
+            </div>
+          } @else {
+            <p class="c360-muted">Nada agendado. Registrá una visita con fecha de próxima acción para que aparezca en la agenda.</p>
+          }
+        </section>
+
+        <section class="c360-seccion">
+          <h2>Último pedido</h2>
+          @if (cliente()!.ultimoPedido; as p) {
+            <a class="c360-ultimo" [routerLink]="['/pedido', p.id]">
+              <div>
+                <b>Pedido {{ p.numero }}</b>
+                <span>{{ p.fecha | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="c360-ultimo-der">
+                <span class="c360-monto">US$ {{ p.totalUsd | number:'1.2-2' }}</span>
+                <span class="enum-pill" [attr.data-valor]="p.estado">{{ p.estado }}</span>
+              </div>
+            </a>
+          } @else {
+            <p class="c360-muted">Este cliente todavía no hizo pedidos.</p>
+          }
+        </section>
+
+        <section class="c360-seccion">
+          <h2>Lo que más compra</h2>
+          @if (cliente()!.topProductos.length === 0) {
+            <p class="c360-muted">Sin pedidos despachados o entregados todavía.</p>
+          } @else {
+            <ol class="c360-top">
+              @for (t of cliente()!.topProductos; track t.productoId) {
+                <li>
+                  <a [routerLink]="['/catalogo', t.productoId]">{{ t.productoNombre }}</a>
+                  <span class="c360-top-num">{{ t.unidades | number:'1.0-0' }} u · US$ {{ t.totalUsd | number:'1.2-2' }}</span>
+                </li>
+              }
+            </ol>
+          }
+        </section>
+
+        <section class="c360-seccion c360-mapa">
+          <div class="c360-seccion-cabezal">
+            <h2>Ubicación</h2>
+            @if (mapsUrl(); as url) {
+              <a mat-button [href]="url" target="_blank" rel="noopener"><mat-icon>directions</mat-icon> Cómo llegar</a>
+            }
+          </div>
+          @if (tieneUbicacion()) {
+            <app-mini-mapa [lat]="cliente()!.latitud" [lng]="cliente()!.longitud" [direccion]="cliente()!.direccionEntrega || cliente()!.nombre"></app-mini-mapa>
+          } @else {
+            <div class="c360-sin-ubicacion">
+              <mat-icon>location_off</mat-icon>
+              <span>Sin ubicación. Cargá latitud y longitud desde "Editar datos" (bloque Ubicación).</span>
+            </div>
+          }
+        </section>
+
+      </aside>
+    </div>
+  }
+</div>
