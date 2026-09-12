@@ -42,6 +42,8 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
         public int SkuStockBajo { get; set; }
         /// <summary>SKU con saldo total &lt; 0 (el Kardex quedó en negativo).</summary>
         public int SkuStockNegativo { get; set; }
+        /// <summary>Pedidos ENTREGADOS del mes: la base de las comisiones y del "vendió" del equipo.</summary>
+        public decimal VentasEntregadasMesUsd { get; set; }
         /// <summary>Comisión sellada en los pedidos entregados del mes.</summary>
         public decimal ComisionesMesUsd { get; set; }
     }

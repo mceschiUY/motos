@@ -446,6 +446,7 @@ GO
 --     período, así que el IF NOT EXISTS mira las dos columnas.
 -- ============================================================================
 DECLARE @periodo NVARCHAR(7) = FORMAT(GETDATE(), 'yyyy-MM');
+DECLARE @periodoAnt NVARCHAR(7) = FORMAT(DATEADD(MONTH, -1, GETDATE()), 'yyyy-MM');
 
 INSERT INTO PC_METAS (VendedorId, Periodo, ObjetivoUsd)
 SELECT v.Id, @periodo, x.Objetivo
@@ -456,6 +457,18 @@ FROM (VALUES
 ) AS x(Nombre, Objetivo)
 JOIN PC_VENDEDORES v ON v.Nombre = x.Nombre
 WHERE NOT EXISTS (SELECT 1 FROM PC_METAS m WHERE m.VendedorId = v.Id AND m.Periodo = @periodo);
+
+-- Metas del mes anterior (Etapa H.6): la pantalla de comisiones compara contra el mes
+-- pasado, y sin meta previa la comparación queda coja.
+INSERT INTO PC_METAS (VendedorId, Periodo, ObjetivoUsd)
+SELECT v.Id, @periodoAnt, x.Objetivo
+FROM (VALUES
+    (N'Andrés Ferreira', 16000.00),
+    (N'Lucía Méndez',    12000.00),
+    (N'Pablo Ceschi',    22000.00)
+) AS x(Nombre, Objetivo)
+JOIN PC_VENDEDORES v ON v.Nombre = x.Nombre
+WHERE NOT EXISTS (SELECT 1 FROM PC_METAS m WHERE m.VendedorId = v.Id AND m.Periodo = @periodoAnt);
 GO
 
 -- ============================================================================
@@ -580,6 +593,86 @@ BEGIN
 END
 ELSE
     PRINT 'Seed de dominio: ya hay pedidos, se omite.';
+GO
+
+-- ============================================================================
+-- 14 bis. Pedidos ENTREGADOS del mes anterior (Etapa H.6). La liquidación de
+--     comisiones compara el mes con el anterior; con todo el relato comprimido
+--     en el mes en curso, el mes pasado daba cero. Se siembran 5 entregados
+--     repartidos entre los tres vendedores, solo si no hay ningún entregado
+--     anterior al mes en curso (así también entra en una base ya sembrada).
+--     * Numerados a continuación del último Id (el número real lo pone
+--       PedidoHooks a partir del Id); son historia, no salen en el kanban del mes.
+--     * Kardex: cada salida tiene su entrada previa por la misma cantidad
+--       (contenedor recibido el mes pasado), así las existencias de HOY no
+--       cambian y el relato del stock (SKU con 2 unidades, el negativo) sigue.
+--     * Sin envío: los del mes pasado ya se cerraron; el tracking no los necesita.
+-- ============================================================================
+IF NOT EXISTS (SELECT 1 FROM PC_PEDIDOS WHERE Estado = N'entregado' AND Fecha < DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
+   AND EXISTS (SELECT 1 FROM PC_PEDIDOS)
+BEGIN
+    DECLARE @iniMes DATETIME2 = CAST(DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) AS DATETIME2);
+    DECLARE @depCentralAnt INT = (SELECT TOP 1 Id FROM PC_DEPOSITOS WHERE Codigo = N'DEP-CENTRAL');
+    DECLARE @seq INT = (SELECT ISNULL(MAX(Id), 0) FROM PC_PEDIDOS);
+
+    INSERT INTO PC_PEDIDOS (Numero, Fecha, ClienteId, VendedorId, DepositoId, AgenciaId, Estado, TotalUsd, ComisionUsd, Observaciones, EnvioId, MotivoAnulacion)
+    SELECT N'PED-' + RIGHT('0000' + CAST(@seq + x.N AS NVARCHAR(10)), 4),
+           DATEADD(DAY, -x.DiasAntesDelMes, @iniMes), c.Id, c.VendedorId, @depCentralAnt, a.Id,
+           N'entregado', 0, 0, x.Observaciones, NULL, N''
+    FROM (VALUES
+        -- N, DíasAntesDelInicioDelMes, Cliente, Agencia, Observaciones
+        (1, 22, N'Moto Center Rivera',      N'DAC',          N'Reposición de invierno del norte.'),
+        (2, 18, N'Racing Store Montevideo', N'Flota propia', N'Pedido grande de fin de mes.'),
+        (3, 13, N'Ruta 5 Motos',            N'DAC',          N'Entregado de mañana, como pidió.'),
+        (4,  9, N'El Cruce Motopartes',     N'Mirtrans',     N'Compra chica, cerrada en la visita.'),
+        (5,  4, N'Distribuidora Litoral',   N'Mirtrans',     N'Volumen para talleres del litoral.')
+    ) AS x(N, DiasAntesDelMes, Cliente, Agencia, Observaciones)
+    JOIN PC_CLIENTES c ON c.Nombre = x.Cliente
+    LEFT JOIN PC_AGENCIAS a ON a.Nombre = x.Agencia
+    WHERE c.VendedorId IS NOT NULL;
+
+    INSERT INTO PC_PEDIDO_LINEAS (PedidoId, VarianteId, Cantidad, PrecioUnitarioUsd, SubtotalUsd)
+    SELECT p.Id, v.Id, x.Cantidad, v.PrecioLista, x.Cantidad * v.PrecioLista
+    FROM (VALUES
+        (1, N'LS2-FF800-5960-BLA', 3), (1, N'FOX-180-L-NEG', 2),     (1, N'LS2-VISIRI-U', 4),
+        (2, N'LS2-FF906-5960-GRI', 3), (2, N'SHO-NXR2-5758-BLA', 2), (2, N'ALP-TGPR3-L-ROJ', 2), (2, N'LS2-VISIRI-U', 6),
+        (3, N'BEL-MX9-5960-ROJ', 1),   (3, N'ALP-SMX1-L-NEG', 2),
+        (4, N'LS2-FF800-5758-ROJ', 1), (4, N'LS2-VISIRI-U', 2),
+        (5, N'LS2-FF906-5758-GRI', 2), (5, N'ALP-SMX1-M-ROJ', 3),    (5, N'FOX-180-M-NEG', 2)
+    ) AS x(N, Sku, Cantidad)
+    JOIN PC_PEDIDOS p ON p.Numero = N'PED-' + RIGHT('0000' + CAST(@seq + x.N AS NVARCHAR(10)), 4)
+    JOIN PC_VARIANTES v ON v.Sku = x.Sku;
+
+    UPDATE p SET p.TotalUsd = ISNULL(l.Total, 0)
+    FROM PC_PEDIDOS p
+    LEFT JOIN (SELECT PedidoId, SUM(SubtotalUsd) AS Total FROM PC_PEDIDO_LINEAS GROUP BY PedidoId) l ON l.PedidoId = p.Id
+    WHERE p.Id > @seq;
+
+    UPDATE p SET p.ComisionUsd = ROUND(p.TotalUsd * v.ComisionPorcentaje / 100.0, 2)
+    FROM PC_PEDIDOS p
+    JOIN PC_VENDEDORES v ON v.Id = p.VendedorId
+    WHERE p.Id > @seq;
+
+    -- Entrada previa por la misma cantidad (el contenedor del mes pasado) y la salida del despacho.
+    INSERT INTO PC_MOVIMIENTOS_STOCK (VarianteId, DepositoId, DepositoDestinoId, Tipo, Cantidad, CostoUnitario, Motivo, DocumentoOrigen, Fecha, Usuario)
+    SELECT l.VarianteId, p.DepositoId, NULL, N'entrada', SUM(l.Cantidad), MAX(v.CostoEstandar),
+           N'Recepción contenedor MRKU-3318', N'PO-2026-000', DATEADD(DAY, -26, @iniMes), N'deposito'
+    FROM PC_PEDIDO_LINEAS l
+    JOIN PC_PEDIDOS p ON p.Id = l.PedidoId
+    JOIN PC_VARIANTES v ON v.Id = l.VarianteId
+    WHERE p.Id > @seq
+    GROUP BY l.VarianteId, p.DepositoId;
+
+    INSERT INTO PC_MOVIMIENTOS_STOCK (VarianteId, DepositoId, DepositoDestinoId, Tipo, Cantidad, CostoUnitario, Motivo, DocumentoOrigen, Fecha, Usuario)
+    SELECT l.VarianteId, p.DepositoId, NULL, N'salida', l.Cantidad, v.CostoEstandar,
+           N'Despacho del pedido ' + p.Numero, p.Numero, p.Fecha, N'deposito'
+    FROM PC_PEDIDO_LINEAS l
+    JOIN PC_PEDIDOS p ON p.Id = l.PedidoId
+    JOIN PC_VARIANTES v ON v.Id = l.VarianteId
+    WHERE p.Id > @seq;
+
+    PRINT 'Seed de dominio: pedidos entregados del mes anterior sembrados.';
+END
 GO
 
 -- ============================================================================

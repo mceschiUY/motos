@@ -66,5 +66,74 @@
 // ─── Celular (plan Etapa F5): filtro a lo ancho, KPI en tres columnas; la tabla scrollea sola.
 @media (max-width: 640px) {
   .filtros { width: 100%; .filtro-field { min-width: 0; flex: 1 1 100%; } }
-  .page-header .header-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .page-header .header-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }   // 4 KPI: 2×2
+}
+
+// ─── Etapa H.6: meta, proyección y mes anterior ─────────────────────────────
+
+// Línea chica bajo cada KPI (mes anterior, proyección)
+.header-stats .stat-item .stat-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--ceskia-text-xs);
+  color: var(--ceskia-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// Variación contra el mes anterior: flecha + porcentaje, coloreada por tendencia
+.delta {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: var(--ceskia-text-xs); font-variant-numeric: tabular-nums;
+  color: var(--ceskia-text-tertiary);
+  mat-icon { font-size: 14px; width: 14px; height: 14px; line-height: 14px; }
+  &[data-tendencia='sube'] { color: var(--ceskia-accent-success); }
+  &[data-tendencia='baja'] { color: var(--ceskia-accent-danger); }
+  &[data-tendencia='nuevo'] { color: var(--ceskia-accent-primary); }
+}
+
+// Barra de meta en miniatura (KPI del equipo y celda por vendedor); el tick es "hoy"
+.barra-mini {
+  position: relative; display: block; height: 6px; width: 100%;
+  border-radius: var(--ceskia-radius-full);
+  background: var(--ceskia-surface-alt, var(--ceskia-surface));
+  border: 1px solid var(--ceskia-border-subtle);
+  overflow: visible;
+  i { position: absolute; top: 0; bottom: 0; display: block; }
+  .real { left: 0; border-radius: var(--ceskia-radius-full); background: var(--ceskia-accent-primary); }
+  .hoy { width: 2px; top: -3px; bottom: -3px; background: var(--ceskia-text-primary); opacity: .55; }
+}
+[data-semaforo='verde'] .barra-mini .real { background: var(--ceskia-accent-success); }
+[data-semaforo='amarillo'] .barra-mini .real { background: var(--ceskia-accent-warning); }
+[data-semaforo='rojo'] .barra-mini .real { background: var(--ceskia-accent-danger); }
+
+.header-stats .stat-item.stat-meta {
+  .stat-content { min-width: 150px; }
+  .barra-mini { margin-top: 6px; }
+  &[data-semaforo='verde'] .stat-value { color: var(--ceskia-accent-success); }
+  &[data-semaforo='amarillo'] .stat-value { color: var(--ceskia-accent-warning); }
+  &[data-semaforo='rojo'] .stat-value { color: var(--ceskia-accent-danger); }
+}
+
+.smart-table {
+  td.col-meta {
+    min-width: 170px;
+    .meta-celda { display: grid; grid-template-columns: 48px 1fr; grid-template-rows: auto auto; column-gap: var(--ceskia-space-2); align-items: center; }
+    .meta-pct { font-weight: var(--ceskia-font-semibold); text-align: right; }
+    .barra-mini { align-self: center; }
+    .meta-obj { grid-column: 2; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); white-space: nowrap; }
+    &[data-semaforo='verde'] .meta-pct { color: var(--ceskia-accent-success); }
+    &[data-semaforo='amarillo'] .meta-pct { color: var(--ceskia-accent-warning); }
+    &[data-semaforo='rojo'] .meta-pct { color: var(--ceskia-accent-danger); }
+  }
+
+  td.col-proyectada {
+    color: var(--ceskia-text-secondary);
+    .abiertos { display: block; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); white-space: nowrap; }
+  }
+
+  td.col-anterior {
+    .ant-valor { display: block; color: var(--ceskia-text-secondary); }
+    .delta { justify-content: flex-end; width: 100%; }
+  }
 }

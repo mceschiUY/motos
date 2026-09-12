@@ -76,7 +76,33 @@ WHERE l.VarianteId = @VarianteId AND p.Estado NOT IN ('entregado', 'anulado')
 GROUP BY p.Id, p.Numero, p.Estado, c.Nombre, p.Fecha
 ORDER BY p.Fecha DESC, p.Id DESC";
 
+        // Hermanos: todas las variantes del producto con saldo total (misma regla del Kardex; una
+        // transferencia entre depósitos suma 0 sobre el total) y comprometido en pedidos abiertos.
+        private const string SqlHermanos = @"
+SELECT v.Id AS VarianteId, v.Sku, v.Activo,
+       v.TallaId, t.Nombre AS TallaDisplay, ISNULL(t.Orden, 0) AS TallaOrden,
+       v.ColorId, co.Nombre AS ColorDisplay, co.CodigoHex AS ColorHex,
+       v.PrecioLista AS PrecioListaUsd,
+       ISNULL((SELECT SUM(CASE m.Tipo WHEN 'entrada' THEN m.Cantidad
+                                     WHEN 'salida' THEN -m.Cantidad
+                                     WHEN 'ajuste' THEN m.Cantidad
+                                     WHEN 'transferencia' THEN CASE WHEN m.DepositoDestinoId IS NULL THEN -m.Cantidad ELSE 0 END
+                                     ELSE 0 END)
+               FROM PC_MOVIMIENTOS_STOCK m WHERE m.VarianteId = v.Id), 0) AS Saldo,
+       ISNULL((SELECT SUM(l.Cantidad) FROM PC_PEDIDO_LINEAS l
+               INNER JOIN PC_PEDIDOS p ON p.Id = l.PedidoId
+               WHERE l.VarianteId = v.Id AND p.Estado IN ('borrador', 'confirmado', 'preparado')), 0) AS Comprometido
+FROM PC_VARIANTES v
+LEFT JOIN PC_TALLAS t ON t.Id = v.TallaId
+LEFT JOIN PC_COLORES co ON co.Id = v.ColorId
+WHERE v.ProductoId = @ProductoId
+ORDER BY ISNULL(t.Orden, 0), t.Nombre, co.Nombre, v.Sku";
+
         private class TotalDto { public decimal Total { get; set; } }
+
+        /// <summary>Misma regla para el SKU y para sus hermanos: bajo = entre 0 y 3, exclusivo.</summary>
+        private static string Semaforo(decimal saldo) =>
+            saldo < 0m ? "negativo" : saldo == 0m ? "sin_stock" : saldo < 3m ? "bajo" : "ok";
 
         private readonly IQueryService _consultas;
 
@@ -133,12 +159,16 @@ ORDER BY p.Fecha DESC, p.Id DESC";
                 ? null
                 : Math.Round(ficha.StockTotal / (ficha.UnidadesVendidas30d / 30m), 1, MidpointRounding.AwayFromZero);
 
-            ficha.SemaforoStock = ficha.StockTotal < 0m ? "negativo"
-                : ficha.StockTotal == 0m ? "sin_stock"
-                : ficha.StockTotal < 3m ? "bajo"
-                : "ok";
+            ficha.SemaforoStock = Semaforo(ficha.StockTotal);
 
             ficha.PedidosAbiertos = await _consultas.ConsultarAsync<FichaSkuPedidoDto>(SqlPedidosAbiertos, parametros);
+
+            ficha.Hermanos = await _consultas.ConsultarAsync<FichaSkuHermanoDto>(SqlHermanos, new { ficha.ProductoId });
+            foreach (var h in ficha.Hermanos)
+            {
+                h.EsActual = h.VarianteId == ficha.VarianteId;
+                h.Semaforo = Semaforo(h.Saldo);
+            }
 
             return ficha;
         }

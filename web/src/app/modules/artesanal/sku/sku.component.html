@@ -116,6 +116,73 @@
       </div>
     </div>
 
+    <!-- ═══ Hermanos: las otras tallas y colores del mismo producto (Etapa H.8) ═══ -->
+    <section class="sku-hermanos">
+      <div class="sku-seccion-cabezal">
+        <h2>Otras tallas y colores</h2>
+        <span class="sku-seccion-nota">
+          {{ hermanos().length }} SKU del producto · {{ formatoNumero(unidadesHermanos()) }} unidades en total · clic para abrir
+        </span>
+      </div>
+
+      @if (hermanos().length <= 1) {
+        <div class="sku-nada">Este producto tiene un solo SKU: no hay otras tallas ni colores.</div>
+      } @else {
+        <div class="hermanos-scroll">
+          <table class="hermanos-matriz">
+            <thead>
+              <tr>
+                <th class="h-color">Color \ Talla</th>
+                @for (t of tallas(); track t.id ?? 'u') {
+                  <th class="h-talla" [class.h-actual]="t.id === actual()?.tallaId">{{ t.nombre }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (fila of filasHermanos(); track fila.colorId ?? 'u') {
+                <tr>
+                  <th class="h-color" [class.h-actual]="fila.colorId === actual()?.colorId">
+                    @if (fila.colorHex) { <i class="sku-muestra" [style.background]="fila.colorHex"></i> }
+                    {{ fila.colorDisplay }}
+                  </th>
+                  @for (c of fila.celdas; track $index) {
+                    @if (c) {
+                      <td class="h-celda" [attr.data-semaforo]="c.semaforo" [class.h-actual]="c.esActual" [class.h-inactivo]="!c.activo"
+                          (click)="irAlHermano(c)" [matTooltip]="tooltipHermano(c)" [attr.tabindex]="c.esActual ? null : 0" (keydown.enter)="irAlHermano(c)">
+                        <span class="h-saldo">{{ formatoNumero(c.saldo) }}</span>
+                        @if (c.comprometido > 0) { <span class="h-comp">−{{ formatoNumero(c.comprometido) }}</span> }
+                        @if (c.esActual) { <span class="h-este">este</span> }
+                      </td>
+                    } @else {
+                      <td class="h-celda h-no-existe" matTooltip="No existe ese SKU">·</td>
+                    }
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (alternativas().length > 0) {
+          <div class="hermanos-alternativas">
+            <mat-icon>swap_horiz</mat-icon>
+            <span>Este SKU está {{ etiquetaSemaforo().toLowerCase() }}. Con stock del mismo producto:</span>
+            @for (h of alternativas(); track h.varianteId) {
+              <button type="button" class="alt-chip" (click)="irAlHermano(h)" [matTooltip]="tooltipHermano(h)">
+                @if (h.colorHex) { <i class="sku-muestra" [style.background]="h.colorHex"></i> }
+                {{ nombreHermano(h) }} <b>{{ formatoNumero(h.saldo - h.comprometido) }}</b>
+              </button>
+            }
+          </div>
+        } @else if (stockEnAlerta() && hermanos().length > 1) {
+          <div class="hermanos-alternativas sin-alternativa">
+            <mat-icon>report</mat-icon>
+            <span>Este SKU está {{ etiquetaSemaforo().toLowerCase() }} y ninguna otra talla o color tiene stock neto.</span>
+          </div>
+        }
+      }
+    </section>
+
     <!-- ═══ Dónde está + quién lo pidió ═══ -->
     <div class="sku-grid">
       <section>

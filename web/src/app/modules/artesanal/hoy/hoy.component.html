@@ -55,7 +55,7 @@
       </div>
     </a>
 
-    <a class="kpi" routerLink="/comisiones" [attr.data-acento]="acentoVentas()">
+    <a class="kpi" routerLink="/comisiones" [attr.data-acento]="acentoVentas()" [matTooltip]="tooltipVentas()">
       <div class="kpi-icono"><mat-icon>payments</mat-icon></div>
       <div class="kpi-cuerpo">
         <span class="kpi-valor tnum">{{ cargado() && kpis() ? (kpis()!.ventasMesUsd | usd:0) : '—' }}</span>
@@ -151,6 +151,12 @@
           <h2><mat-icon>groups</mat-icon> Equipo</h2>
           <a class="card-link" routerLink="/comisiones">abrir comisiones <mat-icon>arrow_forward</mat-icon></a>
         </div>
+        @if (cargado() && kpis(); as k) {
+          <p class="eq-resumen tnum">
+            Entregado en el mes <strong>{{ k.ventasEntregadasMesUsd | usd:0 }}</strong> · comisiones <strong>{{ k.comisionesMesUsd | usd }}</strong>
+            · <span class="eq-hoy-leyenda"><i></i> esperado a hoy</span>
+          </p>
+        }
         @if (cargado() && vendedores().length === 0) {
           <p class="vacio">No hay vendedores activos.</p>
         }
@@ -164,7 +170,7 @@
                   @if (v.objetivoUsd > 0) { {{ v.avancePorcentaje | number:'1.0-0' }} % } @else { sin meta }
                 </span>
               </div>
-              <span class="eq-barra"><i class="eq-fill" [style.width.%]="pctMeta(v)"></i></span>
+              <span class="eq-barra"><i class="eq-fill" [style.width.%]="pctMeta(v)"></i>@if (v.objetivoUsd > 0) { <i class="eq-hoy" [style.left.%]="ritmoMes()" matTooltip="Lo esperado a la fecha si el mes fuera parejo"></i> }</span>
               <div class="eq-pie">
                 <span class="tnum">vendió <strong>{{ v.vendidoMesUsd | usd:0 }}</strong>@if (v.objetivoUsd > 0) { de {{ v.objetivoUsd | usd:0 }}}</span>
                 <span class="tnum">comisión <strong>{{ v.comisionMesUsd | usd }}</strong></span>

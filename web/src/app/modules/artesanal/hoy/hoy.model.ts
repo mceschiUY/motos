@@ -15,6 +15,8 @@ export interface CentroControlKpis {
   variacionMesPorcentaje: number | null;
   skuStockBajo: number;
   skuStockNegativo: number;
+  /** Pedidos ENTREGADOS del mes (base de comisiones y del "vendió" del equipo). */
+  ventasEntregadasMesUsd: number;
   comisionesMesUsd: number;
 }
 

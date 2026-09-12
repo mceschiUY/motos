@@ -49,10 +49,11 @@ type SlideTipo = 'hoy' | 'equipo' | 'pedidos' | 'actividad';
                 <span class="tv-cifra tnum">{{ datos() ? kpis()!.enviosFueraSla : '—' }}</span>
                 <span class="tv-label">Envíos fuera de SLA</span>
               </div>
-              <div class="tv-kpi" data-acento="success">
+              <div class="tv-kpi" [attr.data-acento]="acentoVentas()">
                 <mat-icon>payments</mat-icon>
                 <span class="tv-cifra tnum">{{ datos() ? (kpis()!.ventasMesUsd | usd:0) : '—' }}</span>
                 <span class="tv-label">Ventas del mes</span>
+                @if (variacionTexto(); as t) { <span class="tv-label tv-sub">{{ t }}</span> }
               </div>
               <div class="tv-kpi" [attr.data-acento]="(kpis()?.skuStockNegativo ?? 0) > 0 ? 'danger' : (kpis()?.skuStockBajo ?? 0) > 0 ? 'warning' : 'success'">
                 <mat-icon>inventory_2</mat-icon>
@@ -80,7 +81,9 @@ type SlideTipo = 'hoy' | 'equipo' | 'pedidos' | 'actividad';
         }
         @case ('equipo') {
           <div class="tv-slide">
-            <h1 class="tv-titulo"><mat-icon class="tv-titulo-icon">groups</mat-icon> El equipo contra la meta</h1>
+            <h1 class="tv-titulo"><mat-icon class="tv-titulo-icon">groups</mat-icon> El equipo contra la meta
+              @if (kpis(); as k) { <small class="tv-titulo-sub tnum">entregado {{ k.ventasEntregadasMesUsd | usd:0 }} · comisiones {{ k.comisionesMesUsd | usd:0 }} · <i class="tv-hoy-leyenda"></i> esperado a hoy</small> }
+            </h1>
             <div class="tv-equipo">
               @for (v of vendedores(); track v.id) {
                 <div class="tv-vend" [attr.data-acento]="semaforoMeta(v)">
@@ -89,7 +92,7 @@ type SlideTipo = 'hoy' | 'equipo' | 'pedidos' | 'actividad';
                     <span class="tv-vend-zona">{{ v.zona || '' }}</span>
                     <span class="tv-vend-pct tnum">{{ v.objetivoUsd > 0 ? entero(v.avancePorcentaje) + ' %' : 'sin meta' }}</span>
                   </div>
-                  <div class="tv-barra"><div class="tv-fill" [style.width.%]="pctMeta(v)"></div></div>
+                  <div class="tv-barra"><div class="tv-fill" [style.width.%]="pctMeta(v)"></div>@if (v.objetivoUsd > 0) { <div class="tv-hoy" [style.left.%]="ritmoMes()"></div> }</div>
                   <div class="tv-vend-pie tnum">
                     <span>vendió <strong>{{ v.vendidoMesUsd | usd:0 }}</strong>@if (v.objetivoUsd > 0) { de {{ v.objetivoUsd | usd:0 }}}</span>
                     <span>comisión <strong>{{ v.comisionMesUsd | usd }}</strong></span>
@@ -172,6 +175,10 @@ type SlideTipo = 'hoy' | 'equipo' | 'pedidos' | 'actividad';
     .tv-kpi[data-acento='danger'],  .tv-accion[data-acento='danger'],  .tv-vend[data-acento='danger']  { --kpi-acento: var(--ceskia-accent-danger); }
     .tv-cifra { font-size: 3.6rem; font-weight: 650; line-height: 1; color: var(--ceskia-text-primary); }
     .tv-label { font-size: 1.05rem; color: var(--ceskia-text-tertiary); text-align: center; }
+    .tv-sub { font-size: .95rem; color: var(--kpi-acento, var(--ceskia-text-tertiary)); margin-top: -4px; }
+    .tv-titulo-sub { margin-left: auto; font-size: 1.05rem; font-weight: 400; color: var(--ceskia-text-tertiary); display: inline-flex; align-items: center; gap: 6px; }
+    .tv-hoy-leyenda { display: inline-block; width: 3px; height: 16px; background: var(--ceskia-text-primary); opacity: .6; margin-left: 4px; }
+    .tv-hoy { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--ceskia-text-primary); opacity: .6; }
 
     /* Feed */
     .tv-feed { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vh 2vw; }
@@ -197,7 +204,7 @@ type SlideTipo = 'hoy' | 'equipo' | 'pedidos' | 'actividad';
     .tv-estados { display: flex; flex-direction: column; gap: 2.4vh; }
     .tv-estado { display: flex; align-items: center; gap: 24px; }
     .tv-estado-nombre { width: 180px; font-size: 1.5rem; text-transform: capitalize; color: var(--ceskia-text-secondary); }
-    .tv-barra { flex: 1; height: 24px; background: var(--ceskia-elevated); border-radius: 12px; overflow: hidden; }
+    .tv-barra { flex: 1; position: relative; height: 24px; background: var(--ceskia-elevated); border-radius: 12px; overflow: hidden; }
     .tv-fill { height: 100%; background: var(--ceskia-accent-primary); border-radius: 12px; transition: width .8s ease; }
     .tv-estado-num { width: 80px; text-align: right; font-size: 2rem; font-weight: 600; }
     .tv-top { display: flex; flex-direction: column; gap: 1.8vh; }
@@ -277,6 +284,28 @@ export class PantallaComponent implements OnInit, OnDestroy {
   pctPipeline(cantidad: number): number {
     const max = Math.max(1, ...this.pipeline().map(p => p.cantidad));
     return (cantidad / max) * 100;
+  }
+
+  /** Igual que el home: variación contra el mes anterior en lenguaje de negocio. */
+  readonly variacionTexto = computed(() => {
+    const k = this.kpis();
+    if (!k) { return ''; }
+    if (k.variacionMesPorcentaje === null) { return k.ventasMesAnteriorUsd === 0 ? 'sin ventas el mes pasado' : ''; }
+    const v = k.variacionMesPorcentaje;
+    const abs = Math.abs(v).toLocaleString('es-UY', { maximumFractionDigits: 0 });
+    return v > 0 ? `+${abs} % vs mes anterior` : v < 0 ? `−${abs} % vs mes anterior` : 'igual que el mes anterior';
+  });
+
+  readonly acentoVentas = computed(() => {
+    const v = this.kpis()?.variacionMesPorcentaje ?? null;
+    return v === null ? 'primary' : v < 0 ? 'warning' : 'success';
+  });
+
+  /** Dónde cae hoy dentro del mes (0..100): el tick "esperado a hoy" de la barra de meta. */
+  ritmoMes(): number {
+    const hoy = new Date();
+    const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+    return Math.round((hoy.getDate() / diasMes) * 100);
   }
 
   pctMeta(v: VendedorResumen): number {

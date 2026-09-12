@@ -23,7 +23,9 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
     /// </summary>
     public class CentroControlHandler : IRequestHandler<CentroControlQuery, CentroControlDto>
     {
-        private const int MaxAcciones = 12;
+        // Etapa H.7: 14 para que entren la visita del día y el cliente sin visitar aun con
+        // 4 SLA + stock bajo; el TV muestra los primeros 8.
+        private const int MaxAcciones = 14;
 
         // ── Filas internas (una clase por consulta) ─────────────────────────────
 
@@ -35,6 +37,7 @@ namespace ApiMotos.Application.Artesanal.Control.CentroControl
             public int VisitasHoy { get; set; }
             public decimal VentasMesUsd { get; set; }
             public decimal VentasMesAnteriorUsd { get; set; }
+            public decimal VentasEntregadasMesUsd { get; set; }
             public decimal ComisionesMesUsd { get; set; }
         }
 
@@ -114,6 +117,8 @@ SELECT
             WHERE Fecha >= @DesdeMes AND Fecha < @HastaMes AND Estado NOT IN (N'borrador', N'anulado')), 0) AS VentasMesUsd,
     ISNULL((SELECT SUM(TotalUsd) FROM PC_PEDIDOS
             WHERE Fecha >= @DesdeMesAnterior AND Fecha < @DesdeMes AND Estado NOT IN (N'borrador', N'anulado')), 0) AS VentasMesAnteriorUsd,
+    ISNULL((SELECT SUM(TotalUsd) FROM PC_PEDIDOS
+            WHERE Estado = N'entregado' AND Fecha >= @DesdeMes AND Fecha < @HastaMes), 0) AS VentasEntregadasMesUsd,
     ISNULL((SELECT SUM(ComisionUsd) FROM PC_PEDIDOS
             WHERE Estado = N'entregado' AND Fecha >= @DesdeMes AND Fecha < @HastaMes), 0) AS ComisionesMesUsd";
 
@@ -318,6 +323,7 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
                         : Math.Round((kpi.VentasMesUsd - kpi.VentasMesAnteriorUsd) / kpi.VentasMesAnteriorUsd * 100m, 1, MidpointRounding.AwayFromZero),
                     SkuStockBajo = stockSku.Count(s => s.Saldo > 0m),
                     SkuStockNegativo = stockSku.Count(s => s.Saldo < 0m),
+                    VentasEntregadasMesUsd = kpi.VentasEntregadasMesUsd,
                     ComisionesMesUsd = kpi.ComisionesMesUsd,
                 },
                 Pipeline = EstadosPipeline.Select(estado =>
@@ -413,7 +419,7 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
 
             foreach (var v in visitas.Take(2))
             {
-                candidatos.Add((7, new AccionDto
+                candidatos.Add((3, new AccionDto
                 {
                     Tipo = "visita",
                     Acento = "primary",
@@ -507,7 +513,10 @@ ORDER BY TotalUsd DESC, UnidadesMes DESC";
         private static string NombreSku(StockSkuFila s)
         {
             var partes = new List<string>();
-            if (!string.IsNullOrWhiteSpace(s.MarcaDisplay)) partes.Add(s.MarcaDisplay);
+            // El nombre del producto suele traer la marca ("Casco Integral LS2 FF800"): no repetirla.
+            var marcaYaEnNombre = !string.IsNullOrWhiteSpace(s.MarcaDisplay) && !string.IsNullOrWhiteSpace(s.ProductoDisplay)
+                && s.ProductoDisplay.Contains(s.MarcaDisplay, StringComparison.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(s.MarcaDisplay) && !marcaYaEnNombre) partes.Add(s.MarcaDisplay);
             if (!string.IsNullOrWhiteSpace(s.ProductoDisplay)) partes.Add(s.ProductoDisplay);
             if (!string.IsNullOrWhiteSpace(s.TallaDisplay)) partes.Add(s.TallaDisplay);
             if (!string.IsNullOrWhiteSpace(s.ColorDisplay)) partes.Add(s.ColorDisplay.ToLowerInvariant());

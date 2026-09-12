@@ -77,4 +77,24 @@ export interface FichaSku {
   /** Del más nuevo al más viejo. */
   kardex: FichaSkuMovimiento[];
   pedidosAbiertos: FichaSkuPedido[];
+  /** Todas las variantes del mismo producto (esta incluida), ordenadas por talla y color. */
+  hermanos: FichaSkuHermano[];
+}
+
+/** Un SKU del mismo producto: talla, color y cuánto hay. */
+export interface FichaSkuHermano {
+  varianteId: number;
+  sku: string | null;
+  activo: boolean;
+  esActual: boolean;
+  tallaId: number | null;
+  tallaDisplay: string | null;
+  tallaOrden: number;
+  colorId: number | null;
+  colorDisplay: string | null;
+  colorHex: string | null;
+  precioListaUsd: number;
+  saldo: number;
+  comprometido: number;
+  semaforo: SemaforoStock;
 }

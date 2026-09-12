@@ -148,10 +148,10 @@
                           <button mat-icon-button class="action-btn" matTooltip="WhatsApp" (click)="whatsapp(p, $event)"><mat-icon>chat</mat-icon></button>
                           <button mat-icon-button class="action-btn" matTooltip="Llamar" (click)="llamar(p, $event)"><mat-icon>call</mat-icon></button>
                         }
-                        @if (p.telefono) {
-                          <button mat-icon-button class="action-btn" matTooltip="WhatsApp" (click)="whatsapp(p, $event)"><mat-icon>chat</mat-icon></button>
-                          <button mat-icon-button class="action-btn" matTooltip="Llamar" (click)="llamar(p, $event)"><mat-icon>call</mat-icon></button>
+                        @if (p.latitud != null && p.longitud != null) {
+                          <button mat-icon-button class="action-btn" matTooltip="Cómo llegar" (click)="comoLlegar(p, $event)"><mat-icon>directions</mat-icon></button>
                         }
+                        <button mat-icon-button class="action-btn edit" matTooltip="Nuevo pedido para este cliente" (click)="vender(p, $event)"><mat-icon>add_shopping_cart</mat-icon></button>
                         <button mat-icon-button class="action-btn" matTooltip="Registrar visita" (click)="registrarVisita(p)"><mat-icon>add_task</mat-icon></button>
                         <button mat-icon-button class="action-btn edit" matTooltip="Ver cliente" (click)="verCliente(p)"><mat-icon>person</mat-icon></button>
                         <button mat-icon-button class="action-btn more" matTooltip="Ver actividad" (click)="verActividad(p)"><mat-icon>open_in_new</mat-icon></button>

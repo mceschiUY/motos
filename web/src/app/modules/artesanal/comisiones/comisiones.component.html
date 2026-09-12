@@ -16,6 +16,7 @@
           <div class="stat-content">
             <span class="stat-value">{{ totalPedidos() }}</span>
             <span class="stat-label">Pedidos entregados</span>
+            <span class="stat-sub">{{ etiquetaCorta(periodoAnterior()) }}: {{ anteriorPedidos() }}</span>
           </div>
         </div>
         <div class="stat-item">
@@ -23,6 +24,27 @@
           <div class="stat-content">
             <span class="stat-value">{{ usd(totalVendido()) }}</span>
             <span class="stat-label">Vendido</span>
+            <span class="stat-sub delta" [attr.data-tendencia]="deltaVendido().tendencia"
+                  [matTooltip]="etiquetaPeriodo(periodoAnterior()) + ': ' + usd(anteriorVendido())">
+              <mat-icon>{{ iconoDelta(deltaVendido()) }}</mat-icon>{{ textoDelta(deltaVendido()) }} vs {{ etiquetaCorta(periodoAnterior()) }}
+            </span>
+          </div>
+        </div>
+        <div class="stat-item stat-meta" [attr.data-semaforo]="semaforoEquipo()">
+          <div class="stat-icon"><mat-icon>flag</mat-icon></div>
+          <div class="stat-content">
+            @if (totalObjetivo() > 0) {
+              <span class="stat-value">{{ pctEquipo() }} %</span>
+              <span class="stat-label">Meta del equipo · {{ usd(totalObjetivo()) }}</span>
+              <span class="barra-mini" role="progressbar" [attr.aria-valuenow]="pctEquipo()" aria-valuemin="0" aria-valuemax="100">
+                <i class="real" [style.width.%]="pctEquipo() > 100 ? 100 : pctEquipo()"></i>
+                @if (esMesActual()) { <i class="hoy" [style.left.%]="marcaHoyPct()" matTooltip="Lo esperado a la fecha si el mes fuera parejo"></i> }
+              </span>
+            } @else {
+              <span class="stat-value">—</span>
+              <span class="stat-label">Meta del equipo</span>
+              <span class="stat-sub">sin metas cargadas</span>
+            }
           </div>
         </div>
         <div class="stat-item stat-comision">
@@ -30,6 +52,15 @@
           <div class="stat-content">
             <span class="stat-value">{{ usd(totalComision()) }}</span>
             <span class="stat-label">A liquidar</span>
+            @if (esMesActual()) {
+              <span class="stat-sub" [matTooltip]="totalPedidosPendientes() + ' pedidos abiertos por ' + usd(totalPendiente())">
+                Proyectada {{ usd(totalProyectada()) }} si se entrega todo lo abierto
+              </span>
+            } @else {
+              <span class="stat-sub delta" [attr.data-tendencia]="deltaComision().tendencia">
+                <mat-icon>{{ iconoDelta(deltaComision()) }}</mat-icon>{{ textoDelta(deltaComision()) }} vs {{ etiquetaCorta(periodoAnterior()) }}
+              </span>
+            }
           </div>
         </div>
       </div>
@@ -51,7 +82,10 @@
           <mat-icon matPrefix>calendar_month</mat-icon>
         </mat-form-field>
       </div>
-      <p class="nota">La comisión se devenga con la <strong>entrega</strong>: se cuenta lo que cada pedido selló al entregarse.</p>
+      <p class="nota">
+        La comisión se devenga con la <strong>entrega</strong>: se cuenta lo que cada pedido selló al entregarse.
+        @if (esMesActual()) { La <strong>proyectada</strong> suma lo abierto del mes al % de hoy. }
+      </p>
     </div>
 
     <!-- TABLA (solo lectura) -->
@@ -69,7 +103,7 @@
         </ng-container>
 
         <ng-container matColumnDef="pedidos">
-          <th mat-header-cell *matHeaderCellDef class="col-num">Pedidos</th>
+          <th mat-header-cell *matHeaderCellDef class="col-num">Entregados</th>
           <td mat-cell *matCellDef="let item" class="col-num tnum">
             @if (item.pedidos > 0) {
               <button mat-button class="link-pedidos" (click)="verPedidos(item, $event)"
@@ -85,6 +119,25 @@
           <td mat-cell *matCellDef="let item" class="col-num tnum">{{ usd(item.totalUsd) }}</td>
         </ng-container>
 
+        <!-- Meta del mes: barra con semáforo contra lo esperado a hoy (como el panel del vendedor) -->
+        <ng-container matColumnDef="meta">
+          <th mat-header-cell *matHeaderCellDef>Meta</th>
+          <td mat-cell *matCellDef="let item" class="col-meta" [attr.data-semaforo]="semaforoMeta(item)" [matTooltip]="tooltipMeta(item)">
+            @if (item.objetivoUsd > 0) {
+              <div class="meta-celda">
+                <span class="meta-pct tnum">{{ pctMeta(item) }} %</span>
+                <span class="barra-mini" role="progressbar" [attr.aria-valuenow]="pctMeta(item)" aria-valuemin="0" aria-valuemax="100">
+                  <i class="real" [style.width.%]="pctMeta(item) > 100 ? 100 : pctMeta(item)"></i>
+                  @if (esMesActual()) { <i class="hoy" [style.left.%]="marcaHoyPct()"></i> }
+                </span>
+                <span class="meta-obj">de {{ usd(item.objetivoUsd) }}</span>
+              </div>
+            } @else {
+              <span class="sin-datos">sin meta</span>
+            }
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="comisionPorcentaje">
           <th mat-header-cell *matHeaderCellDef class="col-num">%</th>
           <td mat-cell *matCellDef="let item" class="col-num tnum">{{ item.comisionPorcentaje }}%</td>
@@ -95,13 +148,41 @@
           <td mat-cell *matCellDef="let item" class="col-num tnum col-comision">{{ usd(item.comisionUsd) }}</td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-        <tr mat-row *matRowDef="let row; columns: columnas;" class="fila-link"
-            (click)="verVendedor(row)" matTooltip="Ver ficha del vendedor"></tr>
+        <!-- Solo en el mes en curso: lo que cobraría si entrega todo lo que tiene abierto -->
+        <ng-container matColumnDef="proyectada">
+          <th mat-header-cell *matHeaderCellDef class="col-num" matTooltip="Sellada + pedidos abiertos del mes al % de hoy">Proyectada</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum col-proyectada" [matTooltip]="tooltipProyectada(item)">
+            @if (item.pedidosPendientes > 0) {
+              {{ usd(item.comisionProyectadaUsd) }}
+              <span class="abiertos">{{ item.pedidosPendientes }} abierto{{ item.pedidosPendientes === 1 ? '' : 's' }}</span>
+            } @else {
+              <span class="sin-datos">{{ usd(item.comisionUsd) }}</span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Mes anterior: la comisión de entonces y cómo viene contra ese mes -->
+        <ng-container matColumnDef="anterior">
+          <th mat-header-cell *matHeaderCellDef class="col-num">{{ etiquetaCorta(periodoAnterior()) }}</th>
+          <td mat-cell *matCellDef="let item" class="col-num tnum col-anterior" [matTooltip]="tooltipAnterior(item)">
+            @if (item.anteriorPedidos > 0) {
+              <span class="ant-valor">{{ usd(item.anteriorComisionUsd) }}</span>
+            } @else {
+              <span class="sin-datos">—</span>
+            }
+            <span class="delta" [attr.data-tendencia]="deltaFila(item).tendencia">
+              <mat-icon>{{ iconoDelta(deltaFila(item)) }}</mat-icon>{{ textoDelta(deltaFila(item)) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnas()"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnas();" class="fila-link"
+            (click)="verVendedor(row)" matTooltip="Ver panel del vendedor"></tr>
 
         <tr class="mat-row" *matNoDataRow>
           @if (!isLoading()) {
-            <td class="mat-cell empty-state-cell" [attr.colspan]="columnas.length">
+            <td class="mat-cell empty-state-cell" [attr.colspan]="columnas().length">
               <div class="empty-state">
                 <mat-icon>payments</mat-icon>
                 <h3>Sin liquidación en {{ etiquetaPeriodo(periodo()) }}</h3>
@@ -109,7 +190,7 @@
               </div>
             </td>
           } @else {
-            <td class="mat-cell" [attr.colspan]="columnas.length">
+            <td class="mat-cell" [attr.colspan]="columnas().length">
               <div class="relation-loading">
                 <mat-spinner diameter="32"></mat-spinner>
                 <span>Calculando la liquidación...</span>

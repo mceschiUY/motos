@@ -9,4 +9,18 @@ export interface ComisionVendedor {
   pedidos: number;
   totalUsd: number;
   comisionUsd: number;
+
+  // ─── Etapa H.6: meta, proyección y mes anterior (mismo corte, calculado en el backend) ───
+  /** Meta del período (0 si no hay). */
+  objetivoUsd: number;
+  /** Pedidos del período todavía no entregados ni anulados. */
+  pedidosPendientes: number;
+  pendienteEntregaUsd: number;
+  /** Sellada + pendiente × % de hoy: lo que cobraría si entrega todo lo abierto del mes. */
+  comisionProyectadaUsd: number;
+  periodoAnterior: string;
+  anteriorPedidos: number;
+  anteriorTotalUsd: number;
+  anteriorComisionUsd: number;
+  anteriorObjetivoUsd: number;
 }

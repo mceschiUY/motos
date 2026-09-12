@@ -71,6 +71,29 @@
         </div>
       }
 
+      <!-- Mes anterior (Etapa H.9): cómo cerró y cómo viene este mes contra aquel -->
+      @if (mesAnterior(); as ant) {
+        <div class="meta-anterior" [matTooltip]="'Pedidos entregados en ' + etiquetaMesAnterior() + ' y la comisión sellada entonces'">
+          <mat-icon>history</mat-icon>
+          <span>{{ etiquetaMesAnterior() }}:
+            @if (ant.vendido > 0 || ant.objetivo > 0) {
+              vendió <b>{{ ant.vendido | usd:0 }}</b>@if (ant.objetivo > 0) { de {{ ant.objetivo | usd:0 }} <b [class.ok]="ant.cumplida" [class.mal]="!ant.cumplida">({{ ant.pct }} %)</b> }
+              · comisión <b>{{ ant.comision | usd }}</b>
+            } @else {
+              sin entregas ni meta
+            }
+          </span>
+          @if (variacionVendido() !== null) {
+            <span class="delta" [attr.data-tendencia]="variacionVendido()! > 0 ? 'sube' : variacionVendido()! < 0 ? 'baja' : 'igual'">
+              <mat-icon>{{ variacionVendido()! > 0 ? 'trending_up' : variacionVendido()! < 0 ? 'trending_down' : 'trending_flat' }}</mat-icon>
+              {{ variacionVendido()! > 0 ? '+' : '' }}{{ variacionVendido() }} % este mes
+            </span>
+          } @else if (vendido() > 0) {
+            <span class="delta" data-tendencia="nuevo"><mat-icon>trending_up</mat-icon> primer mes con entregas</span>
+          }
+        </div>
+      }
+
       <div class="meta-comisiones">
         <div class="comision">
           <span class="comision-label">Comisión sellada</span>
@@ -169,7 +192,7 @@
                     <a class="parada-cliente" (click)="verCliente(p.clienteId)">{{ p.clienteDisplay }}</a>
                     <div class="parada-sub">
                       <span class="enum-pill" [attr.data-valor]="p.tipo === 'planificada' ? 'reprogramar' : p.resultado">
-                        {{ p.tipo === 'planificada' ? 'Volver' : etiquetaResultado(p.resultado) }}
+                        {{ p.tipo === 'planificada' ? 'Planificada' : etiquetaResultado(p.resultado) }}
                       </span>
                       @if (p.ciudad) { <span>· {{ p.ciudad }}</span> }
                       @if (p.notas) { <span class="notas">· {{ p.notas }}</span> }

@@ -100,6 +100,8 @@
   }
   .parada-acciones { display: flex; gap: 2px; opacity: 0; transition: var(--ceskia-transition-fast); }
   &:hover .parada-acciones, &.selected .parada-acciones { opacity: 1; }
+  // En el celular no hay hover: las acciones de un tap se ven siempre (Etapa H.10).
+  @media (hover: none), (max-width: 640px) { .parada-acciones { opacity: 1; flex-wrap: wrap; justify-content: flex-end; } }
 }
 
 // ─── Lateral ────────────────────────────────────────────────────────────────

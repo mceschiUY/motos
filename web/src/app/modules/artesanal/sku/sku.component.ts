@@ -15,7 +15,15 @@ import { VarianteService } from '../../generated/services/variante.service';
 import { Variante } from '../../generated/models/variante.model';
 import { PrecioVariante } from '../catalogo/catalogo.model';
 import { SkuService } from './sku.service';
-import { FichaSku, FichaSkuMovimiento, SemaforoStock } from './sku.model';
+import { FichaSku, FichaSkuHermano, FichaSkuMovimiento, SemaforoStock } from './sku.model';
+
+/** Una fila de la matriz de hermanos: un color con una celda por talla (null si no existe el SKU). */
+interface FilaHermanos {
+  colorId: number | null;
+  colorDisplay: string;
+  colorHex: string | null;
+  celdas: (FichaSkuHermano | null)[];
+}
 
 /**
  * Ficha de SKU — escena artesanal (pisa `/variante/:id`, la ficha generada de Variante).
@@ -78,6 +86,69 @@ export class SkuComponent implements OnInit {
     const f = this.ficha();
     return f?.coberturaDias != null && f.coberturaDias < 15;
   });
+
+  // ─── Hermanos: matriz color × talla (Etapa H.8) ───
+  readonly hermanos = computed<FichaSkuHermano[]>(() => this.ficha()?.hermanos ?? []);
+  readonly actual = computed(() => this.hermanos().find(h => h.esActual) ?? null);
+  readonly otrosHermanos = computed(() => this.hermanos().filter(h => !h.esActual));
+
+  /** Tallas del producto en orden, como columnas. */
+  readonly tallas = computed(() => {
+    const vistas = new Map<string, { id: number | null; nombre: string; orden: number }>();
+    for (const h of this.hermanos()) {
+      const clave = String(h.tallaId ?? 'unica');
+      if (!vistas.has(clave)) { vistas.set(clave, { id: h.tallaId, nombre: h.tallaDisplay || 'Única', orden: h.tallaOrden }); }
+    }
+    return [...vistas.values()].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre));
+  });
+
+  /** Colores del producto como filas, cada una con una celda por talla. */
+  readonly filasHermanos = computed<FilaHermanos[]>(() => {
+    const filas = new Map<string, FilaHermanos>();
+    const tallas = this.tallas();
+    for (const h of this.hermanos()) {
+      const clave = String(h.colorId ?? 'unico');
+      let fila = filas.get(clave);
+      if (!fila) {
+        fila = { colorId: h.colorId, colorDisplay: h.colorDisplay || 'Color único', colorHex: h.colorHex, celdas: tallas.map(() => null) };
+        filas.set(clave, fila);
+      }
+      const col = tallas.findIndex(t => t.id === h.tallaId);
+      if (col >= 0) { fila.celdas[col] = h; }
+    }
+    return [...filas.values()].sort((a, b) => a.colorDisplay.localeCompare(b.colorDisplay));
+  });
+
+  readonly unidadesHermanos = computed(() => this.hermanos().reduce((s, h) => s + (h.saldo ?? 0), 0));
+  readonly hermanosConStock = computed(() => this.otrosHermanos().filter(h => h.activo && h.saldo - h.comprometido > 0));
+
+  /** Cuando este SKU está flojo, las alternativas del mismo producto con stock neto, las de la misma talla primero. */
+  readonly alternativas = computed(() => {
+    const f = this.ficha();
+    const yo = this.actual();
+    if (!f || !yo || f.disponibleNeto > 0 && this.semaforo() === 'ok') { return []; }
+    return [...this.hermanosConStock()]
+      .sort((a, b) => Number(b.tallaId === yo.tallaId) - Number(a.tallaId === yo.tallaId)
+        || Number(b.colorId === yo.colorId) - Number(a.colorId === yo.colorId)
+        || (b.saldo - b.comprometido) - (a.saldo - a.comprometido))
+      .slice(0, 4);
+  });
+
+  irAlHermano(h: FichaSkuHermano | null): void {
+    if (!h || h.esActual) { return; }
+    this.router.navigate(['/variante', h.varianteId]);
+  }
+
+  nombreHermano(h: FichaSkuHermano): string {
+    return `${h.tallaDisplay || 'única'} ${h.colorDisplay || ''}`.trim();
+  }
+
+  tooltipHermano(h: FichaSkuHermano): string {
+    const neto = h.saldo - h.comprometido;
+    const base = `${h.sku} · ${this.nombreHermano(h)} · ${this.formatoNumero(h.saldo)} en stock`;
+    const comp = h.comprometido > 0 ? ` · ${this.formatoNumero(h.comprometido)} comprometidas · ${this.formatoNumero(neto)} neto` : '';
+    return base + comp + (h.activo ? '' : ' · inactivo') + (h.esActual ? ' · este SKU' : ' · abrir');
+  }
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(qp => {

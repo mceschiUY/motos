@@ -246,6 +246,68 @@
   .stat-value { color: var(--ceskia-accent-danger); }
 }
 
+// ─── Hermanos: matriz color × talla (Etapa H.8) ───
+.sku-hermanos { margin-bottom: var(--ceskia-space-5); }
+
+.hermanos-scroll { overflow-x: auto; }
+
+.hermanos-matriz {
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: var(--ceskia-text-sm);
+
+  th { font-weight: var(--ceskia-font-medium); color: var(--ceskia-text-secondary); text-align: center; padding: var(--ceskia-space-1) var(--ceskia-space-2); white-space: nowrap; }
+  th.h-color { text-align: left; display: flex; align-items: center; gap: var(--ceskia-space-2); min-width: 120px; }
+  thead th.h-color { display: table-cell; color: var(--ceskia-text-muted); font-size: var(--ceskia-text-xs); }
+  th.h-actual { color: var(--ceskia-accent-primary); }
+
+  td.h-celda {
+    position: relative;
+    min-width: 64px; height: 44px;
+    text-align: center; vertical-align: middle;
+    border-radius: var(--ceskia-radius-sm);
+    border: 1px solid var(--ceskia-border-subtle);
+    background: var(--ceskia-surface);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: transform var(--ceskia-transition-fast), box-shadow var(--ceskia-transition-fast);
+    &:hover { transform: translateY(-1px); box-shadow: var(--ceskia-shadow-sm); }
+
+    .h-saldo { font-family: var(--ceskia-font-display); font-weight: var(--ceskia-font-semibold); font-size: var(--ceskia-text-md); color: var(--ceskia-text-primary); }
+    .h-comp { display: block; font-size: var(--ceskia-text-xs); color: var(--ceskia-text-tertiary); line-height: 1; }
+    .h-este { position: absolute; top: 2px; right: 4px; font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: var(--ceskia-accent-primary); }
+
+    &[data-semaforo='ok'] { border-left: 3px solid var(--ceskia-accent-success); }
+    &[data-semaforo='bajo'] { border-left: 3px solid var(--ceskia-accent-warning); .h-saldo { color: var(--ceskia-accent-warning); } }
+    &[data-semaforo='sin_stock'] { border-left: 3px solid var(--ceskia-border-strong); .h-saldo { color: var(--ceskia-text-muted); } }
+    &[data-semaforo='negativo'] { border-left: 3px solid var(--ceskia-accent-danger); .h-saldo { color: var(--ceskia-accent-danger); } }
+
+    &.h-actual { cursor: default; border-color: var(--ceskia-accent-primary); box-shadow: 0 0 0 2px var(--ceskia-accent-primary-glow); &:hover { transform: none; } }
+    &.h-inactivo { opacity: .5; .h-saldo { text-decoration: line-through; } }
+    &.h-no-existe { cursor: default; background: transparent; border-style: dashed; color: var(--ceskia-text-muted); &:hover { transform: none; box-shadow: none; } }
+  }
+}
+
+.hermanos-alternativas {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ceskia-space-2);
+  margin-top: var(--ceskia-space-3);
+  font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary);
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--ceskia-accent-primary); }
+  &.sin-alternativa mat-icon { color: var(--ceskia-accent-danger); }
+
+  .alt-chip {
+    display: inline-flex; align-items: center; gap: var(--ceskia-space-1);
+    padding: 2px var(--ceskia-space-2);
+    border-radius: var(--ceskia-radius-full);
+    border: 1px solid var(--ceskia-border-default);
+    background: var(--ceskia-surface);
+    color: var(--ceskia-text-primary);
+    font: inherit; cursor: pointer;
+    b { color: var(--ceskia-accent-success); font-variant-numeric: tabular-nums; }
+    &:hover { border-color: var(--ceskia-accent-primary); }
+  }
+}
+
 // ─── Grilla depósitos | pedidos ───
 .sku-grid {
   display: grid;

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { EtiquetaPipe } from '../comun/etiquetas';
-import { UsdPipe } from '../comun/usd.pipe';
+import { UsdPipe, usd } from '../comun/usd.pipe';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -102,6 +102,13 @@ export class HoyComponent implements OnInit, OnDestroy {
     return v < 0 ? 'warning' : 'success';
   });
 
+  /** El KPI muestra lo COLOCADO; el tooltip aclara cuánto ya se entregó (base de comisiones). */
+  readonly tooltipVentas = computed(() => {
+    const k = this.kpis();
+    if (!k) { return ''; }
+    return `Pedidos del mes sin borradores ni anulados. Entregado: ${usd(k.ventasEntregadasMesUsd)} · mes anterior: ${usd(k.ventasMesAnteriorUsd)}`;
+  });
+
   readonly acentoStock = computed(() => {
     const k = this.kpis();
     if (!k) { return 'primary'; }
@@ -162,6 +169,13 @@ export class HoyComponent implements OnInit, OnDestroy {
 
   pctMeta(v: VendedorResumen): number {
     return Math.max(0, Math.min(100, v.avancePorcentaje ?? 0));
+  }
+
+  /** Dónde cae hoy dentro del mes (0..100): el tick "esperado a hoy" de la barra de meta. */
+  ritmoMes(): number {
+    const hoy = new Date();
+    const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+    return Math.round((hoy.getDate() / diasMes) * 100);
   }
 
   // ═══════════ Top productos / stock ═══════════

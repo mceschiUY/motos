@@ -624,7 +624,93 @@ del vendedor, 10 Móvil con acciones de un tap). Se anota el avance por ítem.
   Pública: tarjeta "¿Dudas con tu envío?" con WhatsApp de la empresa (`social.whatsapp` o
   `empresa.telefono` de Configuración; si no hay, no aparece). Verificado: imagen 1 → 200
   image, 999 → 404, seguimiento público con `imagenPrincipalId` por línea y sin precios.
-- [ ] 6 Comisiones · [ ] 7 Hoy y TV · [ ] 8 SKU · [ ] 9 Panel · [ ] 10 Móvil.
+- [x] **6 — Comisiones con meta, proyección y mes anterior** (`/comisiones`; `ComisionesHandler`
+  y `ComisionVendedorDto` crecen, el endpoint es el mismo): cada fila trae la **meta** del
+  período (`PC_METAS`), lo **pendiente de entregar** (pedidos del mes en estado distinto de
+  entregado/anulado, mismo criterio que el panel del vendedor) y el **mes anterior** (entregados,
+  vendido, comisión sellada y meta). La proyección se calcula en el handler: sellada + pendiente ×
+  % de hoy. Pantalla: cuatro KPI (entregados con el mes anterior, vendido con variación ▲▼ contra
+  el mes anterior, **meta del equipo** con barra, tick de "esperado a hoy" y semáforo, a liquidar
+  con la **proyectada** "si se entrega todo lo abierto"); en la tabla, columna **Meta** (barra
+  mini con semáforo, % y objetivo; el semáforo compara contra lo esperado a la fecha en el mes en
+  curso y contra la meta entera en un mes cerrado), columna **Proyectada** (solo en el mes en
+  curso, con cuántos pedidos abiertos) y columna del **mes anterior** (comisión de entonces y
+  variación; "nuevo" si antes no había nada). La fila lleva al panel del vendedor; el CSV exporta
+  todas las columnas nuevas. **Seed**: metas del mes anterior (16.000 / 12.000 / 22.000) y
+  sección **14 bis** con 5 pedidos entregados el mes pasado repartidos entre los tres vendedores
+  (numerados a continuación del último Id, sin envío), guardada por "no hay entregados anteriores
+  al mes en curso" así entra también en una base ya sembrada; cada salida tiene su entrada previa
+  por la misma cantidad (contenedor MRKU-3318) para que las existencias de hoy no cambien.
+  **Ojo** al escribir seeds: `DbBootstrap` ejecuta con `ExecuteSqlRaw`, que interpreta `{ }`
+  como formato; un comentario con llaves tira `FormatException` y corta el resto del archivo.
+  Verificado por API: mes actual con 3 filas (Andrés 2 entregados, 3 abiertos, proyectada
+  US$ 174,12; Lucía sin entregas pero 1 abierto y US$ 61,20 el mes pasado); mes anterior con los
+  5 entregados y proyectada = sellada; período inválido → 400; existencias con el mismo único
+  negativo; ficha de PED-0013 (entregado, sin envío) responde. Front compilado. Las metas del
+  seed (US$ 18.000 / 12.000 / 25.000) siguen muy por encima de lo vendido, así que el semáforo
+  arranca en rojo para todos: si para la demo se quiere ver verde, bajar las metas en el seed.
+- [x] **7 — Hoy y TV** (revisión con el payload real de `centro-control` sobre el seed):
+  (a) el feed decía "AGV Casco Integral AGV K1 S…" y "Alpinestars Botas Alpinestars…": el
+  nombre del producto ya trae la marca, `NombreSku` no la antepone si está contenida;
+  (b) la **visita del día** no entraba en el feed (prioridad 7, detrás del stock bajo, y el
+  corte en 12 la dejaba afuera): ahora va con prioridad 3, a la par de "listo para despachar",
+  y el cupo sube a 14 (el TV sigue mostrando 8), así entran también los clientes sin visitar;
+  (c) el KPI "Ventas del mes" (colocado, US$ 7.743) no cerraba con el "vendió" del equipo
+  (entregado, US$ 3.193): el DTO trae `VentasEntregadasMesUsd`, el KPI lo aclara en tooltip
+  junto con el mes anterior, y la tarjeta Equipo abre con "Entregado en el mes US$ X ·
+  comisiones US$ Y" (el `comisionesMesUsd` que venía sin usar); (d) barras de meta del equipo
+  con el **tick de "esperado a hoy"** (día/días del mes) y leyenda, en Hoy y en la TV, mismo
+  criterio que el panel y comisiones; (e) TV: el KPI de ventas tomaba siempre acento verde y
+  no decía la variación; ahora lleva el acento por variación y la línea "+42 % vs mes anterior",
+  y la slide del equipo suma entregado, comisiones y la leyenda del tick. Verificado por API:
+  14 acciones (4 SLA, negativo, 2 preparados, la visita de hoy, 3 stock bajo, confirmado, 2 sin
+  visitar), entregado 3.193 / comisiones 127,37 / variación +42,1 % (gracias al 14 bis del ítem
+  6 el mes anterior ya no es cero). Front compilado. Sin cambios de seed.
+- [x] **8 — Ficha de SKU con hermanos** (`/variante/:id`; `FichaSkuDto.Hermanos` +
+  `SqlHermanos` en `FichaSkuHandler`, mismo endpoint): la ficha trae TODAS las variantes del
+  producto (la actual marcada) con talla, orden de talla, color y hex, precio, saldo total del
+  Kardex (misma regla: transferencia con destino suma 0), comprometido en pedidos abiertos y
+  semáforo (la regla `bajo = entre 0 y 3` quedó en un helper compartido con el SKU). Pantalla:
+  sección **"Otras tallas y colores"** debajo de los KPI, como **matriz color × talla** (filas
+  colores con muestra, columnas tallas en orden; cada celda es el saldo con borde semáforo, el
+  comprometido en chico y "este" en la actual; celda punteada si ese SKU no existe; clic o
+  Enter abre la ficha del hermano, la ruta ya recarga por `paramMap`). Si el SKU actual está
+  bajo, sin stock o negativo, una línea de **alternativas** ofrece hasta 4 hermanos con stock
+  neto, primero los de la misma talla y luego los del mismo color; si ninguno tiene, lo dice.
+  Producto con un solo SKU: mensaje y nada más. Verificado por API: botas SMX-6 42 (2 u, bajo)
+  → hermanos 41/43/44 con 3 u; AGV K1 S 57-58 (−1) → los otros 3 talles en 0, sin alternativa;
+  Bell MX-9 55-56 amarillo → matriz 4 tallas × 3 colores, con comprometidos en 57-58 azul (2)
+  y 59-60 azul (1). Front compilado. Sin cambios de seed.
+- [x] **9 — Panel del vendedor** (`/vendedor/:id`, solo front; revisado con el payload real de
+  `panel`, `avance` y `agenda` de Andrés): la escena ya contaba ranking, meta con "esperado a
+  hoy", comisión sellada/proyectada/"podría cobrar" (coincide con `/comisiones`: 174,12),
+  simulador, ventas por semana (ahora con las semanas de agosto pobladas por el 14 bis),
+  esta semana, cartera con salud y pedidos abiertos. Faltaba el **mes anterior**: la tarjeta de
+  meta cierra con una línea "Agosto 2026: vendió US$ 1.340 de US$ 16.000 (8 %) · comisión
+  US$ 60,31" y la variación de lo vendido contra ese mes ("+16 % este mes"; "primer mes con
+  entregas" si antes no hubo). Sale de una segunda llamada a `GET vendedor/{id}/avance?periodo=`
+  en el mismo `forkJoin` (el endpoint ya aceptaba período; nada nuevo en la API). Y la parada
+  planificada de "Esta semana" decía "Volver": ahora "Planificada", como la agenda (ítem A).
+  Front compilado. Sin cambios de seed.
+- [x] **10 — Móvil con acciones de un tap** (solo front): helper `modules/artesanal/comun/contacto.ts`
+  (`telUrl`, `whatsappUrl`, `mapaUrl` por coordenadas o dirección+ciudad, `abrirContacto`), para
+  que agenda, Mis clientes y Mis pedidos armen los mismos links. **Agenda / Mi día**: los
+  botones WhatsApp y Llamar estaban **duplicados** en la parada (dos `@if (p.telefono)`
+  iguales) y las acciones tenían `opacity: 0` hasta el hover, o sea **invisibles en el
+  celular**: ahora se ven siempre sin hover o ≤640 px, sin duplicados, y se suman "Cómo llegar"
+  (si la parada tiene coordenadas) y "Nuevo pedido para este cliente". **Mis clientes** (`/m/clientes`):
+  cruza el panel del vendedor (semáforo) con la lista de clientes (teléfono, dirección,
+  coordenadas) y cada tarjeta lleva una fila de acciones altas para el dedo: Llamar, WhatsApp,
+  Llegar y Vender (la tarjeta pasó de `<button>` a `div role=button`, porque un botón no puede
+  contener botones). **Mis pedidos** (`/m/pedidos`): por tarjeta, WhatsApp al cliente con el
+  número y el estado del pedido (teléfono de la lista de clientes, el pedido generado no lo
+  trae), Envío (seguimiento, si ya salió) y Repetir (`/m/pedidos/nuevo?clienteId&pedidoId`, que
+  el armado ya entendía). Cliente 360 y la ficha del pedido ya tenían sus acciones. Front
+  compilado; los links de un tap se verificaron por lectura (sin navegador ni teléfono).
+
+**Etapa H cerrada (2026-09-12)**: los 12 ítems hechos. Pendiente transversal que quedó anotado en
+el ítem 6: las metas del seed (US$ 18.000 / 12.000 / 25.000) siguen muy por encima de lo vendido
+y el semáforo arranca en rojo para todos; si para la demo se quiere ver verde, bajar las metas.
 
 ### Etapa G — Permisos del negocio (pendiente, sin fecha)
 La plataforma de seguridad existe (usuarios, perfiles, roles, capabilities, `[ZasAuthorize]`,

@@ -20,6 +20,7 @@ import { ClienteService } from '../../generated/services/cliente.service';
 import { Vendedor } from '../../generated/models/vendedor.model';
 import { Cliente } from '../../generated/models/cliente.model';
 import { ActividadFormComponent } from '../../generated/components/actividad/actividad-form/actividad-form.component';
+import { abrirContacto, mapaUrl, telUrl, whatsappUrl } from '../comun/contacto';
 import { AgendaService } from './agenda.service';
 import { AvanceVendedor, ClienteSinVisitar, ParadaAgenda } from './agenda.model';
 
@@ -215,18 +216,22 @@ export class AgendaComponent implements OnInit {
 
   verCliente(p: ParadaAgenda | ClienteSinVisitar): void { this.router.navigate(['/cliente', p.clienteId]); }
 
-  /** Contacto de un tap desde la parada (revisión de escenas 2026-09-12). */
+  /** Contacto de un tap desde la parada (revisión de escenas 2026-09-12; helpers de comun/contacto en H.10). */
   whatsapp(p: ParadaAgenda, ev: Event): void {
     ev.stopPropagation();
-    const tel = (p.telefono || '').replace(/[^0-9]/g, '');
-    if (!tel) return;
-    const texto = `Hola ${p.clienteDisplay ?? ''}, te escribo de la distribuidora para coordinar la visita.`;
-    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+    abrirContacto(whatsappUrl(p.telefono, `Hola ${p.clienteDisplay ?? ''}, te escribo de la distribuidora para coordinar la visita.`));
   }
   llamar(p: ParadaAgenda, ev: Event): void {
     ev.stopPropagation();
-    const tel = (p.telefono || '').replace(/[^0-9+]/g, '');
-    if (tel) window.location.href = `tel:${tel}`;
+    abrirContacto(telUrl(p.telefono));
+  }
+  comoLlegar(p: ParadaAgenda, ev: Event): void {
+    ev.stopPropagation();
+    abrirContacto(mapaUrl(p.latitud, p.longitud, null, p.ciudad));
+  }
+  vender(p: ParadaAgenda, ev: Event): void {
+    ev.stopPropagation();
+    this.router.navigate(['/pedidos/nuevo'], { queryParams: { clienteId: p.clienteId } });
   }
   /** true si la parada es de un cliente ya en alerta de "sin visitar". */
   urgente(p: ParadaAgenda): boolean { return p.diasSinVisita == null || p.diasSinVisita > this.diasAlerta(); }

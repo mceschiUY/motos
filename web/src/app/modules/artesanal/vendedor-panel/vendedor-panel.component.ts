@@ -59,6 +59,8 @@ export class VendedorPanelComponent implements OnInit {
   readonly notFound = signal(false);
   readonly panel = signal<PanelVendedor | null>(null);
   readonly avance = signal<AvanceVendedor | null>(null);
+  /** Mismo corte del mes anterior (Etapa H.9): para decir "el mes pasado cerró en X". */
+  readonly avanceAnterior = signal<AvanceVendedor | null>(null);
   readonly paradas = signal<ParadaAgenda[]>([]);
   /** Slider "¿y si vende US$ X más?": solo front, no persiste. */
   readonly extraUsd = signal(0);
@@ -93,6 +95,32 @@ export class VendedorPanelComponent implements OnInit {
   readonly semaforoSimulado = computed<Semaforo>(() => this.semaforoDe(this.vendidoSimulado()));
   readonly comisionSimulada = computed(() => this.comisionSellada() + this.extraUsd() * this.porcentajeComision() / 100);
   readonly faltaParaMeta = computed(() => Math.max(0, this.objetivo() - this.vendidoSimulado()));
+
+  // ─── Mes anterior ────────────────────────────────────────────────────────
+  readonly periodoAnterior = computed(() => {
+    const d = new Date(this.hoy.getFullYear(), this.hoy.getMonth() - 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  readonly etiquetaMesAnterior = computed(() => {
+    const [y, m] = this.periodoAnterior().split('-').map(Number);
+    const t = new Intl.DateTimeFormat('es-UY', { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1));
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  });
+  readonly mesAnterior = computed(() => {
+    const a = this.avanceAnterior();
+    if (!a) return null;
+    return {
+      vendido: a.vendidoUsd, objetivo: a.objetivoUsd, comision: a.comisionUsd,
+      pct: a.objetivoUsd > 0 ? Math.round(a.vendidoUsd / a.objetivoUsd * 100) : null,
+      cumplida: a.objetivoUsd > 0 && a.vendidoUsd >= a.objetivoUsd,
+    };
+  });
+  /** Variación de lo vendido (entregado) contra el mes anterior, en %; null si no hay base. */
+  readonly variacionVendido = computed(() => {
+    const ant = this.mesAnterior()?.vendido ?? 0;
+    if (ant <= 0) return null;
+    return Math.round((this.vendido() - ant) / ant * 100);
+  });
 
   // ─── Ventas por semana ───────────────────────────────────────────────────
   readonly barras = computed<BarraSemana[]>(() => {
@@ -154,11 +182,13 @@ export class VendedorPanelComponent implements OnInit {
     forkJoin({
       panel: this.panelService.panel(this.vendedorId),
       avance: this.agendaService.avance(this.vendedorId).pipe(catchError(() => of(null))),
+      anterior: this.agendaService.avance(this.vendedorId, this.periodoAnterior()).pipe(catchError(() => of(null))),
       agenda: this.agendaService.agenda(this.vendedorId, this.hoyIso, this.iso(hasta)).pipe(catchError(() => of([] as ParadaAgenda[]))),
     }).subscribe({
-      next: ({ panel, avance, agenda }) => {
+      next: ({ panel, avance, anterior, agenda }) => {
         this.panel.set(panel);
         this.avance.set(avance);
+        this.avanceAnterior.set(anterior);
         this.paradas.set(agenda ?? []);
         this.isLoading.set(false);
       },

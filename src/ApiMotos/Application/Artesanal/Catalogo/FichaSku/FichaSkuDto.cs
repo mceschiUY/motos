@@ -44,6 +44,34 @@ namespace ApiMotos.Application.Artesanal.Catalogo.FichaSku
         public List<FichaSkuMovimientoDto> Kardex { get; set; } = new();
         /// <summary>Pedidos no entregados ni anulados que contienen el SKU.</summary>
         public List<FichaSkuPedidoDto> PedidosAbiertos { get; set; } = new();
+
+        /// <summary>
+        /// Etapa H.8: TODAS las variantes del mismo producto (esta incluida, con EsActual), con su
+        /// saldo total y comprometido, ordenadas por talla y color. Responde "no tengo 42, ¿qué
+        /// talle sí tengo?" sin salir de la ficha.
+        /// </summary>
+        public List<FichaSkuHermanoDto> Hermanos { get; set; } = new();
+    }
+
+    public class FichaSkuHermanoDto
+    {
+        public int VarianteId { get; set; }
+        public string? Sku { get; set; }
+        public bool Activo { get; set; }
+        public bool EsActual { get; set; }
+        public int? TallaId { get; set; }
+        public string? TallaDisplay { get; set; }
+        public int TallaOrden { get; set; }
+        public int? ColorId { get; set; }
+        public string? ColorDisplay { get; set; }
+        public string? ColorHex { get; set; }
+        public decimal PrecioListaUsd { get; set; }
+        /// <summary>Saldo del Kardex sumando todos los depósitos.</summary>
+        public decimal Saldo { get; set; }
+        /// <summary>Unidades en pedidos borrador/confirmado/preparado.</summary>
+        public decimal Comprometido { get; set; }
+        /// <summary>'ok' | 'bajo' | 'sin_stock' | 'negativo', misma regla que SemaforoStock.</summary>
+        public string Semaforo { get; set; } = "ok";
     }
 
     public class FichaSkuDepositoDto

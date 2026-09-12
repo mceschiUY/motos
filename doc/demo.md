@@ -24,8 +24,9 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
 - Columna izquierda, **"Qué hacer hoy"**: el feed de acciones ordenado por urgencia. Leer dos
   en voz alta: *"Envío MT-2026-0111 a Salto fuera de SLA · 14 días en facturación · límite 4"*
   y *"Botas Alpinestars SMX-6 v2 42 negro: quedan 2"*.
-- Centro: pipeline de pedidos del mes por estado y **Equipo** (meta, avance, comisión por
-  vendedor). Derecha: top productos, stock por depósito y "Recién pasó".
+- Centro: pipeline de pedidos del mes por estado y **Equipo** (entregado y comisiones del mes,
+  meta con tick de "esperado a hoy", avance y comisión por vendedor). Derecha: top productos,
+  stock por depósito y "Recién pasó".
 - Decir: *"Nada de esto es una tabla: es lo que el gerente necesita decidir a las 9 de la mañana."*
 - Opcional: el botón de TV (arriba a la derecha del home) abre `/pantalla`, la misma
   información en cuatro slides grandes para la tele de la oficina. Esc para volver.
@@ -48,7 +49,10 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
   Clientes, Catálogo, Vender y Pedidos; Esc para salir. (Con un teléfono real: rol de vista
   **Vendedor**, que abre `/m`, o el QR "Abrir en el celular".)
 - En el teléfono: **Mi día** es la agenda con las paradas de hoy; el botón "Mapa" despliega el
-  mapa y la ruta del día. Tocar una parada abre el cliente.
+  mapa y la ruta del día. Tocar una parada abre el cliente; cada parada trae **acciones de un
+  tap**: WhatsApp, Llamar, Cómo llegar, Nuevo pedido y Registrar visita. En **Clientes** y
+  **Pedidos** del celular, las tarjetas también (Llamar · WhatsApp · Llegar · Vender; WhatsApp ·
+  Envío · Repetir).
 - **Cliente 360**: tipo, ciudad, contacto, vendedor asignado, **semáforo** con motivo
   ("Visitado hace 3 días"), notas ("Cierra de 13 a 15"). KPI: días sin visita, pedidos del
   año, ticket promedio, pedidos abiertos, envíos en curso.
@@ -74,17 +78,21 @@ Antes de empezar: `dotnet run --project src/ApiMotos` y `cd web && npm start`, a
   "preparado" a "despachado": el hook descuenta el Kardex y **nace el envío** con su código.
 - Abrir la ficha del pedido: proceso guiado, líneas, botón de WhatsApp con el texto armado.
 - Desde una línea, o desde el feed de Hoy, abrir la **ficha de SKU** (`/variante/70`, Botas
-  SMX-6 42 negro): stock por depósito, comprometido, **"se acaba en N días"**, Kardex como
+  SMX-6 42 negro): **otras tallas y colores** en matriz (41, 43 y 44 tienen 3, con alternativas
+  para saltar), stock por depósito, comprometido, **"se acaba en N días"**, Kardex como
   línea de tiempo con saldo corrido y el `PED-000n` clickeable, historial de precios.
   `/movimientostock/1` redirige a la misma ficha con el movimiento resaltado.
 - **Registrar movimiento** y **Editar datos** abren los forms generados como diálogos.
 
 ## 6. Cerrar el mes (`/vendedor/1` → `/comisiones`)
 - Volver al rol **Gerencia**. Desde "Equipo" en Hoy, abrir a **Andrés Ferreira**: ranking del
-  mes, meta con barra y marca de "esperado a hoy", comisión sellada y **proyectada** ("si
-  entrega lo que tiene abierto"), slider *"¿y si vende US$ 2.000 más?"*, ventas por semana,
+  mes, meta con barra y marca de "esperado a hoy", **cómo cerró el mes anterior** y la
+  variación contra él, comisión sellada y **proyectada** ("si entrega lo que tiene abierto"),
+  slider *"¿y si vende US$ 2.000 más?"*, ventas por semana,
   esta semana, mis clientes con semáforo, pedidos abiertos.
-- `/comisiones`: liquidación por vendedor y mes con export CSV.
+- `/comisiones`: liquidación por vendedor y mes con meta del equipo, barra y semáforo por
+  vendedor, comisión **proyectada** si se entrega lo abierto, y el mes anterior con la variación
+  (▲▼ %); export CSV.
 - Cierre: *"Catálogo, vendedores, pedidos, depósito, envíos y comisiones en un solo relato; y
   cada pantalla que vieron es un link desde la anterior."*
 

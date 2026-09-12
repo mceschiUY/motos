@@ -79,6 +79,26 @@
     b { color: var(--ceskia-text-secondary); font-variant-numeric: tabular-nums; }
   }
 
+  // Mes anterior: una línea, con la variación de lo vendido contra aquel mes (Etapa H.9)
+  .meta-anterior {
+    display: flex; align-items: center; flex-wrap: wrap; gap: var(--ceskia-space-2);
+    margin-top: var(--ceskia-space-3); padding-top: var(--ceskia-space-3);
+    border-top: 1px dashed var(--ceskia-border-subtle);
+    font-size: var(--ceskia-text-sm); color: var(--ceskia-text-secondary);
+    > mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--ceskia-text-tertiary); }
+    b { color: var(--ceskia-text-primary); font-variant-numeric: tabular-nums; }
+    b.ok { color: var(--ceskia-accent-success); }
+    b.mal { color: var(--ceskia-text-tertiary); font-weight: var(--ceskia-font-normal); }
+    .delta {
+      display: inline-flex; align-items: center; gap: 2px; margin-left: auto;
+      font-size: var(--ceskia-text-xs); font-variant-numeric: tabular-nums; color: var(--ceskia-text-tertiary);
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      &[data-tendencia='sube'] { color: var(--ceskia-accent-success); }
+      &[data-tendencia='baja'] { color: var(--ceskia-accent-danger); }
+      &[data-tendencia='nuevo'] { color: var(--ceskia-accent-primary); }
+    }
+  }
+
   .meta-comisiones {
     display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ceskia-space-3);
     margin-top: var(--ceskia-space-4);
